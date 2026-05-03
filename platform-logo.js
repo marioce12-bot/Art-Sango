@@ -3,6 +3,65 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
 import { firebaseConfig } from "./firebase-config.js";
 
 const LOGO_KEY = 'artsango_platform_logo';
+const MANIFEST_LINK_ID = 'dynamic-manifest';
+const APPLE_TOUCH_ICON_ID = 'dynamic-apple-touch-icon';
+
+function guessMimeType(src = '') {
+  const lower = String(src).toLowerCase();
+  if (lower.endsWith('.svg') || lower.startsWith('data:image/svg+xml')) return 'image/svg+xml';
+  if (lower.endsWith('.webp') || lower.startsWith('data:image/webp')) return 'image/webp';
+  if (lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.startsWith('data:image/jpeg')) return 'image/jpeg';
+  return 'image/png';
+}
+
+function buildManifestHref(logoUrl) {
+  const icon = logoUrl || './icon.svg';
+  const type = guessMimeType(icon);
+  const manifest = {
+    name: 'ArtSango',
+    short_name: 'ArtSango',
+    start_url: './index.html',
+    display: 'standalone',
+    background_color: '#11100e',
+    theme_color: '#11100e',
+    icons: [
+      { src: icon, sizes: '192x192', type, purpose: 'any' },
+      { src: icon, sizes: '512x512', type, purpose: 'any' }
+    ]
+  };
+
+  return URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' }));
+}
+
+function applyManifest(logoUrl) {
+  let link = document.querySelector(`link[rel="manifest"]#${MANIFEST_LINK_ID}`) || document.querySelector('link[rel="manifest"]');
+  if (!link) {
+    link = document.createElement('link');
+    link.rel = 'manifest';
+    document.head.appendChild(link);
+  }
+
+  const nextHref = buildManifestHref(logoUrl);
+  if (link.dataset.blobUrl) {
+    try { URL.revokeObjectURL(link.dataset.blobUrl); } catch {}
+  }
+  link.id = MANIFEST_LINK_ID;
+  link.href = nextHref;
+  link.dataset.blobUrl = nextHref;
+}
+
+function applyAppleTouchIcon(logoUrl) {
+  let link = document.querySelector(`link[rel="apple-touch-icon"]#${APPLE_TOUCH_ICON_ID}`) || document.querySelector('link[rel="apple-touch-icon"]');
+  if (!link) {
+    link = document.createElement('link');
+    link.rel = 'apple-touch-icon';
+    document.head.appendChild(link);
+  }
+
+  link.id = APPLE_TOUCH_ICON_ID;
+  link.sizes = '180x180';
+  link.href = logoUrl || './icon.svg';
+}
 
 function applyToExistingNodes(logoUrl) {
   const existing = document.querySelectorAll('#platform-logo, .platform-logo-dynamic');
@@ -22,7 +81,14 @@ function applyLogo(logoUrl) { applyToExistingNodes(logoUrl); }
 
 async function loadPlatformLogo() {
   const localLogo = localStorage.getItem(LOGO_KEY) || '';
-  if (localLogo) applyLogo(localLogo);
+  if (localLogo) {
+    applyLogo(localLogo);
+    applyManifest(localLogo);
+    applyAppleTouchIcon(localLogo);
+  } else {
+    applyManifest('./icon.svg');
+    applyAppleTouchIcon('./icon.svg');
+  }
 
   try {
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
@@ -32,6 +98,8 @@ async function loadPlatformLogo() {
     if (remoteLogo) {
       localStorage.setItem(LOGO_KEY, remoteLogo);
       applyLogo(remoteLogo);
+      applyManifest(remoteLogo);
+      applyAppleTouchIcon(remoteLogo);
       return;
     }
   } catch {}

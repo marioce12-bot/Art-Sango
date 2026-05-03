@@ -4,6 +4,16 @@ function hasNotificationSupport() {
   return typeof window !== 'undefined' && 'Notification' in window;
 }
 
+function isIOS() {
+  if (typeof navigator === 'undefined') return false;
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+function isStandalonePwa() {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+
 function toMs(value) {
   if (!value) return 0;
   if (typeof value.toDate === 'function') return value.toDate().getTime();
@@ -126,6 +136,10 @@ async function ensurePushSubscription({ db, currentUser, role = '' } = {}) {
 
 export async function requestNotificationPermission() {
   if (!hasNotificationSupport()) return false;
+  if (isIOS() && !isStandalonePwa()) {
+    console.warn('Les notifications iOS nécessitent une installation PWA sur l’écran d’accueil.');
+    return false;
+  }
   if (Notification.permission === 'granted') return true;
   if (Notification.permission !== 'denied') {
     const permission = await Notification.requestPermission();
@@ -141,6 +155,9 @@ export function showNotification(title, options = {}) {
     requireInteraction: true,
     ...options,
   };
+
+  payload.icon = payload.icon || './icon.svg';
+  payload.badge = payload.badge || './icon.svg';
 
   payload.tag = payload.tag || `artsango-${Date.now()}`;
   payload.data = {
@@ -173,6 +190,8 @@ export function notifyNewMessage(senderName, messageText, options = {}) {
     tag: options.tag || `message-${options.conversationId || Date.now()}`,
     url: options.url || 'messagerie.html',
     kind: 'message',
+    icon: options.icon || './icon.svg',
+    badge: options.badge || './icon.svg',
   });
 }
 
@@ -187,6 +206,8 @@ export function notifyNewOrder(details = {}) {
     tag: details.tag || `order-${details.orderId || Date.now()}`,
     url: details.url || 'commandes.html',
     kind: 'order',
+    icon: details.icon || './icon.svg',
+    badge: details.badge || './icon.svg',
   });
 }
 

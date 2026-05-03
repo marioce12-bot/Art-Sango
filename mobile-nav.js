@@ -8,7 +8,7 @@
   if (HIDE_ON.has(path)) return;
 
   function buildManifestHref(iconUrl) {
-    const fallbackIcon = 'https://cdn-icons-png.flaticon.com/512/599/599305.png';
+    const fallbackIcon = './icon.svg';
     const icon = iconUrl || fallbackIcon;
     const manifest = {
       name: 'ArtSango',

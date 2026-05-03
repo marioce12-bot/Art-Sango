@@ -1,5 +1,5 @@
 const CACHE_NAME = 'artsango-v3';
-const DEFAULT_NOTIFICATION_ICON = 'https://cdn-icons-png.flaticon.com/512/599/599305.png';
+const DEFAULT_NOTIFICATION_ICON = './icon.svg';
 const PRECACHE = [
   './',
   './index.html',
@@ -18,6 +18,7 @@ const PRECACHE = [
   './inscription-artisan.html',
   './mobile-nav.js',
   './platform-logo.js',
+  './icon.svg',
   './sw-register.js',
   './manifest.webmanifest',
   './messaging-service.js'
