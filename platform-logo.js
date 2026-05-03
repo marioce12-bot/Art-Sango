@@ -63,6 +63,24 @@ function applyAppleTouchIcon(logoUrl) {
   link.href = logoUrl || './icon.svg';
 }
 
+async function toDataUrl(src) {
+  if (!src) return '';
+  if (src.startsWith('data:')) return src;
+  try {
+    const response = await fetch(src, { mode: 'cors' });
+    if (!response.ok) return src;
+    const blob = await response.blob();
+    return await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || src));
+      reader.onerror = () => resolve(src);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return src;
+  }
+}
+
 function applyToExistingNodes(logoUrl) {
   const existing = document.querySelectorAll('#platform-logo, .platform-logo-dynamic');
   if (!existing.length) return;
@@ -83,10 +101,8 @@ async function loadPlatformLogo() {
   const localLogo = localStorage.getItem(LOGO_KEY) || '';
   if (localLogo) {
     applyLogo(localLogo);
-    applyManifest(localLogo);
     applyAppleTouchIcon(localLogo);
   } else {
-    applyManifest('./icon.svg');
     applyAppleTouchIcon('./icon.svg');
   }
 
@@ -98,13 +114,20 @@ async function loadPlatformLogo() {
     if (remoteLogo) {
       localStorage.setItem(LOGO_KEY, remoteLogo);
       applyLogo(remoteLogo);
-      applyManifest(remoteLogo);
       applyAppleTouchIcon(remoteLogo);
+      const manifestIcon = await toDataUrl(remoteLogo);
+      applyManifest(manifestIcon || remoteLogo);
       return;
     }
   } catch {}
 
-  if (!localLogo) applyLogo('');
+  if (localLogo) {
+    const manifestIcon = await toDataUrl(localLogo);
+    applyManifest(manifestIcon || localLogo);
+  } else {
+    applyManifest('./icon.svg');
+    applyLogo('');
+  }
 }
 
 if (document.readyState === 'loading') {
