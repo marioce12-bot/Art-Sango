@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Commande - ArtSango</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <style>
+    :root{ --bg:#f8f3ea; --card:#fff; --line:#e8dcc8; --brand:#0f766e; }
+    *{ box-sizing:border-box; }
+    body{ margin:0; font-family:"Inter",sans-serif; background:var(--bg); color:#111827; }
+    .wrap{ max-width:700px; margin:0 auto; padding:18px; padding-bottom:calc(18px + env(safe-area-inset-bottom)); }
+    .back-btn{ border:0; background:var(--brand); color:#fff; border-radius:999px; padding:10px 14px; font-weight:700; cursor:pointer; margin-bottom:16px; }
+    h1{ font-family:"Playfair Display",serif; margin:0 0 6px; }
+    .sub{ color:#6b7280; margin:0 0 20px; font-size:.9rem; }
+    .card{ background:#fff; border:1px solid var(--line); border-radius:14px; padding:22px; margin-bottom:14px; }
+    label{ display:block; font-size:.83rem; font-weight:600; margin-bottom:5px; color:#374151; }
+    input, textarea{ width:100%; padding:11px 13px; border:1.5px solid #c9bca7; border-radius:10px; font:inherit; font-size:.94rem; margin-bottom:14px; transition:border-color .15s; }
+    input:focus, textarea:focus{ outline:none; border-color:var(--brand); }
+    textarea{ min-height:80px; resize:vertical; }
+    .order-item{ display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #f3ede4; font-size:.92rem; }
+    .order-item:last-child{ border-bottom:0; }
+    .total-row{ display:flex; justify-content:space-between; font-weight:800; font-size:1.05rem; padding-top:12px; margin-top:4px; border-top:1px solid var(--line); }
+    .err{ color:#dc2626; font-size:.85rem; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:10px 12px; margin-bottom:14px; display:none; }
+    .success{ background:#f0fdf4; border:1px solid #86efac; border-radius:14px; padding:28px; text-align:center; display:none; }
+    .success h2{ color:#166534; font-family:"Playfair Display",serif; }
+    .btn{ display:block; text-align:center; border:0; border-radius:12px; padding:13px; font-weight:800; font-size:1rem; cursor:pointer; transition:opacity .15s; }
+    .btn:disabled{ opacity:.5; cursor:not-allowed; }
+    .btn-main{ background:var(--brand); color:#fff; }
+    a.btn-ghost{ text-decoration:none; background:transparent; border:2px solid #d1c4ae; color:#374151; margin-top:10px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <button class="back-btn" onclick="goBack('panier.html')">Retour</button>
+
+    <div id="form-section">
+      <h1>Finaliser la commande</h1>
+      <p class="sub">Aucun paiement en ligne — l'artisan te contacte pour confirmer.</p>
+
+      <div class="card">
+        <h3 style="margin:0 0 10px;">Récapitulatif</h3>
+        <div id="order-recap"></div>
+        <div class="total-row"><span>Total</span><span id="order-total">—</span></div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin:0 0 16px;">Tes coordonnées</h3>
+        <div class="err" id="err-msg"></div>
+        <label>Nom complet</label>
+        <input id="clientName" type="text" placeholder="Ton nom">
+        <label>WhatsApp</label>
+        <input id="clientPhone" type="tel" placeholder="+229 XX XX XX XX">
+        <label>Pays</label>
+        <input id="clientCountry" type="text" placeholder="Bénin">
+        <label>Ville</label>
+        <input id="clientCity" type="text" placeholder="Cotonou">
+        <label>Mode de réception</label>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px;">
+          <label style="display:flex;align-items:center;gap:6px;margin:0;font-weight:600;"><input type="radio" name="deliveryMode" value="livraison" checked style="width:auto;margin:0;"> Livraison</label>
+          <label style="display:flex;align-items:center;gap:6px;margin:0;font-weight:600;"><input type="radio" name="deliveryMode" value="retrait" style="width:auto;margin:0;"> Retrait boutique</label>
+        </div>
+        <label>Localisation (obligatoire si livraison)</label>
+        <input id="clientLocation" type="text" placeholder="Quartier, repère ou lien Google Maps">
+        <label>Message (optionnel)</label>
+        <textarea id="clientMessage" placeholder="Précisions sur ta commande…"></textarea>
+        <button class="btn btn-main" id="submit-btn" onclick="submitOrder()">Envoyer ma commande</button>
+      </div>
+    </div>
+
+    <div class="success" id="success-section">
+      <h2>Commande envoyée !</h2>
+      <p>L'artisan va te contacter très prochainement sur WhatsApp ou par téléphone pour confirmer.</p>
+      <a class="btn btn-ghost" href="marketplace.html">Continuer mes achats</a>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+  <script type="module">
+    import { initializeApp }          from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, collection, addDoc, serverTimestamp, doc, getDoc }
+      from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey:"AIzaSyAghL7HcGVTWur9ijJzjWXywTgvCaiJ01M",
+      authDomain:"art-sango.firebaseapp.com",
+      projectId:"art-sango",
+      storageBucket:"art-sango.firebasestorage.app",
+      messagingSenderId:"840868763552",
+      appId:"1:840868763552:web:b7cb1ac710d3b9968436c5"
+    };
+
+    const EMAILJS_SERVICE_ID  = 'service_f2dcr5x';
+    const EMAILJS_TEMPLATE_ID = 'template_y5vsooe';
+    const EMAILJS_PUBLIC_KEY  = 'XLD7E5T9f0z40q6F3';
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+    let pushService = null;
+
+    const pushServiceReady = import('./messaging-service.js').then((mod) => {
+      pushService = mod;
+      return mod;
+    }).catch(() => null);
+
+    // Init EmailJS dès que le SDK est prêt
+    window.addEventListener('load', () => {
+      if (window.emailjs) emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+    });
+
+    let currentClient = null;
+
+    const cart = JSON.parse(localStorage.getItem('artsango_cart') || '[]');
+    if (!cart.length) window.location.href = 'panier.html';
+
+    // Auth + pré-remplissage
+    onAuthStateChanged(auth, async user => {
+      if (!user) {
+        window.location.href = `connexion-client.html?next=${encodeURIComponent('checkout.html')}`;
+        return;
+      }
+
+      // Stocker l'email Firebase Auth comme fallback (toujours disponible)
+      const authEmail = user.email || '';
+
+      const artisanSnap = await getDoc(doc(db, 'artisans', user.uid));
+      if (artisanSnap.exists()) {
+        const a = artisanSnap.data();
+        currentClient = { uid: user.uid, role: 'artisan', authEmail, fullName: a.brandName || '', whatsappFull: a.phone || '', country: a.country || '', city: a.city || '' };
+      } else {
+        const clientSnap = await getDoc(doc(db, 'clients', user.uid));
+        if (!clientSnap.exists()) {
+          window.location.href = `connexion-client.html?next=${encodeURIComponent('checkout.html')}`;
+          return;
+        }
+        currentClient = { uid: user.uid, role: 'client', authEmail, ...clientSnap.data() };
+      }
+      if (currentClient.fullName)     document.getElementById('clientName').value    = currentClient.fullName;
+      if (currentClient.whatsappFull) document.getElementById('clientPhone').value   = currentClient.whatsappFull;
+      if (currentClient.country)      document.getElementById('clientCountry').value = currentClient.country;
+      if (currentClient.city)         document.getElementById('clientCity').value    = currentClient.city;
+    });
+
+    // Récap panier
+    document.getElementById('order-recap').innerHTML = cart.map((i, idx) => `
+      <div class="order-item">
+        <span>${i.name}</span>
+        <span>
+          <input type="number" min="1" value="1" id="qty-${idx}"
+            style="width:72px;padding:6px;border:1px solid #d8cab4;border-radius:8px;margin-right:8px;">
+          <strong>${(i.price||0).toLocaleString('fr-FR')} XOF</strong>
+        </span>
+      </div>`).join('');
+
+    function computeTotal() {
+      let total = 0;
+      cart.forEach((i, idx) => {
+        const qty = Math.max(1, parseInt(document.getElementById(`qty-${idx}`)?.value || '1', 10));
+        total += (i.price || 0) * qty;
+      });
+      document.getElementById('order-total').textContent = total.toLocaleString('fr-FR') + ' XOF';
+      return total;
+    }
+    computeTotal();
+    cart.forEach((_, idx) => document.getElementById(`qty-${idx}`)?.addEventListener('input', computeTotal));
+
+    // Résoudre l'email de l'artisan — cherche dans Firestore, puis Firebase Auth en fallback
+    async function resolveArtisanEmail(artisanId, artisanData) {
+      // 1. Champ email dans le document artisan
+      if (artisanData.email && artisanData.email.includes('@')) return artisanData.email;
+
+      // 2. Champ emailAddress ou mail (noms alternatifs courants)
+      if (artisanData.emailAddress && artisanData.emailAddress.includes('@')) return artisanData.emailAddress;
+      if (artisanData.mail && artisanData.mail.includes('@')) return artisanData.mail;
+
+      // 3. Pas d'email dans Firestore → on ne peut pas envoyer, on log discrètement
+      console.warn(`Artisan ${artisanId} : aucun email trouvé dans Firestore.`);
+      return null;
+    }
+
+    // Envoi email
+    async function sendEmail(toEmail, artisanName, orderCode, items, payload) {
+      if (!toEmail || !window.emailjs) return;
+      const productName = items.map(it => `${it.name} x${it.qty}`).join(', ');
+      try {
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+          to_email:         toEmail,
+          artisan_name:     artisanName     || 'Artisan',
+          order_id:         orderCode,
+          order_date:       new Date().toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' }),
+          product_name:     productName,
+          product_category: items[0]?.category || 'Artisanat',
+          amount:           (payload.montant || 0).toLocaleString('fr-FR'),
+          client_name:      payload.clientName,
+          client_phone:     payload.clientPhone,
+          delivery_mode:    payload.deliveryMode   || 'livraison',
+          client_location:  payload.clientLocation || '-',
+          maps_link:        payload.mapsLink       || '-',
+          message:          payload.clientMessage  || '-',
+        });
+        console.log('Email envoyé à', toEmail);
+      } catch (e) {
+        // On log l'erreur mais on ne bloque pas la commande
+        console.warn('Echec envoi email:', e?.text || e?.message || e);
+      }
+    }
+
+    window.submitOrder = async function () {
+      const errEl = document.getElementById('err-msg');
+      const btn   = document.getElementById('submit-btn');
+      errEl.style.display = 'none';
+
+      const clientName     = document.getElementById('clientName').value.trim();
+      const clientPhone    = document.getElementById('clientPhone').value.trim();
+      const clientCountry  = document.getElementById('clientCountry').value.trim();
+      const clientCity     = document.getElementById('clientCity').value.trim();
+      const clientLocation = document.getElementById('clientLocation').value.trim();
+      const deliveryMode   = document.querySelector('input[name="deliveryMode"]:checked')?.value || 'livraison';
+      const clientMessage  = document.getElementById('clientMessage').value.trim();
+
+      if (!clientName || !clientPhone || !clientCountry || !clientCity) {
+        errEl.textContent = 'Remplis nom, WhatsApp, pays et ville.';
+        errEl.style.display = 'block'; return;
+      }
+      if (!currentClient?.uid) {
+        errEl.textContent = 'Session non prête. Recharge la page puis réessaie.';
+        errEl.style.display = 'block'; return;
+      }
+      if (deliveryMode === 'livraison' && !clientLocation) {
+        errEl.textContent = 'La localisation est obligatoire pour la livraison.';
+        errEl.style.display = 'block'; return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Envoi en cours…';
+
+      // Regrouper par artisan
+      const byArtisan = {};
+      cart.forEach((i, idx) => {
+        const qty = Math.max(1, parseInt(document.getElementById(`qty-${idx}`)?.value || '1', 10));
+        const key = i.artisanId || 'unknown';
+        if (!byArtisan[key]) byArtisan[key] = [];
+        byArtisan[key].push({ ...i, qty, lineTotal: (i.price || 0) * qty });
+      });
+
+      try {
+        await pushServiceReady;
+
+        for (const [artisanId, items] of Object.entries(byArtisan)) {
+          const montant      = items.reduce((s, i) => s + i.lineTotal, 0);
+          const artisanSnap  = await getDoc(doc(db, 'artisans', artisanId));
+          const artisanData  = artisanSnap.exists() ? artisanSnap.data() : {};
+          const mapsLink     = deliveryMode === 'livraison' && clientLocation
+            ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(clientLocation)}` : '';
+
+          // Résoudre l'email avec fallback
+          const artisanEmail = await resolveArtisanEmail(artisanId, artisanData);
+
+          // Sauvegarder la commande dans Firestore
+          const orderRef = await addDoc(collection(db, 'commandes'), {
+            artisanId,
+            artisanName:    artisanData.brandName || '',
+            artisanEmail:   artisanEmail          || '',
+            items,
+            montant,
+            clientUid:      currentClient.uid,
+            clientRole:     currentClient.role    || 'client',
+            clientName,
+            clientPhone,
+            clientCountry,
+            clientCity,
+            clientLocation,
+            mapsLink,
+            deliveryMode,
+            clientMessage,
+            clientWhatsapp: clientPhone,
+            statut:         'en_attente',
+            createdAt:      serverTimestamp(),
+          });
+
+          // Envoyer l'email si on a un email — sinon on passe silencieusement
+          if (artisanEmail) {
+            await sendEmail(artisanEmail, artisanData.brandName, orderRef.id.substring(0,8).toUpperCase(), items, {
+              montant, clientName, clientPhone, clientCountry, clientCity,
+              clientLocation, mapsLink, deliveryMode, clientMessage
+            });
+          }
+
+          if (pushService?.sendPushToUser) {
+            const firstItem = items[0] || {};
+            await pushService.sendPushToUser({
+              db,
+              recipientUid: artisanId,
+              title: 'Nouvelle commande',
+              body: `${clientName || 'Un client'} a passé une commande${firstItem.name ? ` pour ${firstItem.name}` : ''}`,
+              url: `commandes.html?order=${encodeURIComponent(orderRef.id)}`,
+              kind: 'order',
+              data: { orderId: orderRef.id, artisanId, amount: montant },
+            }).catch(() => {});
+          }
+        }
+
+        // Succès — vider le panier et afficher la confirmation
+        localStorage.removeItem('artsango_cart');
+        document.getElementById('form-section').style.display    = 'none';
+        document.getElementById('success-section').style.display = 'block';
+
+      } catch (e) {
+        errEl.textContent = 'Erreur : ' + (e?.message || String(e));
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Envoyer ma commande';
+      }
+    };
+  </script>
+
+  <script>
+    function goBack(fallback) {
+      if (window.history.length > 1) window.history.back(); else window.location.href = fallback;
+    }
+  </script>
+  <script type="module" src="./platform-logo.js"></script>
+  <script defer src="./sw-register.js"></script>
+  <script defer src="./mobile-nav.js"></script>
+</body>
+</html>

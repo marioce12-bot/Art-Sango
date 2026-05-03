@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>ArtSango AI Studio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --charcoal:#11100e; --earth:#3b271d; --terracotta:#8b4a2e;
+      --burnt-orange:#bf6a3c; --gold:#cba56b; --sand:#d7c3a1;
+      --cream:#f3e7d4; --brand:#0f766e;
+      --glass:rgba(18,14,11,0.62); --glass-line:rgba(227,189,136,0.24);
+      --card-bg:rgba(18,14,11,0.52);
+    }
+    *{ box-sizing:border-box; }
+    body{ margin:0; font-family:"Inter",Verdana,sans-serif; color:var(--cream); min-height:100dvh; }
+    .page{ position:relative; min-height:100dvh; isolation:isolate; }
+    .photo-bg{
+      position:fixed; inset:0; z-index:-3;
+      background-image:
+        linear-gradient(112deg, rgba(9,7,6,0.88) 12%, rgba(30,19,14,0.72) 45%, rgba(9,8,7,0.9) 100%),
+        url("https://images.unsplash.com/photo-1600566752229-250ed79470f8?auto=format&fit=crop&w=1800&q=80");
+      background-size:cover; background-position:center;
+    }
+    .texture{
+      position:fixed; inset:0; z-index:-2; pointer-events:none;
+      background:
+        radial-gradient(700px 380px at 80% 20%, rgba(191,106,60,0.22), transparent 70%),
+        radial-gradient(500px 280px at 12% 90%, rgba(203,165,107,0.14), transparent 72%);
+    }
+    .wrap{ max-width:1140px; margin:0 auto; padding:18px; padding-bottom:calc(18px + env(safe-area-inset-bottom)); position:relative; z-index:1; }
+    .top{
+      display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
+      background:var(--glass); border:1px solid var(--glass-line);
+      backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+      border-radius:20px; padding:12px 16px; margin-bottom:16px;
+    }
+    .logo{ text-decoration:none; color:var(--cream); font-family:"Cormorant Garamond",serif; font-weight:700; font-size:1.3rem; display:inline-flex; align-items:center; gap:10px; }
+    .logo img{ width:38px; height:38px; border-radius:10px; object-fit:cover; border:1px solid rgba(255,255,255,.3); display:none; background:#fff; }
+    .back-btn{ border:0; border-radius:999px; padding:9px 14px; font-weight:700; cursor:pointer; background:rgba(255,255,255,.1); color:var(--cream); border:1px solid rgba(227,189,136,.3); }
+
+    .hero-title{ margin:0 0 6px; font-family:"Cormorant Garamond",serif; font-size:2rem; color:#ecfeff; }
+    .hero-sub{ margin:0; opacity:.9; font-size:.95rem; color:#99f6e4; }
+    .status-bar{
+      margin-top:12px; padding:8px 14px; border-radius:10px; font-size:.82rem; font-weight:600;
+      background:rgba(0,0,0,.35); border:1px solid var(--glass-line); display:flex; align-items:center; gap:8px;
+    }
+    .status-dot{ width:8px; height:8px; border-radius:50%; background:#6b7280; flex-shrink:0; transition:background .3s; }
+    .status-dot.ok{ background:#22c55e; }
+    .status-dot.err{ background:#ef4444; }
+
+    .chat-card{
+      margin-top:14px;
+      background:var(--card-bg);
+      border:1px solid var(--glass-line);
+      border-radius:16px;
+      padding:20px;
+      backdrop-filter:blur(12px);
+    }
+    .chat-title{ margin:0 0 10px; font-family:"Cormorant Garamond",serif; font-size:1.3rem; color:#f0fdfa; }
+
+    .chat-log{
+      border:1px solid rgba(203,165,107,0.28);
+      border-radius:12px;
+      background:rgba(0,0,0,0.24);
+      min-height:220px;
+      max-height:430px;
+      overflow:auto;
+      padding:10px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .msg{
+      border:1px solid rgba(203,165,107,0.28);
+      border-radius:10px;
+      padding:9px 10px;
+      white-space:pre-wrap;
+      line-height:1.5;
+      font-size:.9rem;
+    }
+    .msg.user{ align-self:flex-end; max-width:88%; background:rgba(15,118,110,0.2); border-color:rgba(99,210,199,0.35); }
+    .msg.ai{ align-self:flex-start; max-width:92%; background:rgba(255,255,255,0.06); color:#f3e7d4; }
+    .msg small{ display:block; opacity:.7; margin-top:6px; font-size:.72rem; }
+
+    .ai-image-wrap{ margin-top:8px; }
+    .ai-image{
+      width:100%;
+      max-width:360px;
+      border-radius:10px;
+      border:1px solid rgba(203,165,107,0.28);
+      display:block;
+    }
+
+    .editor-wrap{ margin-top:12px; }
+    .editor-label{ display:block; font-size:.82rem; font-weight:600; color:var(--sand); margin-bottom:6px; }
+    textarea{
+      width:100%; min-height:120px;
+      border:1.5px solid rgba(203,165,107,0.32); border-radius:10px;
+      padding:10px 12px; font:inherit; font-size:.93rem;
+      transition:border-color .15s; resize:vertical;
+      background:rgba(0,0,0,.32); color:var(--cream);
+    }
+    textarea::placeholder{ color:#9ca3af; }
+    textarea:focus{ outline:none; border-color:var(--brand); }
+
+    .tools-row{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; align-items:center; }
+    .upload-btn,
+    .clear-btn,
+    .copy-btn,
+    .send-btn{
+      border-radius:9px;
+      font-size:.84rem;
+      font-weight:700;
+      cursor:pointer;
+      padding:8px 12px;
+    }
+    .upload-btn{ border:1px solid rgba(99,210,199,0.35); background:rgba(255,255,255,0.08); color:#99f6e4; }
+    .clear-btn{ border:1px solid rgba(220,38,38,0.35); background:rgba(220,38,38,0.12); color:#fecaca; }
+    .copy-btn{ border:1px solid rgba(203,165,107,0.35); background:transparent; color:var(--sand); }
+    .send-btn{ border:0; background:linear-gradient(135deg,var(--gold),var(--burnt-orange)); color:#23120a; font-weight:800; margin-left:auto; }
+    .send-btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+    .preview-wrap{
+      margin-top:10px;
+      display:none;
+      border:1px solid rgba(203,165,107,0.28);
+      border-radius:12px;
+      background:rgba(0,0,0,.2);
+      padding:10px;
+    }
+    .preview-title{ margin:0 0 8px; color:var(--sand); font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; }
+    .preview-img{ width:100%; max-width:230px; display:block; border-radius:10px; border:1px solid rgba(203,165,107,0.28); }
+
+    @media (max-width:900px){
+      .chat-log{ max-height:360px; }
+      .send-btn{ width:100%; margin-left:0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="photo-bg" aria-hidden="true"></div>
+    <div class="texture" aria-hidden="true"></div>
+
+    <div class="wrap">
+      <header class="top">
+        <a class="logo" href="index.html">
+          <img class="platform-logo-dynamic" alt="Logo ArtSango">
+          <span>ArtSango</span>
+        </a>
+        <button class="back-btn" onclick="goBack('dashboard-artisan.html')">← Retour</button>
+      </header>
+
+      <section class="chat-card">
+        <h1 class="hero-title">ArtSango AI Studio</h1>
+        <p class="hero-sub">Chatbot unique pour générer des textes, améliorer un visuel importé et proposer une légende prête à publier.</p>
+        <div class="status-bar">
+          <span class="status-dot" id="statusDot"></span>
+          <span id="statusText">Vérification de la connexion IA…</span>
+        </div>
+        <h2 class="chat-title" style="margin-top:14px;">Assistant créatif</h2>
+        <div class="chat-log" id="chatLog">
+          <div class="msg ai">Décris ton besoin (texte, storytelling, bio, posts) ou importe une image pour demander une amélioration visuelle et un texte d'accompagnement.<small>ArtSango AI</small></div>
+        </div>
+
+        <div class="preview-wrap" id="previewWrap">
+          <p class="preview-title">Image importée</p>
+          <img class="preview-img" id="previewImg" alt="Aperçu import">
+        </div>
+
+        <div class="editor-wrap">
+          <label class="editor-label" for="chatInput">Ton message</label>
+          <textarea id="chatInput" placeholder="Ex: Améliore cette image de sac en raphia pour un rendu premium, puis donne-moi une légende Instagram + CTA WhatsApp."></textarea>
+
+          <div class="tools-row">
+            <input type="file" id="imageInput" accept="image/png,image/jpeg,image/webp" style="display:none;">
+            <button class="upload-btn" type="button" onclick="openImagePicker()">Importer une image</button>
+            <button class="clear-btn" type="button" onclick="clearImage()">Retirer l'image</button>
+            <button class="copy-btn" type="button" onclick="copyLastAiText()">Copier la dernière réponse</button>
+            <button class="send-btn" id="sendBtn" type="button" onclick="sendMessage()">Envoyer au chatbot</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const chatLog = document.getElementById('chatLog');
+    const chatInput = document.getElementById('chatInput');
+    const imageInput = document.getElementById('imageInput');
+    const previewWrap = document.getElementById('previewWrap');
+    const previewImg = document.getElementById('previewImg');
+    const sendBtn = document.getElementById('sendBtn');
+    let selectedImageDataUrl = '';
+
+    async function checkStatus() {
+      const dot = document.getElementById('statusDot');
+      const txt = document.getElementById('statusText');
+      try {
+        const r = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: 'ping' }),
+        });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        dot.className = 'status-dot ok';
+        txt.textContent = 'IA connectée — prête à discuter';
+      } catch (e) {
+        dot.className = 'status-dot err';
+        txt.textContent = `IA indisponible (${e.message}) — vérifie le serveur`;
+      }
+    }
+    checkStatus();
+
+    function goBack(fallback) {
+      if (window.history.length > 1) window.history.back();
+      else window.location.href = fallback;
+    }
+
+    function appendMessage(role, text, imageUrl) {
+      const msg = document.createElement('div');
+      msg.className = `msg ${role}`;
+      msg.textContent = text || '';
+
+      if (imageUrl) {
+        const wrap = document.createElement('div');
+        wrap.className = 'ai-image-wrap';
+        const img = document.createElement('img');
+        img.className = 'ai-image';
+        img.src = imageUrl;
+        img.alt = 'Image générée ou améliorée';
+        wrap.appendChild(img);
+        msg.appendChild(wrap);
+      }
+
+      const meta = document.createElement('small');
+      meta.textContent = role === 'user' ? 'Toi' : 'ArtSango AI';
+      msg.appendChild(meta);
+
+      chatLog.appendChild(msg);
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    function openImagePicker() {
+      imageInput.click();
+    }
+
+    function clearImage() {
+      selectedImageDataUrl = '';
+      imageInput.value = '';
+      previewImg.removeAttribute('src');
+      previewWrap.style.display = 'none';
+    }
+
+    imageInput.addEventListener('change', (event) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      const max = 8 * 1024 * 1024;
+      if (file.size > max) {
+        alert('Image trop lourde (max 8 Mo).');
+        event.target.value = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        selectedImageDataUrl = String(reader.result || '');
+        if (!selectedImageDataUrl.startsWith('data:image/')) {
+          alert('Format image invalide.');
+          clearImage();
+          return;
+        }
+        previewImg.src = selectedImageDataUrl;
+        previewWrap.style.display = 'block';
+      };
+      reader.onerror = () => {
+        alert('Impossible de lire cette image.');
+        clearImage();
+      };
+      reader.readAsDataURL(file);
+    });
+
+    async function sendMessage() {
+      const prompt = chatInput.value.trim();
+      if (!prompt && !selectedImageDataUrl) {
+        alert('Écris un message ou importe une image.');
+        return;
+      }
+
+      appendMessage('user', prompt || '[Image importée]');
+      sendBtn.disabled = true;
+      sendBtn.textContent = 'Traitement…';
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt,
+            imageDataUrl: selectedImageDataUrl || '',
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+
+        appendMessage('ai', data.reply || '', data.imageUrl || '');
+        localStorage.setItem('artsango_last_ai_output', JSON.stringify({
+          text: data.reply || '',
+          imageUrl: data.imageUrl || '',
+          mode: data.mode || 'text_chat',
+          at: Date.now(),
+        }));
+
+        chatInput.value = '';
+        clearImage();
+      } catch (e) {
+        appendMessage('ai', `Erreur: ${e.message}`);
+      } finally {
+        sendBtn.disabled = false;
+        sendBtn.textContent = 'Envoyer au chatbot';
+      }
+    }
+
+    chatInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault();
+        sendMessage();
+      }
+    });
+
+    function copyLastAiText() {
+      const messages = Array.from(chatLog.querySelectorAll('.msg.ai'));
+      if (!messages.length) {
+        alert('Aucune réponse IA à copier.');
+        return;
+      }
+      const last = messages[messages.length - 1].firstChild?.textContent || messages[messages.length - 1].textContent || '';
+      navigator.clipboard.writeText(last.trim()).then(() => {
+        alert('Dernière réponse copiée.');
+      }).catch(() => {
+        alert('Copie impossible.');
+      });
+    }
+  </script>
+  <script type="module" src="./platform-logo.js"></script>
+  <script defer src="./sw-register.js"></script>
+  <script defer src="./mobile-nav.js"></script>
+</body>
+</html>

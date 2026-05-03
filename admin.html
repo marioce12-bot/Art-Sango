@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Admin - ArtSango</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <style>
+    :root{ --bg:#efe7d9; --brand:#0f766e; }
+    *{ box-sizing:border-box; }
+    body{ margin:0; font-family:"Inter",Verdana,sans-serif; background:var(--bg); color:#111827; }
+    .wrap{ max-width:980px; margin:0 auto; padding:20px; padding-bottom:calc(20px + env(safe-area-inset-bottom)); }
+    .top{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:18px; }
+    .back-btn{ border:0; background:var(--brand); color:#fff; border-radius:999px; padding:10px 14px; font-weight:700; cursor:pointer; }
+    h1{ margin:0; font-family:"Playfair Display",serif; }
+    .stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:18px; }
+    .stat-card{ background:#fff; border:1px solid #e0d2be; border-radius:12px; padding:14px; }
+    .stat-label{ font-size:.78rem; color:#6b7280; text-transform:uppercase; font-weight:700; }
+    .stat-val{ font-size:1.7rem; font-weight:900; margin-top:4px; }
+    .section-title{ font-family:"Playfair Display",serif; margin:0 0 10px; }
+    .card{ background:#fff; border:1px solid #e0d2be; border-radius:12px; padding:14px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .tag{ font-size:.75rem; font-weight:700; padding:5px 9px; border-radius:999px; background:#fef3c7; color:#92400e; }
+    .tag.ok{ background:#dcfce7; color:#166534; }
+    .btn-action{ border:0; background:var(--brand); color:#fff; font-weight:700; border-radius:8px; padding:8px 12px; cursor:pointer; font-size:.88rem; }
+    .loading{ text-align:center; padding:30px; color:#9ca3af; }
+    .gate{ background:#fff; border:1px solid #e0d2be; border-radius:12px; padding:20px; margin-bottom:14px; }
+    .gate input{ width:100%; border:1.5px solid #d2c3ad; border-radius:9px; padding:9px 10px; font:inherit; margin-top:8px; }
+    .gate .row{ display:grid; grid-template-columns:1fr auto; gap:8px; margin-top:8px; }
+    .mini{ font-size:.85rem; color:#6b7280; margin:0; }
+    @media (max-width:700px){ .card{ flex-direction:column; align-items:flex-start; } .stats{ grid-template-columns:1fr 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <button class="back-btn" onclick="goBack('dashboard-artisan.html')">← Retour</button>
+      <h1>Backoffice ArtSango</h1>
+    </div>
+
+    <!-- Gate simplifié : mot de passe uniquement -->
+    <div class="gate" id="admin-gate">
+      <h2 class="section-title" style="margin-top:0;">Accès admin</h2>
+      <p class="mini">Saisis le mot de passe admin pour accéder au backoffice.</p>
+      <div class="row">
+        <input id="admin-password-input" type="password" placeholder="Mot de passe admin" onkeydown="if(event.key==='Enter') unlockAdmin()">
+        <button class="btn-action" onclick="unlockAdmin()">Entrer</button>
+      </div>
+      <p class="mini" id="gate-msg" style="color:#dc2626;margin-top:8px;"></p>
+    </div>
+
+    <div id="admin-panel" style="display:none;">
+
+      <!-- Changer mot de passe -->
+      <div class="gate">
+        <h2 class="section-title" style="margin-top:0;">Sécurité admin</h2>
+        <p class="mini">Changer le mot de passe admin (sauvegardé sur Firestore).</p>
+        <div class="row">
+          <input id="new-admin-pass" type="text" placeholder="Nouveau mot de passe admin">
+          <button class="btn-action" onclick="changeAdminPassword()">Changer</button>
+        </div>
+      </div>
+
+      <!-- Logo plateforme -->
+      <div class="gate">
+        <h2 class="section-title" style="margin-top:0;">Logo plateforme</h2>
+        <p class="mini">Importe un logo JPEG/PNG/WEBP/SVG.</p>
+        <input id="logo-file" type="file" accept="image/jpeg,image/png,image/webp,image/svg+xml" style="margin-top:8px;">
+        <button class="btn-action" style="margin-top:8px;" id="save-logo-btn" onclick="savePlatformLogo()">Mettre à jour le logo</button>
+      </div>
+
+      <!-- Stats globales -->
+      <div class="stats">
+        <div class="stat-card"><div class="stat-label">Artisans inscrits</div><div class="stat-val" id="total-artisans">—</div></div>
+        <div class="stat-card"><div class="stat-label">Produits publiés</div><div class="stat-val" id="total-products">—</div></div>
+        <div class="stat-card"><div class="stat-label">Commandes totales</div><div class="stat-val" id="total-orders">—</div></div>
+      </div>
+
+      <!-- Artisans à valider -->
+      <h2 class="section-title">Artisans à vérifier</h2>
+      <div id="artisans-list" class="loading">Chargement…</div>
+
+      <!-- Signalements -->
+      <h2 class="section-title" style="margin-top:20px;">Signalements</h2>
+      <article class="card">
+        <div><strong>Modération</strong><p style="margin:4px 0 0;font-size:.9rem;color:#6b7280;">Section prête pour les futurs signalements.</p></div>
+        <div><span class="tag">À connecter</span></div>
+      </article>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp }                                           from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged }          from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, collection, getDocs, doc, updateDoc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey:            "AIzaSyAghL7HcGVTWur9ijJzjWXywTgvCaiJ01M",
+      authDomain:        "art-sango.firebaseapp.com",
+      projectId:         "art-sango",
+      storageBucket:     "art-sango.firebasestorage.app",
+      messagingSenderId: "840868763552",
+      appId:             "1:840868763552:web:b7cb1ac710d3b9968436c5"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+    const IMGBB_API_KEY = "af6d7113f6f4673b0ab9084960da124e";
+
+    // Mot de passe par défaut
+    let currentAdminPassword = '^artsango-admin';
+
+    const ADMIN_REQUESTED = window.location.search.includes('admin=1') || window.location.hash === '#admin';
+    if (ADMIN_REQUESTED) sessionStorage.setItem('artsango_admin_entry', '1');
+    const hasAdminEntry = ADMIN_REQUESTED || sessionStorage.getItem('artsango_admin_entry') === '1';
+    if (!hasAdminEntry) {
+      document.body.innerHTML = '<div style="font-family:Inter,Arial,sans-serif;padding:28px;text-align:center;"><h2>Accès refusé</h2><p>Lien admin invalide.</p></div>';
+      throw new Error('Lien admin invalide');
+    }
+
+    // Charger le mot de passe depuis Firestore (lecture anonyme autorisée)
+    async function loadAdminPassword() {
+      try {
+        const secRef = doc(db, 'platform', 'security');
+        const snap = await getDoc(secRef);
+        if (snap.exists() && snap.data().adminPassword) {
+          currentAdminPassword = snap.data().adminPassword;
+        }
+      } catch {}
+      // fallback localStorage
+      const local = localStorage.getItem('artsango_admin_password');
+      if (local) currentAdminPassword = local;
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function uploadToImgBB(file) {
+      const base64 = await fileToBase64(file);
+      const formData = new FormData();
+      formData.append('image', String(base64).split(',')[1]);
+      const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
+      const json = await res.json();
+      if (json.success && json.data?.url) return json.data.url;
+      throw new Error(json?.error?.message || 'Upload ImgBB échoué');
+    }
+
+    async function loadDashboardData() {
+      try {
+        const artisansSnap  = await getDocs(collection(db, 'artisans'));
+        const productsSnap  = await getDocs(collection(db, 'produits'));
+        let ordersCount = 0;
+        try {
+          const ordersSnap = await getDocs(collection(db, 'commandes'));
+          ordersCount = ordersSnap.size;
+        } catch {}
+
+        document.getElementById('total-artisans').textContent = artisansSnap.size;
+        document.getElementById('total-products').textContent = productsSnap.size;
+        document.getElementById('total-orders').textContent   = ordersCount;
+
+        const unverified = artisansSnap.docs.filter(d => !d.data().verified).map(d => ({ id: d.id, ...d.data() }));
+        const list = document.getElementById('artisans-list');
+        if (!unverified.length) {
+          list.innerHTML = '<p style="color:#6b7280;font-size:.9rem;">Aucun artisan en attente de vérification.</p>';
+          return;
+        }
+        list.innerHTML = unverified.map(a => `
+          <article class="card">
+            <div>
+              <strong>${a.brandName || a.email}</strong>
+              <p style="margin:4px 0 0;font-size:.87rem;color:#6b7280;">${a.category || ''} · ${a.city || ''} · ${a.email || ''}</p>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span class="tag">À valider</span>
+              <button class="btn-action" onclick="verifyArtisan('${a.id}', this)">Valider ✓</button>
+            </div>
+          </article>`).join('');
+      } catch (e) {
+        document.getElementById('artisans-list').innerHTML = '<p style="color:#dc2626;">Erreur : ' + e.message + '</p>';
+      }
+    }
+
+    // Connexion Firebase anonyme pour les opérations d'écriture admin
+    async function ensureAuth() {
+      if (auth.currentUser) return auth.currentUser;
+      try {
+        const cred = await signInAnonymously(auth);
+        return cred.user;
+      } catch {
+        return null;
+      }
+    }
+
+    await loadAdminPassword();
+
+    window.unlockAdmin = async function() {
+      const pass = document.getElementById('admin-password-input').value;
+      if (pass !== currentAdminPassword) {
+        document.getElementById('gate-msg').textContent = 'Mot de passe incorrect.';
+        return;
+      }
+      document.getElementById('admin-gate').style.display = 'none';
+      document.getElementById('admin-panel').style.display = 'block';
+      await loadDashboardData();
+    };
+
+    window.changeAdminPassword = async function() {
+      const nextPass = document.getElementById('new-admin-pass').value.trim();
+      if (!nextPass) return;
+      try {
+        await ensureAuth();
+        await setDoc(doc(db, 'platform', 'security'), { adminPassword: nextPass }, { merge: true });
+        currentAdminPassword = nextPass;
+        localStorage.setItem('artsango_admin_password', nextPass);
+        alert('✅ Mot de passe admin mis à jour.');
+      } catch (e) {
+        alert('Erreur : ' + e.message);
+      }
+    };
+
+    window.savePlatformLogo = async function() {
+      const file = document.getElementById('logo-file').files[0];
+      const btn = document.getElementById('save-logo-btn');
+      if (!file) return;
+      btn.disabled = true;
+      btn.textContent = 'Upload...';
+      try {
+        const logoUrl = await uploadToImgBB(file);
+        await ensureAuth();
+        await setDoc(doc(db, 'platform', 'branding'), {
+          logoUrl,
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+        localStorage.setItem('artsango_platform_logo', logoUrl);
+        alert('✅ Logo mis à jour.');
+      } catch (e) {
+        alert('Erreur logo: ' + e.message);
+      }
+      btn.disabled = false;
+      btn.textContent = 'Mettre à jour le logo';
+    };
+
+    window.verifyArtisan = async function(uid, btn) {
+      btn.disabled = true;
+      btn.textContent = '…';
+      try {
+        await ensureAuth();
+        await updateDoc(doc(db, 'artisans', uid), { verified: true });
+        btn.closest('.card').querySelector('.tag').textContent = '✓ Vérifié';
+        btn.closest('.card').querySelector('.tag').classList.add('ok');
+        btn.remove();
+      } catch (e) {
+        const isPermission = String(e.message || '').toLowerCase().includes('permission') || String(e.code || '').includes('permission');
+        alert(isPermission
+          ? 'Permission refusée : mets à jour les règles Firestore pour autoriser la validation admin des artisans.'
+          : 'Erreur validation artisan: ' + e.message);
+        btn.disabled = false;
+        btn.textContent = 'Valider ✓';
+      }
+    };
+  </script>
+  <script>
+    function goBack(fallback) {
+      if (window.history.length > 1) window.history.back(); else window.location.href = fallback;
+    }
+  </script>
+  <script type="module" src="./platform-logo.js"></script>
+</body>
+</html>

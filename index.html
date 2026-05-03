@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>ArtSango — Artisanat africain authentique</title>
+  <meta name="description" content="Découvrez l'artisanat africain authentique avec ArtSango.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@0,400;0,600;0,700;1,400&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --charcoal: #0e0c0a;
+      --earth: #2a1a10;
+      --terracotta: #8b4a2e;
+      --burnt: #bf6a3c;
+      --gold: #c9a05a;
+      --gold-light: #e8c880;
+      --sand: #d8c4a0;
+      --cream: #f4eadb;
+      --cream-soft: #f9f3ea;
+      --glass: rgba(14,12,10,0.65);
+      --glass-border: rgba(201,160,90,0.18);
+      --section-bg: rgba(18,12,8,0.72);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        transition-duration: 0.001ms !important;
+      }
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Source Sans 3", sans-serif;
+      background: var(--charcoal);
+      color: var(--cream);
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    /* ── Background ── */
+    #bg-canvas {
+      position: fixed; inset: 0; z-index: -2;
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+    .glow {
+      position: fixed; inset: 0; z-index: -1; pointer-events: none;
+      background:
+        radial-gradient(700px 400px at 65% 15%, rgba(191,106,60,0.18), transparent 65%),
+        radial-gradient(500px 300px at 10% 85%, rgba(201,160,90,0.12), transparent 65%),
+        linear-gradient(180deg, rgba(8,6,4,0.1) 0%, rgba(8,6,4,0.45) 100%);
+    }
+
+    /* ── Topbar ── */
+    .topbar {
+      position: fixed;
+      top: calc(14px + env(safe-area-inset-top));
+      left: 50%; transform: translateX(-50%);
+      width: min(1200px, calc(100% - 32px));
+      z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 22px;
+      background: rgba(12,9,6,0.42);
+      border: 1px solid rgba(201,160,90,0.14);
+      border-radius: 18px;
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      transition: background 0.3s;
+    }
+    .logo {
+      font-family: "Bodoni Moda", Georgia, serif;
+      font-weight: 700; font-size: 1.55rem;
+      color: var(--cream); text-decoration: none;
+      letter-spacing: 0.3px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .logo img { width: 34px; height: 34px; border-radius: 8px; object-fit: cover; display: none; }
+
+    /* Desktop nav */
+    .nav { display: flex; align-items: center; gap: 4px; }
+    .nav a {
+      font-size: .92rem; font-weight: 500; color: #d4c0a8;
+      text-decoration: none; padding: 9px 15px; border-radius: 10px;
+      transition: background .15s, color .15s;
+      white-space: nowrap;
+    }
+    .nav a:hover { background: rgba(255,255,255,0.07); color: var(--cream); }
+    .nav .btn-primary {
+      background: linear-gradient(135deg, var(--gold-light), var(--burnt));
+      color: #1a0d06; font-weight: 700;
+      padding: 10px 20px; border-radius: 10px; font-size: .92rem;
+    }
+    .nav .btn-primary:hover { opacity: .9; }
+
+    /* Burger (mobile) */
+    .burger {
+      display: none;
+      background: none; border: 1.5px solid rgba(201,160,90,0.35);
+      border-radius: 9px; padding: 8px 11px; cursor: pointer; color: var(--cream);
+      font-size: 1.1rem; line-height: 1;
+      flex-direction: column; gap: 5px; align-items: center; justify-content: center;
+    }
+    .burger span { display: block; width: 20px; height: 1.5px; background: var(--cream); transition: .22s; border-radius: 2px; }
+    .burger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+    .burger.open span:nth-child(2) { opacity: 0; }
+    .burger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+    .mobile-menu {
+      display: none;
+      position: fixed;
+      top: calc(78px + env(safe-area-inset-top));
+      left: 50%; transform: translateX(-50%);
+      width: min(1200px, calc(100% - 32px));
+      z-index: 99;
+      background: rgba(10,7,5,0.97);
+      border: 1px solid rgba(201,160,90,0.16);
+      border-radius: 16px;
+      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+      padding: 18px;
+      flex-direction: column; gap: 6px;
+    }
+    .mobile-menu.open { display: flex; }
+    .mobile-menu a {
+      text-decoration: none; color: #d4c0a8; font-size: 1rem;
+      font-weight: 500; padding: 13px 18px; border-radius: 11px;
+      transition: background .15s;
+    }
+    .mobile-menu a:hover { background: rgba(255,255,255,0.06); color: var(--cream); }
+    .mobile-menu .btn-primary {
+      background: linear-gradient(135deg, var(--gold-light), var(--burnt));
+      color: #1a0d06; font-weight: 700; text-align: center;
+      padding: 14px 18px; border-radius: 11px; margin-top: 6px;
+      font-size: 1rem;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      min-height: 100dvh;
+      display: flex; align-items: center;
+      padding: calc(110px + env(safe-area-inset-top)) 16px 60px;
+    }
+    .shell { width: min(1200px, 100%); margin: 0 auto; }
+
+    .hero-card {
+      width: 100%;
+      max-width: 100%;
+      margin-left: 0;
+      background: linear-gradient(150deg, rgba(16,10,6,0.92) 0%, rgba(26,16,10,0.88) 100%);
+      border: 1px solid rgba(201,160,90,0.30);
+      border-radius: 24px;
+      padding: clamp(36px, 5vw, 64px) clamp(32px, 6vw, 72px);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    }
+    .eyebrow {
+      display: inline-block;
+      font-size: .78rem; font-weight: 600; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--gold);
+      border: 1px solid rgba(201,160,90,0.35);
+      border-radius: 999px; padding: 5px 14px;
+      margin-bottom: 24px;
+    }
+    .hero h1 {
+      font-family: "Bodoni Moda", Georgia, serif;
+      font-size: clamp(3rem, 7vw, 4.6rem);
+      line-height: 1.06; font-weight: 700;
+      color: #faf3e8; margin-bottom: 20px;
+      letter-spacing: -0.015em;
+    }
+    .hero h1 em {
+      font-style: italic; color: var(--gold-light);
+    }
+    .hero p {
+      font-size: clamp(1rem, 2vw, 1.08rem);
+      line-height: 1.75; color: #c8af90; margin-bottom: 36px;
+      max-width: 460px;
+    }
+
+    /* CTA hiérarchie */
+    .hero-actions {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+    }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      text-decoration: none; font-weight: 600; font-size: .95rem;
+      padding: 14px 26px; border-radius: 12px; border: none;
+      cursor: pointer; transition: opacity .15s, transform .18s;
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn:active { transform: translateY(0); }
+    .btn-gold {
+      background: linear-gradient(135deg, var(--gold-light), var(--burnt));
+      color: #1a0d06; font-weight: 700;
+      box-shadow: 0 8px 32px rgba(201,120,40,0.3);
+      font-size: 1rem;
+    }
+    .btn-ghost {
+      background: rgba(255,255,255,0.05);
+      color: #b09070; border: 1px solid rgba(201,160,90,0.22);
+      font-weight: 500; font-size: .88rem;
+      padding: 12px 20px;
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,0.09); color: var(--cream); }
+    .btn-link {
+      background: none; color: #7a6040; border: none;
+      font-weight: 400; font-size: .88rem;
+      text-decoration: none; padding: 12px 6px;
+      transition: color .15s;
+    }
+    .btn-link:hover { color: #c0a070; transform: none; }
+
+    /* ── Sections communes ── */
+    .section { padding: 88px 16px; }
+    .section-inner { width: min(1200px, 100%); margin: 0 auto; }
+
+    .section-label {
+      font-size: .72rem; letter-spacing: .16em; text-transform: uppercase;
+      color: var(--gold); font-weight: 600; margin-bottom: 12px;
+    }
+    .section-title {
+      font-family: "Bodoni Moda", Georgia, serif;
+      font-size: clamp(2rem, 4vw, 2.9rem);
+      font-weight: 700; color: #faf3e8;
+      margin-bottom: 14px; line-height: 1.14;
+    }
+    .section-sub {
+      color: #a89070; font-size: 1rem; line-height: 1.78;
+      max-width: 540px; margin-bottom: 52px;
+    }
+
+    /* Divider */
+    .divider {
+      width: min(1200px, calc(100% - 32px));
+      margin: 0 auto;
+      height: 1px;
+      background: linear-gradient(to right, transparent, rgba(201,160,90,0.18), transparent);
+    }
+
+    /* ── Catégories ── */
+    .cats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 16px;
+    }
+    .cat-card {
+      background: rgba(20,13,8,0.65);
+      border: 1px solid rgba(201,160,90,0.14);
+      border-radius: 16px;
+      padding: 28px 20px 24px;
+      text-decoration: none; color: inherit;
+      display: flex; flex-direction: column; align-items: flex-start;
+      gap: 14px;
+      transition: border-color .2s, background .2s, transform .22s;
+      backdrop-filter: blur(6px);
+    }
+    .cat-card:hover {
+      border-color: rgba(201,160,90,0.42);
+      background: rgba(30,20,12,0.82);
+      transform: translateY(-4px);
+    }
+    .cat-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      background: linear-gradient(135deg, rgba(201,160,90,0.16), rgba(191,106,60,0.1));
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid rgba(201,160,90,0.2);
+    }
+    .cat-icon svg { width: 22px; height: 22px; stroke: var(--gold); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+    .cat-name {
+      font-family: "Bodoni Moda", serif; font-size: 1.1rem;
+      font-weight: 600; color: var(--cream);
+    }
+    .cat-count { font-size: .85rem; color: #887055; }
+
+    /* ── Artisans vedette ── */
+    .artisans-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+    }
+    .artisan-card {
+      background: rgba(20,13,8,0.65);
+      border: 1px solid rgba(201,160,90,0.13);
+      border-radius: 18px;
+      padding: 28px 24px;
+      display: flex; flex-direction: column; gap: 20px;
+      transition: border-color .2s, transform .22s;
+      backdrop-filter: blur(6px);
+      text-decoration: none; color: inherit;
+    }
+    .artisan-card:hover { border-color: rgba(201,160,90,0.4); transform: translateY(-4px); }
+    .artisan-avatar {
+      width: 58px; height: 58px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--terracotta), var(--gold));
+      display: flex; align-items: center; justify-content: center;
+      font-family: "Bodoni Moda", serif; font-size: 1.4rem; color: #f9f3ea;
+      font-weight: 700; flex-shrink: 0;
+    }
+    .artisan-info { display: flex; flex-direction: column; gap: 4px; }
+    .artisan-name { font-family: "Bodoni Moda", serif; font-size: 1.15rem; font-weight: 600; color: var(--cream); }
+    .artisan-specialty { font-size: .9rem; color: #a08060; }
+    .artisan-location {
+      font-size: .85rem; color: #887055;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .artisan-meta { display: flex; gap: 22px; }
+    .artisan-stat { display: flex; flex-direction: column; gap: 2px; }
+    .artisan-stat-val { font-size: 1.1rem; font-weight: 600; color: var(--gold-light); }
+    .artisan-stat-label { font-size: .8rem; color: #7a6040; }
+
+    /* ── Pièces populaires ── */
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+    .product-card {
+      background: rgba(20,13,8,0.65);
+      border: 1px solid rgba(201,160,90,0.13);
+      border-radius: 18px;
+      overflow: hidden;
+      transition: border-color .2s, transform .22s;
+      backdrop-filter: blur(6px);
+      text-decoration: none; color: inherit;
+    }
+    .product-card:hover { border-color: rgba(201,160,90,0.4); transform: translateY(-4px); }
+
+    .product-img {
+      width: 100%; aspect-ratio: 4/3;
+      position: relative; overflow: hidden;
+    }
+    .product-img-inner {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .product-monogram {
+      font-family: "Bodoni Moda", serif;
+      font-size: 3.8rem; font-weight: 700; font-style: italic;
+      line-height: 1;
+      opacity: 0.18;
+      user-select: none;
+    }
+    .product-img::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(180deg, transparent 40%, rgba(10,6,3,0.55) 100%);
+      z-index: 1;
+    }
+    .product-badge {
+      position: absolute; top: 12px; left: 12px; z-index: 2;
+      font-size: .72rem; font-weight: 600; letter-spacing: .07em;
+      text-transform: uppercase; color: #1a0d06;
+      background: var(--gold-light); border-radius: 999px;
+      padding: 3px 10px;
+    }
+
+    .p-terracotta { background: linear-gradient(140deg, #3d1e10 0%, #6b2e14 45%, #3d1e10 100%); }
+    .p-indigo     { background: linear-gradient(140deg, #0e1a2e 0%, #1c3050 45%, #0e1a2e 100%); }
+    .p-jade       { background: linear-gradient(140deg, #0d2218 0%, #1a3d2a 45%, #0d2218 100%); }
+    .p-sienna     { background: linear-gradient(140deg, #2e1b08 0%, #5c3410 45%, #2e1b08 100%); }
+
+    .product-photo {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover; display: block;
+      transition: transform .4s ease;
+    }
+    .product-card:hover .product-photo { transform: scale(1.06); }
+
+    .product-body { padding: 18px 20px 22px; }
+    .product-name {
+      font-family: "Bodoni Moda", serif; font-size: 1.05rem;
+      font-weight: 600; color: var(--cream); margin-bottom: 5px;
+    }
+    .product-artisan { font-size: .85rem; color: #887055; margin-bottom: 14px; }
+    .product-footer { display: flex; align-items: center; justify-content: space-between; }
+    .product-price { font-size: 1rem; font-weight: 600; color: var(--gold-light); }
+    .product-cta {
+      font-size: .82rem; font-weight: 600; color: var(--burnt);
+      border: 1px solid rgba(191,106,60,0.35); border-radius: 8px;
+      padding: 5px 12px; transition: background .15s;
+    }
+    .product-card:hover .product-cta { background: rgba(191,106,60,0.14); }
+
+    /* ── Avis clients ── */
+    .reviews-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .review-card {
+      background: rgba(20,13,8,0.65);
+      border: 1px solid rgba(201,160,90,0.13);
+      border-radius: 18px;
+      padding: 28px 24px;
+      display: flex; flex-direction: column; gap: 18px;
+      backdrop-filter: blur(6px);
+    }
+    .review-stars { display: flex; gap: 3px; }
+    .review-stars svg { width: 14px; height: 14px; fill: var(--gold); }
+    .review-text { font-size: 1rem; line-height: 1.78; color: #c0a880; font-style: italic; }
+    .review-author { display: flex; align-items: center; gap: 13px; margin-top: auto; }
+    .review-avatar {
+      width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-family: "Bodoni Moda", serif;
+      font-size: 1rem; font-weight: 700; color: #f9f3ea;
+    }
+    .review-name { font-size: .92rem; font-weight: 600; color: #d4bfa0; }
+    .review-date { font-size: .82rem; color: #7a6040; }
+
+    /* ── CTA final ── */
+    .cta-section { padding: 88px 16px; text-align: center; }
+    .cta-box {
+      background: linear-gradient(135deg, rgba(20,13,8,0.82), rgba(35,22,12,0.72));
+      border: 1px solid rgba(201,160,90,0.22);
+      border-radius: 26px;
+      padding: clamp(52px, 6vw, 76px) clamp(32px, 5vw, 68px);
+      max-width: 700px; margin: 0 auto;
+      backdrop-filter: blur(12px);
+    }
+    .cta-box h2 {
+      font-family: "Bodoni Moda", serif;
+      font-size: clamp(2.1rem, 4.5vw, 3rem); font-weight: 700;
+      color: #faf3e8; margin-bottom: 18px; line-height: 1.1;
+    }
+    .cta-box p { color: #a89070; font-size: 1rem; line-height: 1.78; margin-bottom: 36px; }
+    .cta-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+    /* ── FAQ ── */
+    .faq-section { padding: 60px 16px 88px; }
+    .faq-section h2 {
+      font-family: "Bodoni Moda", Georgia, serif;
+      font-size: clamp(1.9rem, 3.5vw, 2.6rem); font-weight: 700; color: #faf3e8;
+      margin-bottom: 8px;
+    }
+    .faq-sub { color: #887055; font-size: 1rem; margin-bottom: 36px; }
+    details {
+      border-radius: 13px; overflow: hidden;
+      border: 1px solid rgba(201,160,90,0.14);
+      margin-bottom: 10px;
+      background: rgba(16,10,6,0.55);
+      backdrop-filter: blur(6px);
+      transition: border-color .2s;
+    }
+    details:hover { border-color: rgba(201,160,90,0.3); }
+    details[open] { border-color: rgba(201,160,90,0.3); }
+    summary {
+      padding: 18px 22px; cursor: pointer;
+      font-weight: 600; font-size: 1rem; color: var(--cream);
+      list-style: none; display: flex; justify-content: space-between; align-items: center;
+      gap: 12px;
+    }
+    summary::-webkit-details-marker { display: none; }
+    .faq-icon {
+      width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+      border: 1px solid rgba(201,160,90,0.3);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--gold); font-size: .85rem; font-weight: 400;
+      transition: transform .22s, background .2s;
+    }
+    details[open] .faq-icon { transform: rotate(45deg); background: rgba(201,160,90,0.12); }
+    details p { padding: 0 22px 20px; color: #b89a72; font-size: .95rem; line-height: 1.8; }
+
+    /* ── Footer minimal ── */
+    footer {
+      padding: 36px 16px calc(36px + env(safe-area-inset-bottom));
+      border-top: 1px solid rgba(201,160,90,0.1);
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 14px;
+      width: min(1200px, calc(100% - 32px)); margin: 0 auto;
+    }
+    .footer-logo {
+      font-family: "Bodoni Moda", serif; font-size: 1.22rem;
+      color: var(--cream); font-weight: 700; text-decoration: none;
+    }
+    .footer-links { display: flex; gap: 26px; }
+    .footer-links a { font-size: .88rem; color: #7a6040; text-decoration: none; transition: color .15s; }
+    .footer-links a:hover { color: #c0a880; }
+    .footer-copy { font-size: .85rem; color: #5a4030; }
+
+    /* ── Responsive ── */
+    @media (max-width: 720px) {
+      .nav { display: none; }
+      .burger { display: flex; }
+      .hero { align-items: flex-start; padding-top: calc(120px + env(safe-area-inset-top)); }
+      .hero-card { margin-left: 0; max-width: 100%; }
+      .hero-actions { flex-direction: column; align-items: stretch; }
+      .btn-link { align-self: center; width: auto; text-align: center; }
+      .cats-grid { grid-template-columns: repeat(2, 1fr); }
+      footer { flex-direction: column; align-items: flex-start; }
+      .footer-links { flex-wrap: wrap; gap: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas" aria-hidden="true"></canvas>
+  <div class="glow" aria-hidden="true"></div>
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <a class="logo" href="index.html">
+      <img id="platform-logo" alt="Logo ArtSango">
+      <span>ArtSango</span>
+    </a>
+    <nav class="nav" id="nav-auth">
+      <a href="marketplace.html">Créations</a>
+      <a href="#categories">Catégories</a>
+      <a href="#faq">FAQ</a>
+      <a href="connexion.html">Se connecter</a>
+      <a class="btn-primary" href="inscription-artisan.html">Vendre mes créations</a>
+    </nav>
+    <button class="burger" id="burger-btn" aria-label="Menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </header>
+
+  <!-- Mobile menu -->
+  <nav class="mobile-menu" id="mobile-menu" aria-label="Navigation mobile">
+    <a href="marketplace.html">Créations</a>
+    <a href="#categories">Catégories</a>
+    <a href="#faq">FAQ</a>
+    <a href="connexion.html">Se connecter</a>
+    <a class="btn-primary" href="inscription-artisan.html">Vendre mes créations</a>
+  </nav>
+
+  <main>
+    <!-- ── Hero ── -->
+    <section class="hero">
+      <div class="shell">
+        <div class="hero-card">
+          <span class="eyebrow">Plateforme culturelle africaine</span>
+          <h1>L'artisanat africain,<br><em>sublimé.</em></h1>
+          <p>
+            Des ateliers d'Afrique à votre espace. Des pièces uniques, taillées à la main, portant l'âme de leurs créateurs.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-gold" href="marketplace.html">
+              Explorer les créations
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true"><path d="M2 7.5h11M8.5 3l4.5 4.5L8.5 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+            <a class="btn btn-ghost" href="inscription-artisan.html">Ouvrir ma boutique</a>
+            <a class="btn-link" href="connexion.html">Se connecter</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ── Catégories ── -->
+    <section class="section" id="categories">
+      <div class="section-inner">
+        <p class="section-label">Explorer par univers</p>
+        <h2 class="section-title">Toutes les catégories</h2>
+        <p class="section-sub">De la poterie aux textiles, chaque catégorie est une invitation à un savoir-faire ancestral.</p>
+        <div class="cats-grid">
+          <a class="cat-card" href="marketplace.html?cat=textile">
+            <div class="cat-icon">
+              <svg viewBox="0 0 24 24"><path d="M3 6c2-2 4-2 6 0s4 2 6 0 4-2 6 0M3 12c2-2 4-2 6 0s4 2 6 0 4-2 6 0M3 18c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/></svg>
+            </div>
+            <div>
+              <div class="cat-name">Textiles</div>
+              <div class="cat-count">124 créations</div>
+            </div>
+          </a>
+          <a class="cat-card" href="marketplace.html?cat=bijoux">
+            <div class="cat-icon">
+              <svg viewBox="0 0 24 24"><path d="M6 3h12l4 6-10 12L2 9l4-6zM2 9h20M12 3L8 9l4 12 4-12-4-6z"/></svg>
+            </div>
+            <div>
+              <div class="cat-name">Bijoux</div>
+              <div class="cat-count">87 créations</div>
+            </div>
+          </a>
+          <a class="cat-card" href="marketplace.html?cat=poterie">
+            <div class="cat-icon">
+              <svg viewBox="0 0 24 24"><path d="M8 3h8M7 3c-.5 2-1 5 0 8s3 5 5 5 4-2 5-5 .5-6 0-8M7 21h10M7 21c0-1.5 1-3 5-3s5 1.5 5 3"/></svg>
+            </div>
+            <div>
+              <div class="cat-name">Poterie</div>
+              <div class="cat-count">63 créations</div>
+            </div>
+          </a>
+          <a class="cat-card" href="marketplace.html?cat=bois">
+            <div class="cat-icon">
+              <svg viewBox="0 0 24 24"><path d="M3 17l4-4 3 3 7-7 4 4M3 20h18"/></svg>
+            </div>
+            <div>
+              <div class="cat-name">Sculptures</div>
+              <div class="cat-count">95 créations</div>
+            </div>
+          </a>
+          <a class="cat-card" href="marketplace.html?cat=peinture">
+            <div class="cat-icon">
+              <svg viewBox="0 0 24 24"><path d="M18 4l-4 4M14 8L4 18c-.5.5-.5 1.5 0 2l1 1c.5.5 1.5.5 2 0l10-10M18 4c1-1 3-1 3 1s-1 3-3 3l-4-4z"/></svg>
+            </div>
+            <div>
+              <div class="cat-name">Peintures</div>
+              <div class="cat-count">48 créations</div>
+            </div>
+          </a>
+          <a class="cat-card" href="marketplace.html?cat=vannerie">
+            <div class="cat-icon">
+              <svg viewBox="0 0 24 24"><ellipse cx="12" cy="10" rx="8" ry="4"/><path d="M4 10c0 4 3.6 7 8 7s8-3 8-7M8 7c0 5 1 8 4 8s4-3 4-8"/></svg>
+            </div>
+            <div>
+              <div class="cat-name">Vannerie</div>
+              <div class="cat-count">39 créations</div>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ── Artisans en vedette ── -->
+    <section class="section" id="artisans">
+      <div class="section-inner">
+        <p class="section-label">Talents du continent</p>
+        <h2 class="section-title">Artisans en vedette</h2>
+        <p class="section-sub">Ces créateurs passionnés portent l'héritage africain dans chacune de leurs pièces.</p>
+        <div class="artisans-grid">
+          <a class="artisan-card" href="marketplace.html">
+            <div style="display:flex;align-items:center;gap:15px;">
+              <div class="artisan-avatar">A</div>
+              <div class="artisan-info">
+                <div class="artisan-name">Ama Koffi</div>
+                <div class="artisan-specialty">Tissage kente & wax</div>
+                <div class="artisan-location">
+                  <svg width="10" height="12" viewBox="0 0 10 12" fill="none" stroke="currentColor" stroke-width=".9" stroke-linecap="round"><circle cx="5" cy="4.5" r="1.8"/><path d="M5 11C5 11 1.5 7.5 1.5 4.5a3.5 3.5 0 017 0C8.5 7.5 5 11 5 11z"/></svg>
+                  Accra, Ghana
+                </div>
+              </div>
+            </div>
+            <div class="artisan-meta">
+              <div class="artisan-stat"><div class="artisan-stat-val">34</div><div class="artisan-stat-label">créations</div></div>
+              <div class="artisan-stat"><div class="artisan-stat-val">4.9</div><div class="artisan-stat-label">note</div></div>
+              <div class="artisan-stat"><div class="artisan-stat-val">6 ans</div><div class="artisan-stat-label">sur ArtSango</div></div>
+            </div>
+          </a>
+          <a class="artisan-card" href="marketplace.html">
+            <div style="display:flex;align-items:center;gap:15px;">
+              <div class="artisan-avatar" style="background:linear-gradient(135deg,#5a3a1a,#c9a05a)">M</div>
+              <div class="artisan-info">
+                <div class="artisan-name">Moussa Diallo</div>
+                <div class="artisan-specialty">Bronze & sculpture bois</div>
+                <div class="artisan-location">
+                  <svg width="10" height="12" viewBox="0 0 10 12" fill="none" stroke="currentColor" stroke-width=".9" stroke-linecap="round"><circle cx="5" cy="4.5" r="1.8"/><path d="M5 11C5 11 1.5 7.5 1.5 4.5a3.5 3.5 0 017 0C8.5 7.5 5 11 5 11z"/></svg>
+                  Cotonou, Bénin
+                </div>
+              </div>
+            </div>
+            <div class="artisan-meta">
+              <div class="artisan-stat"><div class="artisan-stat-val">52</div><div class="artisan-stat-label">créations</div></div>
+              <div class="artisan-stat"><div class="artisan-stat-val">4.8</div><div class="artisan-stat-label">note</div></div>
+              <div class="artisan-stat"><div class="artisan-stat-val">4 ans</div><div class="artisan-stat-label">sur ArtSango</div></div>
+            </div>
+          </a>
+          <a class="artisan-card" href="marketplace.html">
+            <div style="display:flex;align-items:center;gap:15px;">
+              <div class="artisan-avatar" style="background:linear-gradient(135deg,#2a5a3a,#8ab05a)">F</div>
+              <div class="artisan-info">
+                <div class="artisan-name">Fatou Sow</div>
+                <div class="artisan-specialty">Bijoux argent & cuivre</div>
+                <div class="artisan-location">
+                  <svg width="10" height="12" viewBox="0 0 10 12" fill="none" stroke="currentColor" stroke-width=".9" stroke-linecap="round"><circle cx="5" cy="4.5" r="1.8"/><path d="M5 11C5 11 1.5 7.5 1.5 4.5a3.5 3.5 0 017 0C8.5 7.5 5 11 5 11z"/></svg>
+                  Dakar, Sénégal
+                </div>
+              </div>
+            </div>
+            <div class="artisan-meta">
+              <div class="artisan-stat"><div class="artisan-stat-val">28</div><div class="artisan-stat-label">créations</div></div>
+              <div class="artisan-stat"><div class="artisan-stat-val">5.0</div><div class="artisan-stat-label">note</div></div>
+              <div class="artisan-stat"><div class="artisan-stat-val">2 ans</div><div class="artisan-stat-label">sur ArtSango</div></div>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ── Pièces populaires ── -->
+    <section class="section" id="populaires">
+      <div class="section-inner">
+        <p class="section-label">Coups de cœur</p>
+        <h2 class="section-title">Pièces populaires</h2>
+        <p class="section-sub">Les créations qui font battre le cœur de notre communauté cette semaine.</p>
+        <div class="products-grid">
+
+          <!-- Vase terre cuite -->
+          <a class="product-card" href="marketplace.html">
+            <div class="product-img p-terracotta">
+              <img class="product-photo"
+                src="https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=600&q=80&auto=format&fit=crop"
+                alt="Vase Yoruba en terre cuite"
+                loading="lazy"
+                onerror="this.style.display='none'">
+              <span class="product-badge">Nouveau</span>
+            </div>
+            <div class="product-body">
+              <div class="product-name">Vase Yoruba en terre cuite</div>
+              <div class="product-artisan">par Moussa Diallo</div>
+              <div class="product-footer">
+                <div class="product-price">28 000 XOF</div>
+                <div class="product-cta">Voir</div>
+              </div>
+            </div>
+          </a>
+
+          <!-- Écharpe wax indigo -->
+          <a class="product-card" href="marketplace.html">
+            <div class="product-img p-indigo">
+              <img class="product-photo"
+                src="https://images.unsplash.com/photo-1589987607627-616cca3f4200?w=600&q=80&auto=format&fit=crop"
+                alt="Écharpe wax indigo"
+                loading="lazy"
+                onerror="this.style.display='none'">
+            </div>
+            <div class="product-body">
+              <div class="product-name">Écharpe wax indigo</div>
+              <div class="product-artisan">par Ama Koffi</div>
+              <div class="product-footer">
+                <div class="product-price">15 500 XOF</div>
+                <div class="product-cta">Voir</div>
+              </div>
+            </div>
+          </a>
+
+          <!-- Collier perles -->
+          <a class="product-card" href="marketplace.html">
+            <div class="product-img p-jade">
+              <img class="product-photo"
+                src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600&q=80&auto=format&fit=crop"
+                alt="Collier perles de verre"
+                loading="lazy"
+                onerror="this.style.display='none'">
+              <span class="product-badge">Populaire</span>
+            </div>
+            <div class="product-body">
+              <div class="product-name">Collier perles de verre</div>
+              <div class="product-artisan">par Fatou Sow</div>
+              <div class="product-footer">
+                <div class="product-price">9 800 XOF</div>
+                <div class="product-cta">Voir</div>
+              </div>
+            </div>
+          </a>
+
+          <!-- Masque Baoulé sculpté -->
+          <a class="product-card" href="marketplace.html">
+            <div class="product-img p-sienna">
+              <img class="product-photo"
+                src="https://images.unsplash.com/photo-1604147706283-d7119b5b822c?w=600&q=80&auto=format&fit=crop"
+                alt="Masque Baoulé sculpté"
+                loading="lazy"
+                onerror="this.style.display='none'">
+            </div>
+            <div class="product-body">
+              <div class="product-name">Masque Baoulé sculpté</div>
+              <div class="product-artisan">par Kofi Asante</div>
+              <div class="product-footer">
+                <div class="product-price">44 000 XOF</div>
+                <div class="product-cta">Voir</div>
+              </div>
+            </div>
+          </a>
+
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ── Avis clients ── -->
+    <section class="section" id="avis">
+      <div class="section-inner">
+        <p class="section-label">Ce qu'ils disent</p>
+        <h2 class="section-title">Avis clients</h2>
+        <p class="section-sub">Des milliers d'acheteurs font confiance à ArtSango pour trouver des pièces authentiques.</p>
+        <div class="reviews-grid">
+          <div class="review-card">
+            <div class="review-stars" aria-label="5 étoiles">
+              <svg viewBox="0 0 14 14"><path d="M7 1l1.5 4h4l-3.3 2.4 1.3 4L7 9 3.5 11.4l1.3-4L1.5 5h4z"/></svg>
+              <svg viewBox="0 0 14 14"><path d="M7 1l1.5 4h4l-3.3 2.4 1.3 4L7 9 3.5 11.4l1.3-4L1.5 5h4z"/></svg>
+              <svg viewBox="0 0 14 14"><path d="M7 1l1.5 4h4l-3.3 2.4 1.3 4L7 9 3.5 11.4l1.3-4L1.5 5h4z"/></svg>
+              <svg viewBox="0 0 14 14"><path d="M7 1l1.5 4h4l-3.3 2.4 1.3 4L7 9 3.5 11.4l1.3-4L1.5 5h4z"/></svg>
+              <svg viewBox="0 0 14 14"><path d="M7 1l1.5 4h4l-3.3 2.4 1.3 4L7 9 3.5 11.4l1.3-4L1.5 5h4z"/></svg>
+            </div>
+            <div class="review-text">« J'ai reçu ma sculpture en parfait état. La qualité dépasse tout ce que j'attendais — c'est clairement une pièce unique, faite avec amour. »</div>
+            <div class="review-author">
+              <div class="review-avatar" style="background:linear-gradient(135deg,#6b2e14,#c9a05a)">M</div>
+              <div><div class="review-name">Marie L.</div><div class="review-date">Paris · avril 2025</div></div>
+            </div>
+          </div>
+          <div class="review-card">
+            <div class="review-stars" aria-label="5 étoiles">
+              <svg viewBox="0 0 14 14"><path d="M7 1l1.5 4h4l-3.3 2.4 1.3 4L7 9 3.5 11.4l1.3-4L1.5 5h4z"/></svg>
+              <svg viewBox="0 0 14 14"><path d="M7 1l1.5 4h4l-3.3 2.4 1.3 4L7 9 3.5 11.4l1.3-4L1.5 5h4z"/></svg>
+              <svg viewBox="0 0 14 14"><path d="M7 1l1.5 4h4l-3.3 2.4 1.3 4L7 9 3.5 11.4l1.3-4L1.5 5h4z"/></svg>
+              <svg viewBox="0 0 14 14"><path d="M7 1l1.5 4h4l-3.3 2.4 1.3 4L7 9 3.5 11.4l1.3-4L1.5 5h4z"/></svg>
+              <svg viewBox="0 0 14 14"><path d="M7 1l1.5 4h4l-3.3 2.4 1.3 4L7 9 3.5 11.4l1.3-4L1.5 5h4z"/></svg>
+            </div>
+            <div class="review-text">« L'artisan m'a contacté rapidement, très professionnel. Les bijoux sont magnifiques et le packaging soigné. Je recommande vivement. »</div>
+            <div class="review-author">
+              <div class="review-avatar" style="background:linear-gradient(135deg,#1c3050,#3a6090)">I</div>
+              <div><div class="review-name">Ismaël K.</div><div class="review-date">Abidjan · mars 2025</div></div>
+            </div>
+          </div>
+          <div class="review-card">
+            <div class="review-stars" aria-label="5 étoiles">
+              <svg viewBox="0 0 14 14"><path d="M7 1l1.5 4h4l-3.3 2.4 1.3 4L7 9 3.5 11.4l1.3-4L1.5 5h4z"/></svg>
+              <svg viewBox="0 0 14 14"><path d="M7 1l1.5 4h4l-3.3 2.4 1.3 4L7 9 3.5 11.4l1.3-4L1.5 5h4z"/></svg>
+              <svg viewBox="0 0 14 14"><path d="M7 1l1.5 4h4l-3.3 2.4 1.3 4L7 9 3.5 11.4l1.3-4L1.5 5h4z"/></svg>
+              <svg viewBox="0 0 14 14"><path d="M7 1l1.5 4h4l-3.3 2.4 1.3 4L7 9 3.5 11.4l1.3-4L1.5 5h4z"/></svg>
+              <svg viewBox="0 0 14 14"><path d="M7 1l1.5 4h4l-3.3 2.4 1.3 4L7 9 3.5 11.4l1.3-4L1.5 5h4z"/></svg>
+            </div>
+            <div class="review-text">« Enfin une plateforme qui valorise vraiment les artisans africains. J'ai commandé 3 fois déjà — chaque pièce raconte une histoire. »</div>
+            <div class="review-author">
+              <div class="review-avatar" style="background:linear-gradient(135deg,#1a3d2a,#4a8060)">S</div>
+              <div><div class="review-name">Sophie M.</div><div class="review-date">Montréal · février 2025</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- ── CTA artisan ── -->
+    <section class="cta-section">
+      <div class="cta-box">
+        <span class="eyebrow">Rejoignez la communauté</span>
+        <h2>Vous êtes artisan ?<br>Votre boutique vous attend.</h2>
+        <p>Rejoignez des centaines d'artisans qui vendent leurs créations à travers l'Afrique et le monde entier, sans frais d'inscription.</p>
+        <div class="cta-actions">
+          <a class="btn btn-gold" href="inscription-artisan.html">Créer ma boutique gratuitement</a>
+          <a class="btn btn-ghost" href="marketplace.html">Voir les boutiques</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── FAQ ── -->
+    <section class="faq-section" id="faq">
+      <div class="section-inner">
+        <p class="section-label">Questions fréquentes</p>
+        <h2>Vous avez des questions ?</h2>
+        <p class="faq-sub">Tout ce que vous devez savoir avant de commencer.</p>
+        <details>
+          <summary>Comment acheter une création ? <span class="faq-icon">+</span></summary>
+          <p>Parcourez le marketplace, ajoutez l'article à votre panier et validez votre commande. L'artisan vous contacte ensuite directement pour convenir de la livraison — aucun paiement en ligne requis.</p>
+        </details>
+        <details>
+          <summary>Comment ouvrir ma boutique ? <span class="faq-icon">+</span></summary>
+          <p>Inscrivez-vous en tant qu'artisan, complétez votre profil, ajoutez vos produits et publiez. Votre boutique devient immédiatement visible sur le marketplace — gratuitement.</p>
+        </details>
+        <details>
+          <summary>La livraison est-elle possible à l'international ? <span class="faq-icon">+</span></summary>
+          <p>Oui. Chaque artisan définit ses zones de livraison. Les conditions sont convenues directement entre vous et l'artisan lors de la confirmation de commande.</p>
+        </details>
+        <details>
+          <summary>Comment sont gérées mes données ? <span class="faq-icon">+</span></summary>
+          <p>ArtSango utilise vos données uniquement pour la gestion des comptes, commandes et boutiques. Aucune revente à des tiers. La politique complète est disponible à l'inscription.</p>
+        </details>
+        <details>
+          <summary>Comment contacter le service client ? <span class="faq-icon">+</span></summary>
+          <p>Vous pouvez nous joindre via WhatsApp ou par email depuis votre espace personnel. Nous répondons sous 24h en semaine.</p>
+        </details>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <a class="footer-logo" href="index.html">ArtSango</a>
+    <div class="footer-links">
+      <a href="marketplace.html">Marketplace</a>
+      <a href="inscription-artisan.html">Devenir artisan</a>
+      <a href="connexion.html">Connexion</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <div class="footer-copy">© 2025 ArtSango. Tous droits réservés.</div>
+  </footer>
+
+  <!-- Firebase & Scripts -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey:"AIzaSyAghL7HcGVTWur9ijJzjWXywTgvCaiJ01M",
+      authDomain:"art-sango.firebaseapp.com",
+      projectId:"art-sango",
+      storageBucket:"art-sango.firebasestorage.app",
+      messagingSenderId:"840868763552",
+      appId:"1:840868763552:web:b7cb1ac710d3b9968436c5"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    const localLogo = localStorage.getItem('artsango_platform_logo') || '';
+    if (localLogo) {
+      const img = document.getElementById('platform-logo');
+      img.src = localLogo; img.style.display = 'inline-block';
+    }
+    try {
+      const snap = await getDoc(doc(db,'platform','branding'));
+      if (snap.exists() && snap.data().logoUrl) {
+        localStorage.setItem('artsango_platform_logo', snap.data().logoUrl);
+        const img = document.getElementById('platform-logo');
+        img.src = snap.data().logoUrl; img.style.display = 'inline-block';
+      }
+    } catch {}
+
+    onAuthStateChanged(auth, async user => {
+      if (!user) return;
+      const nav = document.getElementById('nav-auth');
+      let dashHref = 'dashboard-client.html', dashLabel = 'Mon espace';
+      try {
+        const a = await getDoc(doc(db,'artisans',user.uid));
+        if (a.exists()) { dashHref = 'dashboard-artisan.html'; dashLabel = 'Mon tableau de bord'; }
+      } catch {}
+      nav.innerHTML = `
+        <a href="marketplace.html">Créations</a>
+        <a href="#categories">Catégories</a>
+        <a href="#faq">FAQ</a>
+        <a href="${dashHref}" class="btn-primary">${dashLabel}</a>
+      `;
+    });
+  </script>
+
+  <!-- Burger menu -->
+  <script>
+    const burgerBtn = document.getElementById('burger-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    burgerBtn.addEventListener('click', () => {
+      const open = mobileMenu.classList.toggle('open');
+      burgerBtn.classList.toggle('open', open);
+      burgerBtn.setAttribute('aria-expanded', open);
+    });
+    mobileMenu.querySelectorAll('a').forEach(a => {
+      a.addEventListener('click', () => {
+        mobileMenu.classList.remove('open');
+        burgerBtn.classList.remove('open');
+        burgerBtn.setAttribute('aria-expanded', false);
+      });
+    });
+  </script>
+
+  <!-- ═══════════════════════════════════════════════════════
+       Background canvas — mini masques africains animés
+       Motifs dessinés en Canvas pur, défilement vertical
+  ════════════════════════════════════════════════════════ -->
+  <script>
+  (function() {
+    const canvas = document.getElementById('bg-canvas');
+    const ctx    = canvas.getContext('2d');
+    let W, H, offsetY = 0;
+    let tileCanvas = null;
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    /* ── Taille de tuile selon l'écran ── */
+    function getTileSize() {
+      return window.innerWidth < 480 ? 44 : window.innerWidth < 768 ? 54 : 64;
+    }
+
+    function resize() {
+      W = canvas.width  = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+      buildTile();
+    }
+
+    /* ══════════════════════════════════════════
+       Dessin d'un mini masque africain en Canvas
+       s  = taille de la cellule (carré)
+       tc = contexte 2D de la tuile
+    ══════════════════════════════════════════ */
+    function drawMask(tc, s, variant) {
+      const cx = s / 2;
+      const cy = s / 2;
+      const r  = s * 0.34;          /* rayon de base de la tête */
+      const lw = s * 0.028;         /* épaisseur de trait */
+
+      tc.strokeStyle = 'rgba(201,160,90,1)';
+      tc.fillStyle   = 'rgba(0,0,0,0)';
+      tc.lineWidth   = lw;
+      tc.lineCap     = 'round';
+      tc.lineJoin    = 'round';
+
+      if (variant === 0) {
+        /* ── Masque A : ovale allongé, yeux en amande, nez droit ── */
+        /* tête */
+        tc.beginPath();
+        tc.ellipse(cx, cy, r * 0.62, r, 0, 0, Math.PI * 2);
+        tc.stroke();
+        /* front plat — coiffe */
+        tc.beginPath();
+        tc.moveTo(cx - r * 0.62, cy - r * 0.55);
+        tc.lineTo(cx - r * 0.4,  cy - r * 1.14);
+        tc.lineTo(cx + r * 0.4,  cy - r * 1.14);
+        tc.lineTo(cx + r * 0.62, cy - r * 0.55);
+        tc.stroke();
+        /* ligne coiffe */
+        tc.beginPath();
+        tc.moveTo(cx - r * 0.4, cy - r * 1.14);
+        tc.lineTo(cx + r * 0.4, cy - r * 1.14);
+        tc.stroke();
+        /* 3 petits traits coiffe */
+        for (let i = -1; i <= 1; i++) {
+          tc.beginPath();
+          tc.moveTo(cx + i * r * 0.28, cy - r * 1.14);
+          tc.lineTo(cx + i * r * 0.28, cy - r * 1.32);
+          tc.stroke();
+        }
+        /* yeux amande */
+        [-1, 1].forEach(side => {
+          const ex = cx + side * r * 0.28;
+          const ey = cy - r * 0.18;
+          tc.beginPath();
+          tc.moveTo(ex - r * 0.18, ey);
+          tc.quadraticCurveTo(ex, ey - r * 0.12, ex + r * 0.18, ey);
+          tc.quadraticCurveTo(ex, ey + r * 0.12, ex - r * 0.18, ey);
+          tc.stroke();
+          /* pupille */
+          tc.beginPath();
+          tc.arc(ex, ey, r * 0.055, 0, Math.PI * 2);
+          tc.fillStyle = 'rgba(201,160,90,1)';
+          tc.fill();
+        });
+        /* nez — ligne droite avec base */
+        tc.beginPath();
+        tc.moveTo(cx, cy - r * 0.08);
+        tc.lineTo(cx, cy + r * 0.22);
+        tc.moveTo(cx - r * 0.15, cy + r * 0.22);
+        tc.lineTo(cx + r * 0.15, cy + r * 0.22);
+        tc.stroke();
+        /* bouche — trait horizontal courbé */
+        tc.beginPath();
+        tc.moveTo(cx - r * 0.2, cy + r * 0.42);
+        tc.quadraticCurveTo(cx, cy + r * 0.52, cx + r * 0.2, cy + r * 0.42);
+        tc.stroke();
+        /* scarifications — 3 traits sur joues */
+        [-1, 1].forEach(side => {
+          for (let k = 0; k < 3; k++) {
+            tc.beginPath();
+            tc.moveTo(cx + side * (r * 0.48 + k * r * 0.08), cy + r * 0.05 + k * r * 0.12);
+            tc.lineTo(cx + side * (r * 0.56 + k * r * 0.08), cy + r * 0.18 + k * r * 0.12);
+            tc.stroke();
+          }
+        });
+
+      } else if (variant === 1) {
+        /* ── Masque B : forme rectangulaire, yeux ronds, sourcils marqués ── */
+        /* tête rectangulaire arrondie */
+        const hw = r * 0.58;
+        tc.beginPath();
+        tc.roundRect(cx - hw, cy - r, hw * 2, r * 2, r * 0.18);
+        tc.stroke();
+        /* coiffe — crête centrale */
+        tc.beginPath();
+        tc.moveTo(cx - hw * 0.7, cy - r);
+        tc.lineTo(cx - hw * 0.3, cy - r * 1.28);
+        tc.lineTo(cx,            cy - r * 1.42);
+        tc.lineTo(cx + hw * 0.3, cy - r * 1.28);
+        tc.lineTo(cx + hw * 0.7, cy - r);
+        tc.stroke();
+        /* sourcils droits */
+        [-1, 1].forEach(side => {
+          tc.beginPath();
+          tc.moveTo(cx + side * hw * 0.12, cy - r * 0.32);
+          tc.lineTo(cx + side * hw * 0.52, cy - r * 0.32);
+          tc.lineWidth = lw * 1.6;
+          tc.stroke();
+          tc.lineWidth = lw;
+        });
+        /* yeux ronds */
+        [-1, 1].forEach(side => {
+          tc.beginPath();
+          tc.arc(cx + side * hw * 0.32, cy - r * 0.1, r * 0.13, 0, Math.PI * 2);
+          tc.stroke();
+          tc.beginPath();
+          tc.arc(cx + side * hw * 0.32, cy - r * 0.1, r * 0.05, 0, Math.PI * 2);
+          tc.fillStyle = 'rgba(201,160,90,1)';
+          tc.fill();
+        });
+        /* nez triangulaire */
+        tc.beginPath();
+        tc.moveTo(cx, cy - r * 0.0);
+        tc.lineTo(cx - r * 0.14, cy + r * 0.26);
+        tc.lineTo(cx + r * 0.14, cy + r * 0.26);
+        tc.closePath();
+        tc.stroke();
+        /* bouche — double trait */
+        tc.beginPath();
+        tc.moveTo(cx - hw * 0.38, cy + r * 0.46);
+        tc.lineTo(cx + hw * 0.38, cy + r * 0.46);
+        tc.moveTo(cx - hw * 0.24, cy + r * 0.58);
+        tc.lineTo(cx + hw * 0.24, cy + r * 0.58);
+        tc.stroke();
+        /* motif géométrique menton */
+        tc.beginPath();
+        tc.moveTo(cx - hw * 0.3, cy + r * 0.72);
+        tc.lineTo(cx,            cy + r * 0.82);
+        tc.lineTo(cx + hw * 0.3, cy + r * 0.72);
+        tc.stroke();
+
+      } else {
+        /* ── Masque C : en feuille / losange, yeux losange, menton pointu ── */
+        const h = r * 1.05;
+        const w = r * 0.55;
+        /* forme losange */
+        tc.beginPath();
+        tc.moveTo(cx,     cy - h);
+        tc.lineTo(cx + w, cy);
+        tc.lineTo(cx,     cy + h);
+        tc.lineTo(cx - w, cy);
+        tc.closePath();
+        tc.stroke();
+        /* ligne médiane horizontale */
+        tc.beginPath();
+        tc.moveTo(cx - w, cy);
+        tc.lineTo(cx + w, cy);
+        tc.stroke();
+        /* coiffe — 3 pointes sur le dessus */
+        for (let i = -1; i <= 1; i++) {
+          tc.beginPath();
+          tc.moveTo(cx + i * w * 0.4, cy - h * 0.82);
+          tc.lineTo(cx + i * w * 0.28, cy - h * 1.16);
+          tc.stroke();
+        }
+        /* yeux losange */
+        [-1, 1].forEach(side => {
+          const ex = cx + side * w * 0.38;
+          const ey = cy - h * 0.28;
+          const er = r * 0.11;
+          tc.beginPath();
+          tc.moveTo(ex,      ey - er);
+          tc.lineTo(ex + er, ey);
+          tc.lineTo(ex,      ey + er);
+          tc.lineTo(ex - er, ey);
+          tc.closePath();
+          tc.stroke();
+        });
+        /* nez — V inversé */
+        tc.beginPath();
+        tc.moveTo(cx - r * 0.1, cy + r * 0.06);
+        tc.lineTo(cx,           cy - r * 0.1);
+        tc.lineTo(cx + r * 0.1, cy + r * 0.06);
+        tc.stroke();
+        /* bouche — arc */
+        tc.beginPath();
+        tc.arc(cx, cy + h * 0.32, r * 0.18, 0.2, Math.PI - 0.2);
+        tc.stroke();
+        /* motif central — losanges concentriques tronqués */
+        tc.beginPath();
+        const sr = r * 0.14;
+        tc.moveTo(cx,      cy - sr);
+        tc.lineTo(cx + sr, cy);
+        tc.lineTo(cx,      cy + sr);
+        tc.lineTo(cx - sr, cy);
+        tc.closePath();
+        tc.stroke();
+      }
+    }
+
+    /* ── Construction de la tuile (2×2 masques variés) ── */
+    function buildTile() {
+      const TILE = getTileSize();
+      const T2   = TILE * 2;          /* tuile = 2 colonnes × 2 rangées */
+      tileCanvas = document.createElement('canvas');
+      tileCanvas.width  = T2;
+      tileCanvas.height = T2;
+      const tc = tileCanvas.getContext('2d');
+      tc.clearRect(0, 0, T2, T2);
+
+      /* 4 cellules, 4 variantes pour rompre la répétition */
+      const variants = [[0,0,0],[0,1,1],[1,0,2],[1,1,0]]; /* [col, row, variant] */
+      variants.forEach(([col, row, v]) => {
+        tc.save();
+        tc.translate(col * TILE, row * TILE);
+        drawMask(tc, TILE, v);
+        tc.restore();
+      });
+    }
+
+    /* ── Rendu principal ── */
+    function draw() {
+      const TILE = getTileSize();
+      ctx.clearRect(0, 0, W, H);
+
+      /* fond uni sombre */
+      ctx.fillStyle = '#0f0d0a';
+      ctx.fillRect(0, 0, W, H);
+
+      if (!tileCanvas) return;
+
+      const T2    = TILE * 2;
+      const cols  = Math.ceil(W / T2) + 2;
+      const rows  = Math.ceil(H / T2) + 3;
+      const yOff  = -(T2 - (offsetY % T2));
+
+      /* motifs */
+      ctx.globalAlpha = 0.32;
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          ctx.drawImage(tileCanvas, col * T2 - T2, yOff + row * T2, T2, T2);
+        }
+      }
+      ctx.globalAlpha = 1;
+
+      /* vignette radiale pour fondre les bords */
+      const vig = ctx.createRadialGradient(W/2, H/2, H * 0.22, W/2, H/2, W * 0.80);
+      vig.addColorStop(0, 'rgba(0,0,0,0)');
+      vig.addColorStop(1, 'rgba(6,4,2,0.90)');
+      ctx.fillStyle = vig;
+      ctx.fillRect(0, 0, W, H);
+
+      /* lueur chaude centrale */
+      const glow = ctx.createRadialGradient(W * 0.5, H * 0.4, 0, W * 0.5, H * 0.4, W * 0.5);
+      glow.addColorStop(0, 'rgba(201,160,90,0.07)');
+      glow.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    /* ── Boucle d'animation ── */
+    function loop() {
+      if (!prefersReduced) {
+        const isMobile = window.innerWidth < 768;
+        const SPEED    = isMobile ? 0.14 : 0.28;
+        offsetY = (offsetY + SPEED) % (getTileSize() * 2);
+      }
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+    loop();
+  })();
+</script>
+
+<script defer src="./sw-register.js"></script>
+
+</body>
+</html>

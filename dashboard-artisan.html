@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Dashboard Artisan - ArtSango</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --charcoal:#11100e; --earth:#3b271d; --terracotta:#8b4a2e;
+      --burnt-orange:#bf6a3c; --gold:#cba56b; --sand:#d7c3a1;
+      --cream:#f3e7d4; --brand:#0f766e;
+      --glass:rgba(18,14,11,0.62); --glass-line:rgba(227,189,136,0.24);
+      --card-bg:rgba(18,14,11,0.52);
+    }
+    *{ box-sizing:border-box; }
+    body{ margin:0; font-family:"Inter",Verdana,sans-serif; color:var(--cream); min-height:100dvh; }
+
+    .page{ position:relative; min-height:100dvh; isolation:isolate; }
+    .photo-bg{
+      position:fixed; inset:0; z-index:-3;
+      background-image:
+        linear-gradient(112deg,rgba(9,7,6,0.88) 12%,rgba(30,19,14,0.72) 45%,rgba(9,8,7,0.9) 100%),
+        url("https://images.unsplash.com/photo-1600566752229-250ed79470f8?auto=format&fit=crop&w=1800&q=80");
+      background-size:cover; background-position:center;
+    }
+    body[data-shop-theme="heritage"] .photo-bg{
+      background-image:
+        linear-gradient(112deg,rgba(9,7,6,0.88) 12%,rgba(30,19,14,0.72) 45%,rgba(9,8,7,0.9) 100%),
+        url("https://images.unsplash.com/photo-1600566752229-250ed79470f8?auto=format&fit=crop&w=1800&q=80");
+    }
+    body[data-shop-theme="savane"] .photo-bg{
+      background-image:
+        linear-gradient(112deg,rgba(33,17,8,0.88) 12%,rgba(56,32,10,0.72) 45%,rgba(14,10,7,0.9) 100%),
+        url("https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=1800&q=80");
+    }
+    body[data-shop-theme="lagune"] .photo-bg{
+      background-image:
+        linear-gradient(112deg,rgba(4,22,26,0.88) 12%,rgba(10,48,58,0.72) 45%,rgba(8,14,26,0.9) 100%),
+        url("https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=1800&q=80");
+    }
+    body[data-shop-theme="atelier"] .photo-bg{
+      background-image:
+        linear-gradient(112deg,rgba(26,12,34,0.88) 12%,rgba(39,24,62,0.72) 45%,rgba(12,14,22,0.9) 100%),
+        url("https://images.unsplash.com/photo-1452802447250-470a88ac82bc?auto=format&fit=crop&w=1800&q=80");
+    }
+    body[data-shop-theme="sahara"] .photo-bg{
+      background-image:
+        linear-gradient(112deg,rgba(42,18,6,0.88) 12%,rgba(72,38,12,0.72) 45%,rgba(20,12,26,0.9) 100%),
+        url("https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=1800&q=80");
+    }
+    body[data-shop-theme="kente"] .photo-bg{
+      background-image:
+        linear-gradient(112deg,rgba(42,20,8,0.86) 12%,rgba(92,34,14,0.7) 45%,rgba(14,24,20,0.9) 100%),
+        url("https://images.unsplash.com/photo-1465005198441-3f4dc1f6e707?auto=format&fit=crop&w=1800&q=80");
+    }
+    body[data-shop-theme="bogolan"] .photo-bg{
+      background-image:
+        linear-gradient(112deg,rgba(24,16,10,0.88) 12%,rgba(55,33,20,0.72) 45%,rgba(10,8,6,0.9) 100%),
+        url("https://images.unsplash.com/photo-1517089596392-fb9a9033e05b?auto=format&fit=crop&w=1800&q=80");
+    }
+    body[data-shop-theme="baobab"] .photo-bg{
+      background-image:
+        linear-gradient(112deg,rgba(28,18,8,0.86) 12%,rgba(64,40,18,0.7) 45%,rgba(14,20,10,0.9) 100%),
+        url("https://images.unsplash.com/photo-1473773508845-188df298d2d1?auto=format&fit=crop&w=1800&q=80");
+    }
+    body[data-shop-theme="nile"] .photo-bg{
+      background-image:
+        linear-gradient(112deg,rgba(6,24,30,0.86) 12%,rgba(12,52,64,0.72) 45%,rgba(8,14,26,0.9) 100%),
+        url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1800&q=80");
+    }
+    .texture{
+      position:fixed; inset:0; z-index:-2; pointer-events:none;
+      background:
+        radial-gradient(700px 380px at 80% 20%,rgba(191,106,60,0.22),transparent 70%),
+        radial-gradient(500px 280px at 12% 90%,rgba(203,165,107,0.14),transparent 72%);
+    }
+    .wrap{ max-width:1140px; margin:0 auto; padding:18px; padding-bottom:calc(18px + env(safe-area-inset-bottom)); position:relative; z-index:1; }
+
+    /* Header */
+    .top{
+      display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
+      background:var(--glass); border:1px solid var(--glass-line);
+      backdrop-filter:blur(18px); border-radius:20px; padding:12px 18px; margin-bottom:20px;
+    }
+    .top-left{ display:flex; align-items:center; gap:12px; }
+    .back-btn{ border:0; background:rgba(255,255,255,0.1); color:var(--cream); border-radius:999px; padding:9px 14px; font-weight:700; cursor:pointer; font-size:.9rem; border:1px solid rgba(227,189,136,0.25); transition:background .15s; }
+    .back-btn:hover{ background:rgba(255,255,255,0.18); }
+    .dash-title{ margin:0; font-family:"Playfair Display",serif; font-size:1.3rem; color:var(--cream); }
+    .top nav{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .top nav a{ text-decoration:none; color:var(--sand); font-weight:700; font-size:.86rem; padding:8px 13px; border:1px solid rgba(203,165,107,0.3); border-radius:999px; background:rgba(255,255,255,0.06); transition:background .15s; }
+    .top nav a:hover{ background:rgba(255,255,255,0.12); }
+    .top nav a#logout-link{ color:#fca5a5; border-color:rgba(220,38,38,0.35); background:rgba(220,38,38,0.1); }
+
+    .loading{ text-align:center; padding:60px; color:var(--sand); opacity:.7; }
+
+    /* Bannière profil */
+    .profile-banner{
+      background:linear-gradient(120deg,rgba(15,118,110,0.5),rgba(21,94,117,0.4));
+      border:1px solid rgba(99,210,199,0.25); backdrop-filter:blur(10px);
+      border-radius:20px; padding:20px 24px; margin-bottom:18px;
+      display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+    }
+    .avatar{ width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg,#99f6e4,#6ee7b7); flex-shrink:0; overflow:hidden; border:2px solid rgba(99,210,199,0.4); }
+    .avatar img{ width:100%; height:100%; object-fit:cover; }
+    .profile-info .name{ font-weight:900; font-size:1.15rem; color:#f0fdfa; }
+    .profile-info .location{ font-size:.88rem; color:#99f6e4; opacity:.85; margin-top:3px; }
+    .verified-badge{ display:inline-flex; align-items:center; gap:5px; background:#dcfce7; color:#166534; font-size:.73rem; font-weight:700; padding:3px 8px; border-radius:999px; margin-top:5px; }
+    .unverified-badge{ background:#fef3c7; color:#92400e; }
+    .upload-tools{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:8px; }
+    .file-input{ font-size:.8rem; max-width:200px; color:var(--sand); }
+    .tiny-btn{ border:0; border-radius:8px; padding:7px 10px; font-weight:700; background:rgba(255,255,255,0.1); color:#99f6e4; cursor:pointer; font-size:.8rem; border:1px solid rgba(99,210,199,0.3); }
+    .tiny-btn:hover{ background:rgba(255,255,255,0.18); }
+    .profile-actions{ margin-left:auto; display:flex; gap:8px; flex-wrap:wrap; }
+
+    /* Stats */
+    .stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    .stat-card{ background:var(--glass); border:1px solid var(--glass-line); backdrop-filter:blur(12px); border-radius:16px; padding:16px; transition:transform .15s; }
+    .stat-card:hover{ transform:translateY(-2px); }
+    .slabel{ font-size:.74rem; color:var(--sand); text-transform:uppercase; font-weight:700; letter-spacing:.06em; }
+    .svalue{ font-size:1.6rem; font-weight:900; margin-top:6px; color:#f0fdfa; }
+
+    /* Reset stats */
+    .reset-bar{
+      background:rgba(220,38,38,0.1); border:1px solid rgba(220,38,38,0.25);
+      border-radius:12px; padding:12px 18px; margin-bottom:18px;
+      display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;
+    }
+    .reset-bar p{ margin:0; font-size:.85rem; color:#fca5a5; }
+    .reset-btn{
+      border:0; border-radius:8px; padding:8px 16px; font-weight:700; font-size:.82rem;
+      background:rgba(220,38,38,0.25); color:#fca5a5; cursor:pointer;
+      border:1px solid rgba(220,38,38,0.35); transition:background .15s;
+    }
+    .reset-btn:hover{ background:rgba(220,38,38,0.4); }
+
+    /* Grille principale */
+    .main-grid{ display:grid; grid-template-columns:2fr 1fr; gap:12px; margin-bottom:14px; }
+    .card{ background:var(--card-bg); border:1px solid var(--glass-line); backdrop-filter:blur(12px); border-radius:16px; padding:18px; }
+    .card h2{ margin:0 0 14px; font-family:"Playfair Display",serif; color:#f0fdfa; font-size:1.1rem; }
+
+    .btn{ display:inline-flex; align-items:center; margin-right:8px; margin-top:8px; text-decoration:none; font-weight:700; border-radius:10px; padding:10px 14px; font-size:.9rem; transition:transform .15s; border:0; cursor:pointer; }
+    .btn:hover{ transform:translateY(-1px); }
+    .btn-main{ background:linear-gradient(135deg,var(--gold),var(--burnt-orange)); color:#23120a; }
+    .btn-ghost{ background:rgba(255,255,255,0.07); color:var(--cream); border:1.5px solid rgba(203,165,107,0.35); }
+    .btn-ghost:hover{ background:rgba(255,255,255,0.12); }
+
+    ul{ margin:6px 0 0; padding-left:0; list-style:none; }
+    ul li{ margin-bottom:6px; }
+    ul li a{ display:block; color:var(--sand); font-weight:700; text-decoration:none; font-size:.9rem; padding:8px 12px; border-radius:10px; background:rgba(255,255,255,0.05); border:1px solid rgba(203,165,107,0.2); transition:background .15s; }
+    ul li a:hover{ background:rgba(203,165,107,0.15); color:var(--cream); }
+
+    .alert-row{ background:rgba(251,191,36,0.12); border:1px solid rgba(251,191,36,0.3); border-radius:10px; padding:10px 14px; font-size:.88rem; display:flex; justify-content:space-between; align-items:center; margin-top:10px; color:#fde68a; }
+    .alert-row a{ color:#fbbf24; font-weight:700; text-decoration:none; }
+
+    .shop-btn{ text-decoration:none; font-weight:700; border-radius:10px; padding:9px 14px; font-size:.88rem; background:rgba(255,255,255,0.1); color:#99f6e4; border:1px solid rgba(99,210,199,0.3); transition:background .15s; }
+    .shop-btn:hover{ background:rgba(255,255,255,0.18); }
+
+    /* Mes produits */
+    .products-section{ background:var(--card-bg); border:1px solid var(--glass-line); backdrop-filter:blur(12px); border-radius:16px; padding:22px; margin-bottom:14px; }
+    .products-section h2{ margin:0 0 16px; font-family:"Playfair Display",serif; color:#f0fdfa; font-size:1.1rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+    .prod-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:12px; }
+    .prod-item{ background:rgba(255,255,255,0.06); border:1px solid rgba(203,165,107,0.2); border-radius:14px; overflow:hidden; transition:transform .18s; }
+    .prod-item:hover{ transform:translateY(-2px); }
+    .prod-thumb{ height:130px; background:linear-gradient(135deg,#3b271d,#5a3d28); overflow:hidden; position:relative; }
+    .prod-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .prod-thumb .photo-count{ position:absolute; bottom:6px; right:8px; background:rgba(0,0,0,0.65); color:#fff; font-size:.68rem; font-weight:700; padding:2px 7px; border-radius:999px; }
+    .prod-info{ padding:10px 12px; }
+    .prod-info .pname{ font-weight:700; font-size:.88rem; color:#f0fdfa; margin-bottom:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .prod-info .pprice{ color:var(--gold); font-weight:700; font-size:.85rem; }
+    .prod-info .pcat{ font-size:.72rem; color:var(--sand); margin-top:2px; }
+    .prod-actions{ display:flex; gap:6px; padding:8px 12px 12px; }
+    .pa-btn{ flex:1; border:0; border-radius:8px; padding:7px 4px; font-weight:700; font-size:.74rem; cursor:pointer; transition:opacity .15s, transform .15s; }
+    .pa-btn:hover{ transform:translateY(-1px); opacity:.9; }
+    .pa-view{ background:rgba(203,165,107,0.2); color:var(--cream); border:1px solid rgba(203,165,107,0.35); }
+    .pa-toggle-off{ background:rgba(251,191,36,0.15); color:#fde68a; border:1px solid rgba(251,191,36,0.3); }
+    .pa-toggle-on{ background:rgba(16,185,129,0.15); color:#6ee7b7; border:1px solid rgba(16,185,129,0.3); }
+    .pa-delete{ background:rgba(220,38,38,0.15); color:#fca5a5; border:1px solid rgba(220,38,38,0.3); }
+    .prod-item.inactive .prod-thumb{ opacity:.5; filter:grayscale(60%); }
+    .prod-item.inactive .pname{ text-decoration:line-through; opacity:.7; }
+    .inactive-badge{ position:absolute; top:8px; left:8px; background:rgba(220,38,38,0.85); color:#fff; font-size:.65rem; font-weight:700; padding:2px 8px; border-radius:999px; }
+    .no-products{ color:var(--sand); font-size:.9rem; text-align:center; padding:30px; }
+
+    /* Modale confirmation */
+    .modal-overlay{ position:fixed; inset:0; z-index:999; background:rgba(0,0,0,0.75); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; }
+    .modal-box{ background:#1b1511; border:1px solid rgba(203,165,107,0.3); border-radius:16px; padding:28px; max-width:400px; width:90%; }
+    .modal-box h3{ margin:0 0 8px; color:#f0fdfa; font-family:"Playfair Display",serif; }
+    .modal-box p{ color:var(--sand); font-size:.9rem; margin:0 0 20px; line-height:1.6; }
+    .modal-btns{ display:flex; gap:10px; }
+    .mb{ flex:1; border:0; border-radius:10px; padding:11px; font-weight:700; font-size:.9rem; cursor:pointer; }
+    .mb-cancel{ background:rgba(255,255,255,0.08); color:var(--cream); border:1px solid rgba(203,165,107,0.3); }
+    .mb-confirm-del{ background:#dc2626; color:#fff; }
+    .mb-confirm-reset{ background:rgba(220,38,38,0.25); color:#fca5a5; border:1px solid rgba(220,38,38,0.4); }
+
+    /* Edition profil */
+    .edit-card{ background:var(--card-bg); border:1px solid var(--glass-line); backdrop-filter:blur(12px); border-radius:16px; padding:22px; margin-bottom:14px; }
+    .edit-card h2{ margin:0 0 6px; font-family:"Playfair Display",serif; color:#f0fdfa; font-size:1.1rem; display:flex; align-items:center; gap:10px; justify-content:space-between; }
+    .toggle-edit{ background:none; border:1px solid rgba(203,165,107,0.35); color:var(--sand); border-radius:8px; padding:5px 12px; font-size:.8rem; font-weight:700; cursor:pointer; }
+    .toggle-edit:hover{ background:rgba(255,255,255,0.08); }
+    .edit-form{ display:none; }
+    .edit-form.open{ display:block; }
+    .form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; }
+    .form-full{ grid-column:1/-1; }
+    .form-group{ display:flex; flex-direction:column; gap:5px; }
+    .form-group label{ font-size:.78rem; font-weight:700; color:var(--sand); text-transform:uppercase; letter-spacing:.04em; }
+    .form-group input,.form-group select,.form-group textarea{
+      padding:10px 13px; border:1.5px solid rgba(203,165,107,0.3); border-radius:10px;
+      font:inherit; font-size:.9rem; background:rgba(0,0,0,0.3); color:var(--cream); transition:border-color .15s;
+    }
+    .form-group input::placeholder,.form-group textarea::placeholder{ color:#6b7280; }
+    .form-group input:focus,.form-group select:focus,.form-group textarea:focus{ outline:none; border-color:var(--brand); }
+    .form-group select option{ background:#1b1511; }
+    .form-group textarea{ resize:vertical; min-height:90px; }
+    .char-count{ font-size:.74rem; color:#6b7280; text-align:right; margin-top:3px; }
+
+    /* Theme boutique */
+    .theme-picker{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-top:4px; }
+    .theme-option{
+      border:1.5px solid rgba(203,165,107,0.3);
+      border-radius:10px;
+      background:rgba(0,0,0,0.24);
+      padding:6px;
+      cursor:pointer;
+      color:var(--cream);
+      transition:border-color .15s, transform .15s, box-shadow .15s;
+      text-align:left;
+    }
+    .theme-option:hover{ transform:translateY(-1px); border-color:rgba(203,165,107,0.55); }
+    .theme-option.active{ border-color:#f59e0b; box-shadow:0 0 0 1px rgba(245,158,11,0.35) inset; }
+    .theme-swatch{ height:42px; border-radius:8px; border:1px solid rgba(255,255,255,0.16); margin-bottom:6px; background-size:cover; background-position:center; }
+    .theme-name{ font-size:.72rem; font-weight:700; color:var(--sand); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .sw-heritage{ background-image:url("https://images.unsplash.com/photo-1600566752229-250ed79470f8?auto=format&fit=crop&w=500&q=70"); }
+    .sw-savane{ background-image:url("https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=500&q=70"); }
+    .sw-lagune{ background-image:url("https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=500&q=70"); }
+    .sw-atelier{ background-image:url("https://images.unsplash.com/photo-1452802447250-470a88ac82bc?auto=format&fit=crop&w=500&q=70"); }
+    .sw-sahara{ background-image:url("https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=500&q=70"); }
+    .sw-kente{ background-image:url("https://images.unsplash.com/photo-1465005198441-3f4dc1f6e707?auto=format&fit=crop&w=500&q=70"); }
+    .sw-bogolan{ background-image:url("https://images.unsplash.com/photo-1517089596392-fb9a9033e05b?auto=format&fit=crop&w=500&q=70"); }
+    .sw-baobab{ background-image:url("https://images.unsplash.com/photo-1473773508845-188df298d2d1?auto=format&fit=crop&w=500&q=70"); }
+    .sw-nile{ background-image:url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=500&q=70"); }
+
+    .mobile-top-actions{ display:none; }
+
+    /* Indicatif dans le formulaire édition */
+    .phone-edit-row{ display:flex; gap:8px; }
+    .phone-edit-prefix{
+      width:160px; flex-shrink:0; padding:10px 8px;
+      border:1.5px solid rgba(203,165,107,0.3); border-radius:10px;
+      font:inherit; font-size:.82rem; background:rgba(0,0,0,0.3); color:var(--cream); cursor:pointer;
+    }
+    .phone-edit-prefix:focus{ outline:none; border-color:var(--brand); }
+    .phone-edit-prefix option{ background:#1b1511; }
+    .phone-edit-num{
+      flex:1;
+      width:100%;
+      max-width:100%;
+      padding:10px 13px;
+      border:1.5px solid rgba(203,165,107,0.3);
+      border-radius:10px;
+      font:inherit;
+      font-size:.9rem;
+      background:rgba(0,0,0,0.3);
+      color:var(--cream);
+    }
+    .phone-edit-num:focus{ outline:none; border-color:var(--brand); }
+
+    .save-row{ display:flex; align-items:center; gap:12px; margin-top:16px; flex-wrap:wrap; }
+    .save-btn{ border:0; border-radius:10px; padding:11px 22px; background:linear-gradient(135deg,var(--gold),var(--burnt-orange)); color:#23120a; font-weight:800; cursor:pointer; font-size:.9rem; transition:transform .15s; }
+    .save-btn:hover{ transform:translateY(-1px); }
+    .save-btn:disabled{ opacity:.5; cursor:not-allowed; transform:none; }
+    .save-status{ font-size:.85rem; font-weight:700; }
+    .save-status.ok{ color:#86efac; }
+    .save-status.err{ color:#fca5a5; }
+    .sections-help{ font-size:.78rem; color:#9ca3af; margin:2px 0 8px; }
+    .sections-input-row{ display:flex; gap:8px; flex-wrap:wrap; }
+    .sections-input-row input{ flex:1; min-width:220px; }
+    .add-section-btn{
+      border:1px solid rgba(99,210,199,0.3);
+      border-radius:10px;
+      background:rgba(255,255,255,0.08);
+      color:#99f6e4;
+      font-weight:700;
+      padding:9px 14px;
+      cursor:pointer;
+      font-size:.82rem;
+      white-space:nowrap;
+    }
+    .add-section-btn:hover{ background:rgba(255,255,255,0.14); }
+    .sections-list{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+    .section-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      border-radius:999px;
+      border:1px solid rgba(203,165,107,0.35);
+      background:rgba(255,255,255,0.08);
+      color:var(--sand);
+      padding:5px 10px;
+      font-size:.76rem;
+      font-weight:700;
+    }
+    .section-pill button{
+      border:0;
+      background:transparent;
+      color:#fca5a5;
+      font-size:.9rem;
+      line-height:1;
+      cursor:pointer;
+      padding:0;
+    }
+    .section-empty{ font-size:.78rem; color:#6b7280; margin-top:8px; }
+    .divider{ height:1px; background:rgba(227,189,136,0.15); margin:14px 0; }
+
+    @media(max-width:980px){ .stats{ grid-template-columns:repeat(2,1fr); } .main-grid{ grid-template-columns:1fr; } }
+    @media(max-width:980px){ .theme-picker{ grid-template-columns:repeat(3,minmax(0,1fr)); } }
+    @media(max-width:600px){
+      .profile-banner{ flex-direction:column; }
+      .profile-actions{ margin-left:0; }
+      .form-grid{ grid-template-columns:1fr; }
+      .prod-grid{ grid-template-columns:repeat(2,1fr); }
+      .theme-picker{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .top nav{ display:none; }
+      .mobile-top-actions{ display:flex; gap:8px; margin-left:auto; }
+      .mobile-top-actions a{ text-decoration:none; color:var(--sand); font-weight:700; font-size:.76rem; padding:7px 11px; border:1px solid rgba(203,165,107,0.3); border-radius:999px; background:rgba(255,255,255,0.06); }
+      .wrap{ padding-bottom:calc(92px + env(safe-area-inset-bottom)); }
+      .texture{ opacity:.45; }
+
+      /* Formulaire profil mobile compact */
+      .edit-card{ padding:14px; border-radius:14px; }
+      .edit-card h2{ font-size:1rem; gap:8px; }
+      .edit-card p{ font-size:.8rem !important; }
+      .toggle-edit{ font-size:.74rem; padding:5px 9px; }
+      .divider{ margin:10px 0; }
+
+      .form-grid{ gap:9px; margin-top:10px; }
+      .edit-form{ width:100%; max-width:100%; overflow:hidden; }
+      .form-grid, .form-full, .form-group{ min-width:0; }
+      .form-group label{ font-size:.7rem; letter-spacing:.03em; }
+      .form-group input,
+      .form-group select,
+      .form-group textarea,
+      .phone-edit-prefix,
+      .phone-edit-num{ width:100%; max-width:100%; padding:9px 10px; font-size:.84rem; border-radius:9px; }
+      .form-group textarea{ min-height:74px; }
+      .char-count{ font-size:.68rem; }
+
+      .phone-edit-row{ flex-direction:column; gap:7px; }
+      .phone-edit-prefix{ width:100%; font-size:.8rem; }
+
+      .theme-picker{ gap:7px; }
+      .theme-option{ padding:5px; border-radius:9px; }
+      .theme-swatch{ height:34px; margin-bottom:5px; }
+      .theme-name{ font-size:.66rem; }
+
+      .save-row{ gap:8px; margin-top:12px; }
+      .save-btn{ width:100%; justify-content:center; padding:10px 14px; font-size:.84rem; }
+      .save-status{ font-size:.78rem; }
+    }
+    @media(max-width:400px){ .prod-grid{ grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="photo-bg" aria-hidden="true"></div>
+    <div class="texture" aria-hidden="true"></div>
+
+    <!-- Modale générique -->
+    <div class="modal-overlay" id="modal-overlay" style="display:none;">
+      <div class="modal-box">
+        <h3 id="modal-title">Confirmer</h3>
+        <p id="modal-body"></p>
+        <div class="modal-btns">
+          <button class="mb mb-cancel" onclick="closeModal()">Annuler</button>
+          <button class="mb" id="modal-confirm-btn">Confirmer</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="wrap">
+      <header class="top">
+        <div class="top-left">
+          <button class="back-btn" onclick="goBack('index.html')">← Retour</button>
+          <h1 class="dash-title" id="dash-title">Dashboard</h1>
+        </div>
+        <div class="mobile-top-actions">
+          <a href="boutique-vendeur.html" id="mobile-shop-link">Voir ma boutique</a>
+          <a href="marketplace.html">Marketplace</a>
+        </div>
+        <nav>
+          <a href="marketplace.html">Marketplace</a>
+          <a href="ai-studio.html">ArtSango AI</a>
+          <a href="messagerie.html">Messagerie</a>
+          <a href="commandes.html">Commandes</a>
+          <a href="#" id="logout-link">Déconnexion</a>
+        </nav>
+      </header>
+
+      <div id="loading-state" class="loading">Chargement du tableau de bord...</div>
+      <div id="dash-content" style="display:none;">
+
+        <!-- Bannière profil -->
+        <div class="profile-banner">
+          <div class="avatar">
+            <img id="profile-img" src="" alt="Photo de profil" style="display:none;" onerror="this.style.display='none'">
+          </div>
+          <div class="profile-info">
+            <div class="name" id="profile-name">—</div>
+            <div class="location" id="profile-location">—</div>
+            <span class="verified-badge unverified-badge" id="verified-badge">En attente de vérification</span>
+            <div class="upload-tools">
+              <input class="file-input" type="file" id="profile-photo-input" accept="image/jpeg,image/png,image/webp">
+              <button class="tiny-btn" id="save-photo-btn" onclick="saveProfilePhoto()">Mettre à jour la photo</button>
+            </div>
+          </div>
+          <div class="profile-actions">
+            <a class="shop-btn" id="my-shop-link" href="boutique-vendeur.html">Voir ma boutique</a>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <section class="stats" id="stats-section">
+          <article class="stat-card"><div class="slabel">Vues boutique</div><div class="svalue" id="stat-views">—</div></article>
+          <article class="stat-card"><div class="slabel">Commandes</div><div class="svalue" id="stat-orders">—</div></article>
+          <article class="stat-card"><div class="slabel">Chiffre d'affaires</div><div class="svalue" id="stat-ca">—</div></article>
+          <article class="stat-card"><div class="slabel">Produits actifs</div><div class="svalue" id="stat-products">—</div></article>
+        </section>
+
+        <!-- Réinitialisation stats -->
+        <div class="reset-bar">
+          <p>Réinitialiser les statistiques remet à zéro les vues, commandes et chiffre d'affaires affichés.</p>
+          <button class="reset-btn" onclick="askResetStats()">Réinitialiser les statistiques</button>
+        </div>
+
+        <!-- Actions + IA -->
+        <section class="main-grid">
+          <article class="card">
+            <h2>Actions rapides</h2>
+            <a class="btn btn-main" href="produit-nouveau.html">+ Ajouter un produit</a>
+            <a class="btn btn-ghost" href="commandes.html">Voir les commandes</a>
+            <a class="btn btn-ghost" href="messagerie.html">Messagerie</a>
+            <div id="urgent-orders"></div>
+          </article>
+          <article class="card">
+            <h2>Raccourcis IA</h2>
+            <ul>
+              <li><a href="ai-studio.html">Générer la bio de ma marque</a></li>
+              <li><a href="ai-studio.html">Créer 3 posts Instagram</a></li>
+              <li><a href="ai-studio.html">Optimiser le prix d'un produit</a></li>
+              <li><a href="ai-studio.html">Améliorer mon storytelling</a></li>
+            </ul>
+          </article>
+        </section>
+
+        <!-- Mes produits -->
+        <div class="products-section" id="products-section">
+          <h2>
+            <span>Mes produits</span>
+            <a class="btn btn-main" href="produit-nouveau.html" style="margin:0;padding:8px 14px;font-size:.82rem;">+ Ajouter</a>
+          </h2>
+          <div class="prod-grid" id="prod-grid">
+            <div class="no-products">Chargement...</div>
+          </div>
+        </div>
+
+        <!-- Edition profil -->
+        <div class="edit-card" id="profile-section">
+          <h2>
+            <span>Modifier mes informations</span>
+            <button class="toggle-edit" id="toggle-edit-btn" onclick="toggleEditForm()">Afficher le formulaire</button>
+          </h2>
+          <p style="color:var(--sand);font-size:.85rem;margin:4px 0 0;">Mets à jour le nom de ta boutique, ta description, tes coordonnées.</p>
+          <p style="margin-top:8px;"><a href="#" id="logout-link-mobile" style="color:#fca5a5;font-weight:700;text-decoration:none;border:1px solid rgba(220,38,38,0.35);padding:6px 10px;border-radius:8px;background:rgba(220,38,38,0.08);display:inline-block;font-size:.78rem;">Deconnexion</a></p>
+
+          <div class="edit-form" id="edit-form">
+            <div class="divider"></div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Nom de la boutique</label>
+                <input type="text" id="edit-brandName" placeholder="Ex: Atelier Nkembo" maxlength="60">
+              </div>
+              <div class="form-group">
+                <label>Catégorie</label>
+                <select id="edit-category">
+                  <option value="">— Choisir —</option>
+                  <option>Mode</option><option>Décoration</option><option>Sculpture</option>
+                  <option>Peinture</option><option>Bijoux</option><option>Poterie</option>
+                  <option>Textile</option><option>Art mural</option><option>Maroquinerie</option>
+                  <option>Artisanat bois</option><option>Cosmétique naturel</option><option>Autre</option>
+                </select>
+              </div>
+              <div class="form-group form-full">
+                <label>Description de la boutique</label>
+                <textarea id="edit-description" placeholder="Raconte l'histoire de ta boutique..." maxlength="500" oninput="updateCharCount()"></textarea>
+                <div class="char-count"><span id="desc-chars">0</span> / 500</div>
+              </div>
+              <div class="form-group">
+                <label>Ville</label>
+                <input type="text" id="edit-city" placeholder="Ex: Cotonou">
+              </div>
+              <div class="form-group">
+                <label>Pays</label>
+                <select id="edit-country">
+                  <option value="">— Choisir —</option>
+                  <option>Bénin</option><option>Côte d'Ivoire</option><option>Sénégal</option>
+                  <option>Togo</option><option>Ghana</option><option>Nigeria</option>
+                  <option>Cameroun</option><option>Mali</option><option>Burkina Faso</option>
+                  <option>Congo</option><option>Gabon</option><option>Madagascar</option>
+                  <option>Maroc</option><option>Éthiopie</option><option>Kenya</option>
+                  <option>Tanzanie</option><option>Afrique du Sud</option><option>Autre</option>
+                </select>
+              </div>
+
+              <!-- TELEPHONE AVEC INDICATIF -->
+              <div class="form-group form-full">
+                <label>WhatsApp / Téléphone — indicatif pays obligatoire</label>
+                <div class="phone-edit-row">
+                  <select class="phone-edit-prefix" id="edit-phone-prefix">
+                    <option value="">Indicatif</option>
+                    <option value="+229">+229 — Bénin</option>
+                    <option value="+225">+225 — Côte d'Ivoire</option>
+                    <option value="+221">+221 — Sénégal</option>
+                    <option value="+228">+228 — Togo</option>
+                    <option value="+233">+233 — Ghana</option>
+                    <option value="+234">+234 — Nigeria</option>
+                    <option value="+237">+237 — Cameroun</option>
+                    <option value="+223">+223 — Mali</option>
+                    <option value="+226">+226 — Burkina Faso</option>
+                    <option value="+242">+242 — Congo</option>
+                    <option value="+241">+241 — Gabon</option>
+                    <option value="+261">+261 — Madagascar</option>
+                    <option value="+212">+212 — Maroc</option>
+                    <option value="+251">+251 — Éthiopie</option>
+                    <option value="+254">+254 — Kenya</option>
+                    <option value="+255">+255 — Tanzanie</option>
+                    <option value="+27">+27 — Afrique du Sud</option>
+                    <option value="+33">+33 — France</option>
+                    <option value="+32">+32 — Belgique</option>
+                    <option value="+41">+41 — Suisse</option>
+                    <option value="+1">+1 — États-Unis / Canada</option>
+                  </select>
+                  <input class="phone-edit-num" type="tel" id="edit-phone-number" placeholder="XX XX XX XX">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Site web (optionnel)</label>
+                <input type="url" id="edit-website" placeholder="https://...">
+              </div>
+              <div class="form-group">
+                <label>Instagram (optionnel)</label>
+                <input type="text" id="edit-instagram" placeholder="@ma_boutique">
+              </div>
+
+              <div class="form-group form-full">
+                <label>Theme de fond de ma boutique</label>
+                <input type="hidden" id="edit-shop-theme" value="heritage">
+                <div class="theme-picker" id="theme-picker">
+                  <button class="theme-option active" type="button" data-theme="heritage" onclick="selectShopTheme('heritage')">
+                    <div class="theme-swatch sw-heritage"></div>
+                    <div class="theme-name">Heritage</div>
+                  </button>
+                  <button class="theme-option" type="button" data-theme="savane" onclick="selectShopTheme('savane')">
+                    <div class="theme-swatch sw-savane"></div>
+                    <div class="theme-name">Savane</div>
+                  </button>
+                  <button class="theme-option" type="button" data-theme="lagune" onclick="selectShopTheme('lagune')">
+                    <div class="theme-swatch sw-lagune"></div>
+                    <div class="theme-name">Lagune</div>
+                  </button>
+                  <button class="theme-option" type="button" data-theme="atelier" onclick="selectShopTheme('atelier')">
+                    <div class="theme-swatch sw-atelier"></div>
+                    <div class="theme-name">Atelier</div>
+                  </button>
+                  <button class="theme-option" type="button" data-theme="sahara" onclick="selectShopTheme('sahara')">
+                    <div class="theme-swatch sw-sahara"></div>
+                    <div class="theme-name">Sahara</div>
+                  </button>
+                  <button class="theme-option" type="button" data-theme="kente" onclick="selectShopTheme('kente')">
+                    <div class="theme-swatch sw-kente"></div>
+                    <div class="theme-name">Kente</div>
+                  </button>
+                  <button class="theme-option" type="button" data-theme="bogolan" onclick="selectShopTheme('bogolan')">
+                    <div class="theme-swatch sw-bogolan"></div>
+                    <div class="theme-name">Bogolan</div>
+                  </button>
+                  <button class="theme-option" type="button" data-theme="baobab" onclick="selectShopTheme('baobab')">
+                    <div class="theme-swatch sw-baobab"></div>
+                    <div class="theme-name">Baobab</div>
+                  </button>
+                  <button class="theme-option" type="button" data-theme="nile" onclick="selectShopTheme('nile')">
+                    <div class="theme-swatch sw-nile"></div>
+                    <div class="theme-name">Nile</div>
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-group form-full">
+                <label>Sections de mon catalogue</label>
+                <p class="sections-help">Crée tes rayons (ex: Nouveautés, Sacs, Linge maison). Ils seront disponibles lors de l'ajout de produits.</p>
+                <div class="sections-input-row">
+                  <input type="text" id="catalog-section-input" placeholder="Ex: Nouveautés" maxlength="40">
+                  <button type="button" class="add-section-btn" onclick="addCatalogSection()">+ Ajouter la section</button>
+                </div>
+                <div class="sections-list" id="catalog-sections-list"></div>
+                <div class="section-empty" id="catalog-sections-empty">Aucune section créée pour le moment.</div>
+              </div>
+            </div>
+            <div class="save-row">
+              <button class="save-btn" id="save-profile-btn" onclick="saveProfileInfo()">Enregistrer les modifications</button>
+              <span class="save-status" id="save-status"></span>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- #dash-content -->
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { initializeApp }                    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      getFirestore, doc, getDoc, collection, query, where,
+      getDocs, updateDoc, deleteDoc, orderBy
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey:"AIzaSyAghL7HcGVTWur9ijJzjWXywTgvCaiJ01M", authDomain:"art-sango.firebaseapp.com",
+      projectId:"art-sango", storageBucket:"art-sango.firebasestorage.app",
+      messagingSenderId:"840868763552", appId:"1:840868763552:web:b7cb1ac710d3b9968436c5"
+    };
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+    const IMGBB_KEY = "af6d7113f6f4673b0ab9084960da124e";
+
+    let currentUser = null;
+    let myProducts  = [];
+    let pendingAction = null; // {type:'delete'|'reset', id?}
+    let shopSections = [];
+
+    const SHOP_THEME_DEFAULT = 'heritage';
+
+    // ── Upload photo de profil (fix: display_url) ────────────────
+    const toB64 = f => new Promise((res,rej) => { const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(f); });
+
+    async function uploadToImgBB(file) {
+      const b64 = await toB64(file);
+      const fd  = new FormData();
+      fd.append('image', b64.split(',')[1]);
+      const res  = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method:'POST', body:fd });
+      if (!res.ok) throw new Error(`ImgBB HTTP ${res.status}`);
+      const json = await res.json();
+      if (!json.success) throw new Error(json?.error?.message || 'Réponse ImgBB invalide');
+      // display_url = lien direct vers le fichier image (évite les pages HTML ImgBB)
+      const url = json.data?.display_url || json.data?.image?.url || json.data?.url;
+      if (!url) throw new Error('ImgBB : aucune URL retournée');
+      return url;
+    }
+
+    window.saveProfilePhoto = async function() {
+      const file = document.getElementById('profile-photo-input').files[0];
+      const btn  = document.getElementById('save-photo-btn');
+      if (!file || !currentUser) return;
+      btn.disabled = true; btn.textContent = 'Upload en cours...';
+      try {
+        const url = await uploadToImgBB(file);
+        await updateDoc(doc(db,'artisans',currentUser.uid), { profilePhoto: url });
+        const img = document.getElementById('profile-img');
+        img.src = url; img.style.display = 'block';
+        btn.textContent = 'Photo mise à jour';
+      } catch(e) {
+        alert('Erreur photo : ' + e.message);
+        btn.textContent = 'Mettre à jour la photo';
+      }
+      btn.disabled = false;
+    };
+
+    // ── Modale ───────────────────────────────────────────────────
+    window.closeModal = function() {
+      document.getElementById('modal-overlay').style.display = 'none';
+      pendingAction = null;
+    };
+
+    function openModal(title, body, confirmLabel, confirmClass, action) {
+      document.getElementById('modal-title').textContent = title;
+      document.getElementById('modal-body').textContent  = body;
+      const btn = document.getElementById('modal-confirm-btn');
+      btn.textContent  = confirmLabel;
+      btn.className    = 'mb ' + confirmClass;
+      btn.onclick      = action;
+      document.getElementById('modal-overlay').style.display = 'flex';
+    }
+
+    // ── Réinitialisation statistiques ───────────────────────────
+    window.askResetStats = function() {
+      openModal(
+        'Réinitialiser les statistiques',
+        'Les vues boutique, le nombre de commandes affichées et le chiffre d\'affaires seront remis à zéro dans ton tableau de bord. Cette action ne supprime pas les commandes réelles dans Firestore.',
+        'Réinitialiser',
+        'mb-confirm-reset',
+        doResetStats
+      );
+    };
+
+    async function doResetStats() {
+      closeModal();
+      try {
+        const resetAtIso = new Date().toISOString();
+        await updateDoc(doc(db,'artisans',currentUser.uid), {
+          views:         0,
+          statsResetAt:  resetAtIso,
+        });
+        document.getElementById('stat-views').textContent   = '0';
+        document.getElementById('stat-orders').textContent  = '0';
+        document.getElementById('stat-ca').textContent      = '0 XOF';
+      } catch(e) {
+        alert('Erreur : ' + e.message);
+      }
+    }
+
+    // ── Édition profil ───────────────────────────────────────────
+    window.toggleEditForm = function() {
+      const f = document.getElementById('edit-form');
+      const b = document.getElementById('toggle-edit-btn');
+      f.classList.toggle('open');
+      b.textContent = f.classList.contains('open') ? 'Masquer' : 'Afficher le formulaire';
+    };
+
+    window.updateCharCount = function() {
+      const v = (document.getElementById('edit-description')?.value || '').length;
+      const el = document.getElementById('desc-chars');
+      if (el) el.textContent = v;
+    };
+
+    window.selectShopTheme = function(themeKey) {
+      const input = document.getElementById('edit-shop-theme');
+      if (!input) return;
+      const next = themeKey || SHOP_THEME_DEFAULT;
+      input.value = next;
+      document.body.setAttribute('data-shop-theme', next);
+      document.querySelectorAll('#theme-picker .theme-option').forEach((btn) => {
+        btn.classList.toggle('active', btn.getAttribute('data-theme') === next);
+      });
+    };
+
+    function normalizeSectionName(value) {
+      return (value || '').trim().replace(/\s+/g, ' ').slice(0, 40);
+    }
+
+    function renderCatalogSections() {
+      const list = document.getElementById('catalog-sections-list');
+      const empty = document.getElementById('catalog-sections-empty');
+      if (!list || !empty) return;
+      if (!shopSections.length) {
+        list.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      list.innerHTML = shopSections.map((name, index) => `
+        <span class="section-pill">
+          ${name}
+          <button type="button" aria-label="Supprimer ${name}" onclick="removeCatalogSection(${index})">×</button>
+        </span>
+      `).join('');
+    }
+
+    window.addCatalogSection = function() {
+      const input = document.getElementById('catalog-section-input');
+      const next = normalizeSectionName(input?.value || '');
+      if (!next) return;
+      if (shopSections.some((item) => item.toLowerCase() === next.toLowerCase())) {
+        if (input) input.value = '';
+        return;
+      }
+      shopSections.push(next);
+      renderCatalogSections();
+      if (input) input.value = '';
+    };
+
+    window.removeCatalogSection = function(index) {
+      shopSections = shopSections.filter((_, i) => i !== index);
+      renderCatalogSections();
+    };
+
+    const sectionInput = document.getElementById('catalog-section-input');
+    if (sectionInput) {
+      sectionInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          window.addCatalogSection();
+        }
+      });
+    }
+
+    window.saveProfileInfo = async function() {
+      const btn    = document.getElementById('save-profile-btn');
+      const status = document.getElementById('save-status');
+      btn.disabled = true; status.textContent = 'Enregistrement...'; status.className = 'save-status';
+
+      const get = id => (document.getElementById(id)?.value || '').trim();
+      const phonePfx = get('edit-phone-prefix');
+      const phoneNum = get('edit-phone-number').replace(/\s/g,'');
+
+      if (!phonePfx && phoneNum) {
+        status.textContent = "Sélectionne l'indicatif pays."; status.className = 'save-status err';
+        btn.disabled = false; return;
+      }
+
+      const fullPhone = phonePfx && phoneNum ? phonePfx + phoneNum : '';
+      const updates = {
+        brandName:   get('edit-brandName'),
+        description: get('edit-description'),
+        category:    get('edit-category'),
+        city:        get('edit-city'),
+        country:     get('edit-country'),
+        website:     get('edit-website'),
+        instagram:   get('edit-instagram'),
+        shopTheme:   get('edit-shop-theme') || SHOP_THEME_DEFAULT,
+        shopSections,
+      };
+      if (fullPhone) updates.phone = fullPhone;
+      Object.keys(updates).forEach(k => { if (!updates[k]) delete updates[k]; });
+
+      try {
+        await updateDoc(doc(db,'artisans',currentUser.uid), updates);
+        if (updates.brandName) {
+          document.getElementById('profile-name').textContent = updates.brandName;
+          document.getElementById('dash-title').textContent   = 'Dashboard — ' + updates.brandName;
+        }
+        const loc = [updates.category, updates.city, updates.country].filter(Boolean).join(' · ');
+        if (loc) document.getElementById('profile-location').textContent = loc;
+        if (updates.shopTheme) document.body.setAttribute('data-shop-theme', updates.shopTheme);
+        status.textContent = 'Modifications enregistrées.'; status.className = 'save-status ok';
+        const form = document.getElementById('edit-form');
+        const toggle = document.getElementById('toggle-edit-btn');
+        if (form && form.classList.contains('open')) {
+          form.classList.remove('open');
+          if (toggle) toggle.textContent = 'Afficher le formulaire';
+        }
+        setTimeout(() => { status.textContent = ''; }, 3500);
+      } catch(e) {
+        status.textContent = 'Erreur : ' + e.message; status.className = 'save-status err';
+      }
+      btn.disabled = false;
+    };
+
+    // ── Produits ──────────────────────────────────────────────────
+    const getFirstImg = p => (Array.isArray(p.photos) && p.photos[0]) || p.imageUrl || p.imageURL || p.image || '';
+
+    async function loadMyProducts() {
+      let snap;
+      try {
+        snap = await getDocs(query(collection(db,'produits'), where('artisanId','==',currentUser.uid), orderBy('createdAt','desc')));
+      } catch {
+        snap = await getDocs(query(collection(db,'produits'), where('artisanId','==',currentUser.uid)));
+      }
+      myProducts = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+      renderProducts();
+      document.getElementById('stat-products').textContent = myProducts.filter(p => p.active !== false).length;
+    }
+
+    function renderProducts() {
+      const grid = document.getElementById('prod-grid');
+      if (!myProducts.length) {
+        grid.innerHTML = `<div class="no-products">Aucun produit encore. <a href="produit-nouveau.html" style="color:#cba56b;font-weight:700;">Ajouter le premier</a></div>`;
+        return;
+      }
+      grid.innerHTML = myProducts.map(p => {
+        const img      = getFirstImg(p);
+        const inactive = p.active === false;
+        const count    = Array.isArray(p.photos) ? p.photos.length : (img ? 1 : 0);
+        return `
+        <div class="prod-item ${inactive ? 'inactive' : ''}">
+          <div class="prod-thumb">
+            ${img
+              ? `<img src="${img}" alt="${p.name||''}" loading="lazy" onerror="this.style.display='none'">`
+              : '<div style="height:100%;display:flex;align-items:center;justify-content:center;color:#6b7280;font-size:.8rem;">Aucune photo</div>'}
+            ${inactive ? '<div class="inactive-badge">Retiré</div>' : ''}
+            ${count > 1 ? `<div class="photo-count">${count} photos</div>` : ''}
+          </div>
+          <div class="prod-info">
+            <div class="pname" title="${p.name||''}">${p.name || '—'}</div>
+            <div class="pprice">${(p.price||0).toLocaleString('fr-FR')} XOF</div>
+            <div class="pcat">${p.category || ''}</div>
+          </div>
+          <div class="prod-actions">
+            <button class="pa-btn pa-view"  onclick="location.href='produit-detail.html?id=${p.id}'">Voir</button>
+            <button class="pa-btn ${inactive ? 'pa-toggle-on' : 'pa-toggle-off'}" onclick="toggleProduct('${p.id}',${inactive})">
+              ${inactive ? 'Remettre' : 'Retirer'}
+            </button>
+            <button class="pa-btn pa-delete" onclick="askDelete('${p.id}','${(p.name||'ce produit').replace(/'/g,"\\'")}')">Supprimer</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    window.toggleProduct = async function(id, currentlyInactive) {
+      try {
+        await updateDoc(doc(db,'produits',id), { active: currentlyInactive });
+        const idx = myProducts.findIndex(p => p.id === id);
+        if (idx !== -1) myProducts[idx].active = currentlyInactive;
+        renderProducts();
+        document.getElementById('stat-products').textContent = myProducts.filter(p => p.active !== false).length;
+      } catch(e) { alert('Erreur : ' + e.message); }
+    };
+
+    window.askDelete = function(id, name) {
+      openModal(
+        'Supprimer le produit',
+        `"${name}" sera définitivement supprimé de ta boutique. Cette action est irréversible.`,
+        'Supprimer définitivement',
+        'mb-confirm-del',
+        () => confirmDelete(id)
+      );
+    };
+
+    async function confirmDelete(id) {
+      closeModal();
+      try {
+        await deleteDoc(doc(db,'produits',id));
+        myProducts = myProducts.filter(p => p.id !== id);
+        renderProducts();
+        document.getElementById('stat-products').textContent = myProducts.filter(p => p.active !== false).length;
+      } catch(e) { alert('Erreur suppression : ' + e.message); }
+    }
+
+    // ── Déconnexion ──────────────────────────────────────────────
+    document.getElementById('logout-link').addEventListener('click', e => {
+      e.preventDefault(); signOut(auth).then(() => window.location.href = 'index.html');
+    });
+    const mobileLogout = document.getElementById('logout-link-mobile');
+    if (mobileLogout) {
+      mobileLogout.addEventListener('click', e => {
+        e.preventDefault(); signOut(auth).then(() => window.location.href = 'index.html');
+      });
+    }
+
+    // ── Auth + chargement ─────────────────────────────────────────
+    onAuthStateChanged(auth, async user => {
+      if (!user) { window.location.href = 'connexion.html'; return; }
+      currentUser = user;
+      document.getElementById('my-shop-link').href = 'boutique-vendeur.html?id=' + user.uid;
+      const mobileShopLink = document.getElementById('mobile-shop-link');
+      if (mobileShopLink) mobileShopLink.href = 'boutique-vendeur.html?id=' + user.uid;
+
+      const aSnap = await getDoc(doc(db,'artisans',user.uid));
+      const a     = aSnap.exists() ? aSnap.data() : {};
+
+      document.getElementById('dash-title').textContent    = 'Dashboard — ' + (a.brandName || user.email);
+      document.getElementById('profile-name').textContent  = a.brandName || user.email;
+      document.getElementById('profile-location').textContent = [a.category, a.city, a.country].filter(Boolean).join(' · ');
+
+      if (a.profilePhoto) {
+        const img = document.getElementById('profile-img');
+        img.src = a.profilePhoto; img.style.display = 'block';
+      }
+      if (a.verified) {
+        const b = document.getElementById('verified-badge');
+        b.textContent = 'Artisan vérifié'; b.classList.remove('unverified-badge');
+      }
+
+      // Pré-remplir formulaire édition
+      const set = (id, v) => { const el = document.getElementById(id); if (el && v) el.value = v; };
+      set('edit-brandName',   a.brandName);
+      set('edit-description', a.description || a.bio || '');
+      set('edit-category',    a.category);
+      set('edit-city',        a.city);
+      set('edit-country',     a.country);
+      set('edit-website',     a.website || '');
+      set('edit-instagram',   a.instagram || '');
+      document.body.setAttribute('data-shop-theme', a.shopTheme || SHOP_THEME_DEFAULT);
+      window.selectShopTheme(a.shopTheme || SHOP_THEME_DEFAULT);
+      shopSections = Array.isArray(a.shopSections)
+        ? a.shopSections.map(normalizeSectionName).filter(Boolean)
+        : [];
+      renderCatalogSections();
+      // Pré-remplir indicatif + numéro
+      const rawPhone = (a.phone || a.whatsapp || '').replace(/\s/g,'');
+      if (rawPhone) {
+        const prefSel = document.getElementById('edit-phone-prefix');
+        for (const opt of prefSel.options) {
+          if (opt.value && rawPhone.startsWith(opt.value)) {
+            opt.selected = true;
+            document.getElementById('edit-phone-number').value = rawPhone.slice(opt.value.length);
+            break;
+          }
+        }
+      }
+      window.updateCharCount();
+
+      // Stats commandes (respecte statsResetAt pour eviter le retour apres reset)
+      const resetAtMs = a.statsResetAt ? new Date(a.statsResetAt).getTime() : 0;
+      const getOrderMs = (o) => {
+        if (!o?.createdAt) return 0;
+        if (o.createdAt?.toDate) return o.createdAt.toDate().getTime();
+        const t = new Date(o.createdAt).getTime();
+        return Number.isFinite(t) ? t : 0;
+      };
+
+      const oSnap  = await getDocs(query(collection(db,'commandes'), where('artisanId','==',user.uid)));
+      const allOrders = oSnap.docs.map(d => d.data());
+      const orders = resetAtMs > 0
+        ? allOrders.filter((o) => getOrderMs(o) > resetAtMs)
+        : allOrders;
+      const toShip = orders.filter(o => o.statut === 'a_expedier');
+      const ca     = orders.reduce((s, o) => s + (o.montant || 0), 0);
+
+      document.getElementById('stat-orders').textContent = orders.length;
+      document.getElementById('stat-ca').textContent     = ca ? ca.toLocaleString('fr-FR') + ' XOF' : '0 XOF';
+      document.getElementById('stat-views').textContent  = (a.views || 0).toLocaleString('fr-FR');
+
+      if (toShip.length > 0) {
+        document.getElementById('urgent-orders').innerHTML =
+          `<div class="alert-row"><strong>${toShip.length} commande(s)</strong> à expédier <a href="commandes.html">Traiter</a></div>`;
+      }
+
+      await loadMyProducts();
+
+      try {
+        const {
+          setupNotifications,
+          startConversationNotifications,
+          startOrderNotifications,
+        } = await import('./messaging-service.js');
+        await setupNotifications({ db, currentUser: user, role: 'artisan' });
+        if (typeof window.notificationUnsubscribe === 'function') window.notificationUnsubscribe();
+        const stopMessages = startConversationNotifications({
+          db,
+          currentUser: user,
+          basePath: 'messagerie.html',
+        });
+        const stopOrders = startOrderNotifications({
+          db,
+          currentUser: user,
+          basePath: 'commandes.html',
+        });
+        window.notificationUnsubscribe = () => {
+          if (typeof stopMessages === 'function') stopMessages();
+          if (typeof stopOrders === 'function') stopOrders();
+        };
+      } catch (e) {
+        console.warn('Notifications non configurées:', e.message);
+      }
+
+      document.getElementById('loading-state').style.display = 'none';
+      document.getElementById('dash-content').style.display  = 'block';
+    });
+  </script>
+  <script>
+    function goBack(f){ if(window.history.length>1) window.history.back(); else window.location.href=f; }
+  </script>
+  <script type="module" src="./platform-logo.js"></script>
+  <script defer src="./sw-register.js"></script>
+  <script defer src="./mobile-nav.js"></script>
+</body>
+</html>
