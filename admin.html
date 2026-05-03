@@ -13,7 +13,7 @@
     .top{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:18px; }
     .back-btn{ border:0; background:var(--brand); color:#fff; border-radius:999px; padding:10px 14px; font-weight:700; cursor:pointer; }
     h1{ margin:0; font-family:"Playfair Display",serif; }
-    .stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:18px; }
+    .stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
     .stat-card{ background:#fff; border:1px solid #e0d2be; border-radius:12px; padding:14px; }
     .stat-label{ font-size:.78rem; color:#6b7280; text-transform:uppercase; font-weight:700; }
     .stat-val{ font-size:1.7rem; font-weight:900; margin-top:4px; }
@@ -21,13 +21,36 @@
     .card{ background:#fff; border:1px solid #e0d2be; border-radius:12px; padding:14px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; gap:12px; }
     .tag{ font-size:.75rem; font-weight:700; padding:5px 9px; border-radius:999px; background:#fef3c7; color:#92400e; }
     .tag.ok{ background:#dcfce7; color:#166534; }
+    .section{ background:#fff; border:1px solid #e0d2be; border-radius:12px; padding:14px; margin-bottom:14px; }
+    .section-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
+    .section-sub{ margin:4px 0 0; font-size:.86rem; color:#6b7280; }
+    .list-stack{ display:grid; gap:10px; }
+    .entity-card{ background:#fff; border:1px solid #e0d2be; border-radius:12px; padding:14px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+    .entity-main{ min-width:0; flex:1; }
+    .entity-title{ font-weight:800; font-size:1rem; color:#111827; }
+    .entity-meta{ margin-top:4px; font-size:.85rem; color:#6b7280; display:flex; gap:8px; flex-wrap:wrap; }
+    .entity-details{ margin-top:10px; font-size:.86rem; color:#374151; display:grid; gap:4px; }
+    .entity-details strong{ color:#111827; }
+    .entity-actions{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
+    .status-pill{ font-size:.72rem; font-weight:700; padding:4px 8px; border-radius:999px; display:inline-flex; align-items:center; }
+    .status-pending{ background:#fef3c7; color:#92400e; }
+    .status-approved{ background:#dcfce7; color:#166534; }
+    .status-rejected{ background:#fee2e2; color:#991b1b; }
+    .status-verified{ background:#d1fae5; color:#065f46; }
+    .status-muted{ background:#e5e7eb; color:#374151; }
+    .identity-row{ display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+    .identity-thumb{ width:64px; height:64px; border-radius:10px; overflow:hidden; border:1px solid #e0d2be; background:#f3efe5; }
+    .identity-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .identity-links{ display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+    .identity-links a{ color:#0f766e; font-weight:700; text-decoration:none; font-size:.82rem; }
+    .section-empty{ color:#6b7280; font-size:.9rem; padding:6px 0; }
     .btn-action{ border:0; background:var(--brand); color:#fff; font-weight:700; border-radius:8px; padding:8px 12px; cursor:pointer; font-size:.88rem; }
     .loading{ text-align:center; padding:30px; color:#9ca3af; }
     .gate{ background:#fff; border:1px solid #e0d2be; border-radius:12px; padding:20px; margin-bottom:14px; }
     .gate input{ width:100%; border:1.5px solid #d2c3ad; border-radius:9px; padding:9px 10px; font:inherit; margin-top:8px; }
     .gate .row{ display:grid; grid-template-columns:1fr auto; gap:8px; margin-top:8px; }
     .mini{ font-size:.85rem; color:#6b7280; margin:0; }
-    @media (max-width:700px){ .card{ flex-direction:column; align-items:flex-start; } .stats{ grid-template-columns:1fr 1fr; } }
+    @media (max-width:700px){ .card{ flex-direction:column; align-items:flex-start; } .entity-card{ flex-direction:column; align-items:flex-start; } .stats{ grid-template-columns:1fr 1fr; } }
   </style>
 </head>
 <body>
@@ -70,14 +93,41 @@
 
       <!-- Stats globales -->
       <div class="stats">
-        <div class="stat-card"><div class="stat-label">Artisans inscrits</div><div class="stat-val" id="total-artisans">—</div></div>
-        <div class="stat-card"><div class="stat-label">Produits publiés</div><div class="stat-val" id="total-products">—</div></div>
-        <div class="stat-card"><div class="stat-label">Commandes totales</div><div class="stat-val" id="total-orders">—</div></div>
+        <div class="stat-card"><div class="stat-label">Vendeurs inscrits</div><div class="stat-val" id="total-artisans">???</div></div>
+        <div class="stat-card"><div class="stat-label">Clients inscrits</div><div class="stat-val" id="total-clients">???</div></div>
+        <div class="stat-card"><div class="stat-label">Demandes en attente</div><div class="stat-val" id="total-pending-requests">???</div></div>
+        <div class="stat-card"><div class="stat-label">Boutiques v?rifi?es</div><div class="stat-val" id="total-verified">???</div></div>
       </div>
 
-      <!-- Artisans à valider -->
-      <h2 class="section-title">Artisans à vérifier</h2>
-      <div id="artisans-list" class="loading">Chargement…</div>
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Vendeurs inscrits</h2>
+            <p class="section-sub">Toutes les boutiques d?j? cr??es sur la plateforme.</p>
+          </div>
+        </div>
+        <div id="artisans-list" class="list-stack">Chargement???</div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Clients inscrits</h2>
+            <p class="section-sub">Les comptes clients connect?s ? la marketplace.</p>
+          </div>
+        </div>
+        <div id="clients-list" class="list-stack">Chargement???</div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Demandes de v?rification</h2>
+            <p class="section-sub">Les boutiques physiques ou en ligne qui attendent une d?cision.</p>
+          </div>
+        </div>
+        <div id="verification-list" class="list-stack">Chargement???</div>
+      </section>
 
       <!-- Signalements -->
       <h2 class="section-title" style="margin-top:20px;">Signalements</h2>
@@ -88,10 +138,15 @@
     </div>
   </div>
 
+
   <script type="module">
     import { initializeApp }                                           from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, signInAnonymously, onAuthStateChanged }          from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, collection, getDocs, doc, updateDoc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getAuth, signInAnonymously }                              from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      getFirestore, collection, getDocs, doc, updateDoc, getDoc, setDoc,
+      writeBatch, serverTimestamp, query, where
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { sendPushToUser } from "./messaging-service.js";
 
     const firebaseConfig = {
       apiKey:            "AIzaSyAghL7HcGVTWur9ijJzjWXywTgvCaiJ01M",
@@ -107,18 +162,21 @@
     const db   = getFirestore(app);
     const IMGBB_API_KEY = "af6d7113f6f4673b0ab9084960da124e";
 
-    // Mot de passe par défaut
     let currentAdminPassword = '^artsango-admin';
+    let artisansCache = [];
+    let clientsCache = [];
+    let requestsCache = [];
+    let artisansById = {};
+    let requestsById = {};
 
     const ADMIN_REQUESTED = window.location.search.includes('admin=1') || window.location.hash === '#admin';
     if (ADMIN_REQUESTED) sessionStorage.setItem('artsango_admin_entry', '1');
     const hasAdminEntry = ADMIN_REQUESTED || sessionStorage.getItem('artsango_admin_entry') === '1';
     if (!hasAdminEntry) {
-      document.body.innerHTML = '<div style="font-family:Inter,Arial,sans-serif;padding:28px;text-align:center;"><h2>Accès refusé</h2><p>Lien admin invalide.</p></div>';
+      document.body.innerHTML = '<div style="font-family:Inter,Arial,sans-serif;padding:28px;text-align:center;"><h2>Acc?s refus?</h2><p>Lien admin invalide.</p></div>';
       throw new Error('Lien admin invalide');
     }
 
-    // Charger le mot de passe depuis Firestore (lecture anonyme autorisée)
     async function loadAdminPassword() {
       try {
         const secRef = doc(db, 'platform', 'security');
@@ -127,7 +185,6 @@
           currentAdminPassword = snap.data().adminPassword;
         }
       } catch {}
-      // fallback localStorage
       const local = localStorage.getItem('artsango_admin_password');
       if (local) currentAdminPassword = local;
     }
@@ -148,46 +205,328 @@
       const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
       const json = await res.json();
       if (json.success && json.data?.url) return json.data.url;
-      throw new Error(json?.error?.message || 'Upload ImgBB échoué');
+      throw new Error(json?.error?.message || 'Upload ImgBB ?chou?');
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function toMs(value) {
+      if (!value) return 0;
+      if (typeof value.toDate === 'function') return value.toDate().getTime();
+      if (value instanceof Date) return value.getTime();
+      const t = new Date(value).getTime();
+      return Number.isFinite(t) ? t : 0;
+    }
+
+    function formatDate(value) {
+      const ms = toMs(value);
+      if (!ms) return '?';
+      return new Date(ms).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' });
+    }
+
+    function getShopModeLabel(mode) {
+      return String(mode || '').toLowerCase() === 'online' ? 'Boutique en ligne' : 'Boutique physique';
+    }
+
+    function getReviewState(artisan = {}, request = null) {
+      if (artisan.verified || request?.status === 'approved') return 'verified';
+      const raw = String(request?.status || artisan.verificationStatus || '').toLowerCase();
+      if (raw === 'pending' || raw === '') return 'pending';
+      if (raw === 'rejected' || raw === 'refused') return 'rejected';
+      return 'idle';
+    }
+
+    function getStatusMeta(state) {
+      const map = {
+        verified: { label: 'V?rifi?e', className: 'status-verified' },
+        approved: { label: 'Valid?e', className: 'status-approved' },
+        pending:  { label: 'En attente', className: 'status-pending' },
+        rejected: { label: 'Refus?e', className: 'status-rejected' },
+        idle:     { label: 'Non v?rifi?e', className: 'status-muted' },
+        client:   { label: 'Client', className: 'status-muted' },
+      };
+      return map[state] || map.idle;
+    }
+
+    function getInitials(value = '') {
+      return String(value).trim().split(/\s+/).filter(Boolean).map((part) => part[0]).join('').slice(0, 2).toUpperCase() || 'AS';
+    }
+
+    function requestSortValue(request) {
+      const state = String(request?.status || 'pending').toLowerCase();
+      const order = { pending: 3, approved: 2, rejected: 1 };
+      return (order[state] || 0) * 1_000_000_000 + toMs(request?.submittedAt || request?.updatedAt || request?.reviewedAt);
+    }
+
+    function artisanSortValue(artisan, request) {
+      const state = getReviewState(artisan, request);
+      const order = { verified: 3, pending: 2, rejected: 1, idle: 0 };
+      return (order[state] || 0) * 1_000_000_000 + toMs(artisan?.createdAt);
     }
 
     async function loadDashboardData() {
-      try {
-        const artisansSnap  = await getDocs(collection(db, 'artisans'));
-        const productsSnap  = await getDocs(collection(db, 'produits'));
-        let ordersCount = 0;
-        try {
-          const ordersSnap = await getDocs(collection(db, 'commandes'));
-          ordersCount = ordersSnap.size;
-        } catch {}
+      const [artisansRes, clientsRes, requestsRes] = await Promise.allSettled([
+        getDocs(collection(db, 'artisans')),
+        getDocs(collection(db, 'clients')),
+        getDocs(collection(db, 'verificationRequests')),
+      ]);
 
-        document.getElementById('total-artisans').textContent = artisansSnap.size;
-        document.getElementById('total-products').textContent = productsSnap.size;
-        document.getElementById('total-orders').textContent   = ordersCount;
+      artisansCache = artisansRes.status === 'fulfilled' ? artisansRes.value.docs.map((d) => ({ id: d.id, ...d.data() })) : [];
+      clientsCache = clientsRes.status === 'fulfilled' ? clientsRes.value.docs.map((d) => ({ id: d.id, ...d.data() })) : [];
+      requestsCache = requestsRes.status === 'fulfilled' ? requestsRes.value.docs.map((d) => ({ id: d.id, ...d.data() })) : [];
 
-        const unverified = artisansSnap.docs.filter(d => !d.data().verified).map(d => ({ id: d.id, ...d.data() }));
-        const list = document.getElementById('artisans-list');
-        if (!unverified.length) {
-          list.innerHTML = '<p style="color:#6b7280;font-size:.9rem;">Aucun artisan en attente de vérification.</p>';
-          return;
+      artisansById = Object.fromEntries(artisansCache.map((artisan) => [artisan.id, artisan]));
+      requestsById = Object.fromEntries(requestsCache.map((request) => [request.artisanUid || request.id, request]));
+
+      const pendingRequests = requestsCache.filter((request) => String(request.status || 'pending').toLowerCase() === 'pending').length;
+      const verifiedCount = artisansCache.filter((artisan) => artisan.verified).length;
+
+      document.getElementById('total-artisans').textContent = artisansCache.length;
+      document.getElementById('total-clients').textContent = clientsCache.length;
+      document.getElementById('total-pending-requests').textContent = pendingRequests;
+      document.getElementById('total-verified').textContent = verifiedCount;
+
+      renderArtisans();
+      renderClients();
+      renderRequests();
+    }
+
+    function renderArtisans() {
+      const list = document.getElementById('artisans-list');
+      if (!list) return;
+      if (!artisansCache.length) {
+        list.innerHTML = '<div class="section-empty">Aucun vendeur inscrit pour le moment.</div>';
+        return;
+      }
+
+      const sorted = [...artisansCache].sort((a, b) => {
+        const rank = artisanSortValue(b, requestsById[b.id]) - artisanSortValue(a, requestsById[a.id]);
+        if (rank) return rank;
+        return String(a.brandName || a.email || '').localeCompare(String(b.brandName || b.email || ''), 'fr');
+      });
+
+      list.innerHTML = sorted.map((artisan) => {
+        const request = requestsById[artisan.id] || null;
+        const state = getReviewState(artisan, request);
+        const meta = getStatusMeta(state);
+        const name = artisan.brandName || artisan.email || 'Vendeur';
+        const contact = [artisan.email, artisan.city, artisan.category].filter(Boolean);
+        const created = formatDate(artisan.createdAt);
+        const requestOwner = [request?.ownerFirstName, request?.ownerLastName].filter(Boolean).join(' ');
+        const avatar = artisan.profilePhoto
+          ? `<div class="identity-thumb" style="width:56px;height:56px;"><img src="${escapeHtml(artisan.profilePhoto)}" alt="${escapeHtml(name)}"></div>`
+          : `<div class="identity-thumb" style="width:56px;height:56px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#0f766e;">${escapeHtml(getInitials(name))}</div>`;
+
+        return `
+          <article class="entity-card">
+            <div class="entity-main">
+              <div style="display:flex;align-items:center;gap:10px;">
+                ${avatar}
+                <div>
+                  <div class="entity-title">${escapeHtml(name)}</div>
+                  <div class="entity-meta">${contact.map((item) => `<span>${escapeHtml(item)}</span>`).join('')}</div>
+                </div>
+              </div>
+              <div class="entity-details">
+                <div><strong>Statut :</strong> ${escapeHtml(meta.label)}</div>
+                <div><strong>Inscription :</strong> ${escapeHtml(created)}</div>
+                ${requestOwner ? `<div><strong>Responsable :</strong> ${escapeHtml(requestOwner)}</div>` : ''}
+              </div>
+            </div>
+            <div class="entity-actions">
+              <span class="status-pill ${meta.className}">${escapeHtml(meta.label)}</span>
+              <a class="btn-action" href="boutique-vendeur.html?id=${encodeURIComponent(artisan.id)}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">Voir boutique</a>
+            </div>
+          </article>`;
+      }).join('');
+    }
+
+    function renderClients() {
+      const list = document.getElementById('clients-list');
+      if (!list) return;
+      if (!clientsCache.length) {
+        list.innerHTML = '<div class="section-empty">Aucun client inscrit pour le moment.</div>';
+        return;
+      }
+
+      const sorted = [...clientsCache].sort((a, b) => toMs(b.createdAt) - toMs(a.createdAt));
+      list.innerHTML = sorted.map((client) => {
+        const name = client.name || client.displayName || client.fullName || client.email || 'Client';
+        const contact = [client.email, client.phone].filter(Boolean);
+        return `
+          <article class="entity-card">
+            <div class="entity-main">
+              <div class="entity-title">${escapeHtml(name)}</div>
+              <div class="entity-meta">${contact.map((item) => `<span>${escapeHtml(item)}</span>`).join('')}</div>
+              <div class="entity-details">
+                <div><strong>Inscription :</strong> ${escapeHtml(formatDate(client.createdAt))}</div>
+                <div><strong>Type :</strong> Compte client</div>
+              </div>
+            </div>
+            <div class="entity-actions">
+              <span class="status-pill status-muted">Client</span>
+            </div>
+          </article>`;
+      }).join('');
+    }
+
+    function renderRequests() {
+      const list = document.getElementById('verification-list');
+      if (!list) return;
+      if (!requestsCache.length) {
+        list.innerHTML = '<div class="section-empty">Aucune demande d?pos?e pour le moment.</div>';
+        return;
+      }
+
+      const sorted = [...requestsCache].sort((a, b) => requestSortValue(b) - requestSortValue(a));
+      list.innerHTML = sorted.map((request) => {
+        const artisan = artisansById[request.artisanUid] || {};
+        const state = String(request.status || 'pending').toLowerCase();
+        const meta = getStatusMeta(state === 'approved' ? 'approved' : state);
+        const shopName = artisan.brandName || request.shopName || request.artisanName || 'Demande de v?rification';
+        const owner = [request.ownerFirstName, request.ownerLastName].filter(Boolean).join(' ') || '?';
+        const email = request.email || artisan.email || '?';
+        const lines = [];
+
+        if (request.shopMode === 'online') {
+          lines.push(`<div><strong>Activit? :</strong> ${escapeHtml(request.activityType || '?')}</div>`);
+        } else {
+          lines.push(`<div><strong>RCCM :</strong> ${escapeHtml(request.rccm || '?')}</div>`);
+          lines.push(`<div><strong>Lieu :</strong> ${escapeHtml(request.shopLocation || '?')}</div>`);
+          lines.push(`<div><strong>Num?ro :</strong> ${escapeHtml(request.shopNumber || '?')}</div>`);
+          if (request.physicalNotes) lines.push(`<div><strong>D?tails :</strong> ${escapeHtml(request.physicalNotes)}</div>`);
         }
-        list.innerHTML = unverified.map(a => `
-          <article class="card">
-            <div>
-              <strong>${a.brandName || a.email}</strong>
-              <p style="margin:4px 0 0;font-size:.87rem;color:#6b7280;">${a.category || ''} · ${a.city || ''} · ${a.email || ''}</p>
+        if (request.reviewNote) lines.push(`<div><strong>Note :</strong> ${escapeHtml(request.reviewNote)}</div>`);
+        if (request.reviewedAt) lines.push(`<div><strong>R?vis?e le :</strong> ${escapeHtml(formatDate(request.reviewedAt))}</div>`);
+
+        const front = request.idCardFrontUrl ? `<a class="identity-thumb" href="${escapeHtml(request.idCardFrontUrl)}" target="_blank" rel="noopener"><img src="${escapeHtml(request.idCardFrontUrl)}" alt="Carte recto"></a>` : '';
+        const back = request.idCardBackUrl ? `<a class="identity-thumb" href="${escapeHtml(request.idCardBackUrl)}" target="_blank" rel="noopener"><img src="${escapeHtml(request.idCardBackUrl)}" alt="Carte verso"></a>` : '';
+        const isPending = state === 'pending';
+        const requestId = request.id || request.artisanUid;
+
+        return `
+          <article class="entity-card">
+            <div class="entity-main">
+              <div class="entity-title">${escapeHtml(shopName)}</div>
+              <div class="entity-meta">
+                <span>${escapeHtml(owner)}</span>
+                <span>${escapeHtml(getShopModeLabel(request.shopMode))}</span>
+                <span>${escapeHtml(formatDate(request.submittedAt || request.updatedAt))}</span>
+              </div>
+              <div class="entity-details">
+                <div><strong>Statut :</strong> ${escapeHtml(meta.label)}</div>
+                <div><strong>Email :</strong> ${escapeHtml(email)}</div>
+                ${lines.join('')}
+              </div>
+              <div class="identity-row">
+                ${front}
+                ${back}
+              </div>
             </div>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span class="tag">À valider</span>
-              <button class="btn-action" onclick="verifyArtisan('${a.id}', this)">Valider ✓</button>
+            <div class="entity-actions">
+              <span class="status-pill ${meta.className}">${escapeHtml(meta.label)}</span>
+              ${isPending ? `
+                <button class="btn-action" onclick="approveVerificationRequest(${JSON.stringify(requestId)}, this)">Valider</button>
+                <button class="btn-action" style="background:#dc2626;" onclick="rejectVerificationRequest(${JSON.stringify(requestId)}, this)">Refuser</button>
+              ` : ''}
             </div>
-          </article>`).join('');
+          </article>`;
+      }).join('');
+    }
+
+    async function syncVerifiedProducts(artisanId, verified) {
+      try {
+        const snap = await getDocs(query(collection(db, 'produits'), where('artisanId', '==', artisanId)));
+        await Promise.all(snap.docs.map((product) => updateDoc(product.ref, { verified })));
       } catch (e) {
-        document.getElementById('artisans-list').innerHTML = '<p style="color:#dc2626;">Erreur : ' + e.message + '</p>';
+        console.warn('Sync produits:', e.message);
       }
     }
 
-    // Connexion Firebase anonyme pour les opérations d'écriture admin
+    async function reviewVerificationRequest(requestId, approved, btn, note = '') {
+      const request = requestsCache.find((item) => item.id === requestId) || requestsById[requestId] || {};
+      const artisanId = request.artisanUid || requestId;
+      if (!artisanId) return;
+
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = approved ? 'Validation...' : 'Refus...';
+      }
+
+      try {
+        await ensureAuth();
+        const requestRef = doc(db, 'verificationRequests', requestId);
+        const artisanRef = doc(db, 'artisans', artisanId);
+        const batch = writeBatch(db);
+        const reviewedAt = serverTimestamp();
+        const nextStatus = approved ? 'approved' : 'rejected';
+
+        batch.set(requestRef, {
+          status: nextStatus,
+          reviewedAt,
+          reviewedBy: 'admin',
+          reviewNote: note || '',
+          updatedAt: new Date().toISOString(),
+        }, { merge: true });
+
+        batch.set(artisanRef, {
+          verified: approved,
+          verificationStatus: nextStatus,
+          verifiedAt: approved ? reviewedAt : null,
+          verifiedBadgeLabel: approved ? 'Boutique v?rifi?e' : '',
+          verificationProfile: request,
+          verificationRequestedAt: request.submittedAt || request.updatedAt || new Date().toISOString(),
+        }, { merge: true });
+
+        await batch.commit();
+        await syncVerifiedProducts(artisanId, approved);
+
+        const shopName = request.shopName || request.artisanName || artisansById[artisanId]?.brandName || 'ta boutique';
+        try {
+          await sendPushToUser({
+            db,
+            recipientUid: artisanId,
+            title: approved ? 'Boutique v?rifi?e' : 'Demande de v?rification refus?e',
+            body: approved
+              ? `Ta boutique ${shopName} est maintenant v?rifi?e.`
+              : `Ta demande de v?rification pour ${shopName} a ?t? refus?e${note ? ` : ${note}` : '.'}`,
+            url: `boutique-vendeur.html?id=${encodeURIComponent(artisanId)}`,
+            kind: 'verification',
+            tag: `verification-${artisanId}-${approved ? 'approved' : 'rejected'}`,
+          });
+        } catch (pushError) {
+          console.warn('Push verification:', pushError.message);
+        }
+
+        await loadDashboardData();
+      } catch (e) {
+        alert('Erreur validation v?rification: ' + e.message);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = approved ? 'Valider' : 'Refuser';
+        }
+      }
+    }
+
+    window.approveVerificationRequest = async function(requestId, btn) {
+      return reviewVerificationRequest(requestId, true, btn);
+    };
+
+    window.rejectVerificationRequest = async function(requestId, btn) {
+      const note = window.prompt('Motif du refus (facultatif)') || '';
+      return reviewVerificationRequest(requestId, false, btn, note);
+    };
+
+    window.verifyArtisan = window.approveVerificationRequest;
+
     async function ensureAuth() {
       if (auth.currentUser) return auth.currentUser;
       try {
@@ -219,7 +558,7 @@
         await setDoc(doc(db, 'platform', 'security'), { adminPassword: nextPass }, { merge: true });
         currentAdminPassword = nextPass;
         localStorage.setItem('artsango_admin_password', nextPass);
-        alert('✅ Mot de passe admin mis à jour.');
+        alert('? Mot de passe admin mis ? jour.');
       } catch (e) {
         alert('Erreur : ' + e.message);
       }
@@ -239,33 +578,15 @@
           updatedAt: new Date().toISOString()
         }, { merge: true });
         localStorage.setItem('artsango_platform_logo', logoUrl);
-        alert('✅ Logo mis à jour.');
+        alert('? Logo mis ? jour.');
       } catch (e) {
         alert('Erreur logo: ' + e.message);
       }
       btn.disabled = false;
-      btn.textContent = 'Mettre à jour le logo';
-    };
-
-    window.verifyArtisan = async function(uid, btn) {
-      btn.disabled = true;
-      btn.textContent = '…';
-      try {
-        await ensureAuth();
-        await updateDoc(doc(db, 'artisans', uid), { verified: true });
-        btn.closest('.card').querySelector('.tag').textContent = '✓ Vérifié';
-        btn.closest('.card').querySelector('.tag').classList.add('ok');
-        btn.remove();
-      } catch (e) {
-        const isPermission = String(e.message || '').toLowerCase().includes('permission') || String(e.code || '').includes('permission');
-        alert(isPermission
-          ? 'Permission refusée : mets à jour les règles Firestore pour autoriser la validation admin des artisans.'
-          : 'Erreur validation artisan: ' + e.message);
-        btn.disabled = false;
-        btn.textContent = 'Valider ✓';
-      }
+      btn.textContent = 'Mettre ? jour le logo';
     };
   </script>
+
   <script>
     function goBack(fallback) {
       if (window.history.length > 1) window.history.back(); else window.location.href = fallback;

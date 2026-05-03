@@ -383,15 +383,24 @@
       return copy;
     }
 
+    function isVerifiedShop(product) {
+      const artisan = artisansData[product.artisanId] || {};
+      return Boolean(artisan.verified);
+    }
+
     function sortMarketplaceProducts(list, queryText = '') {
       const terms = getInterestTerms();
       const queryTerms = tokenizeText(queryText);
-      if (!terms.length && !queryTerms.length) return shuffleList(list);
+      if (!terms.length && !queryTerms.length) {
+        const verified = list.filter((product) => isVerifiedShop(product));
+        const others = list.filter((product) => !isVerifiedShop(product));
+        return [...shuffleList(verified), ...shuffleList(others)];
+      }
 
       return list
         .map((product) => ({
           product,
-          score: scoreProduct(product, terms) + scoreProduct(product, queryTerms),
+          score: scoreProduct(product, terms) + scoreProduct(product, queryTerms) + (isVerifiedShop(product) ? 3 : 0),
           rand: Math.random(),
         }))
         .sort((a, b) => b.score - a.score || a.rand - b.rand)
