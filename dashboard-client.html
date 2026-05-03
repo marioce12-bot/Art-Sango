@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Mon Espace - ArtSango</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --charcoal:#11100e; --earth:#3b271d; --terracotta:#8b4a2e;
+      --burnt-orange:#bf6a3c; --gold:#cba56b; --sand:#d7c3a1;
+      --cream:#f3e7d4; --brand:#0f766e;
+      --glass:rgba(18,14,11,0.62); --glass-line:rgba(227,189,136,0.24);
+    }
+    *{ box-sizing:border-box; }
+    body{ margin:0; font-family:"Inter",Verdana,sans-serif; color:var(--cream); min-height:100dvh; }
+    .page{ position:relative; min-height:100dvh; isolation:isolate; }
+    .photo-bg{
+      position:fixed; inset:0; z-index:-3;
+      background-image:
+        linear-gradient(112deg,rgba(9,7,6,0.88) 12%,rgba(30,19,14,0.72) 45%,rgba(9,8,7,0.9) 100%),
+        url("https://images.unsplash.com/photo-1600566752229-250ed79470f8?auto=format&fit=crop&w=1800&q=80");
+      background-size:cover; background-position:center;
+    }
+    .texture{
+      position:fixed; inset:0; z-index:-2; pointer-events:none;
+      background:
+        radial-gradient(700px 380px at 80% 20%,rgba(191,106,60,0.22),transparent 70%),
+        radial-gradient(500px 280px at 12% 90%,rgba(203,165,107,0.14),transparent 72%);
+    }
+    .wrap{ max-width:1100px; margin:0 auto; padding:20px; padding-bottom:calc(20px + env(safe-area-inset-bottom)); position:relative; z-index:1; }
+
+    /* Header */
+    .topbar{
+      display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
+      background:var(--glass); border:1px solid var(--glass-line);
+      backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+      border-radius:20px; padding:12px 18px; margin-bottom:20px;
+    }
+    .logo{ text-decoration:none; color:var(--cream); font-family:"Playfair Display",serif; font-weight:700; font-size:1.3rem; }
+    .nav-links{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .nav-link{ text-decoration:none; color:var(--sand); font-size:.88rem; font-weight:600; padding:8px 12px; border-radius:999px; transition:background .15s; }
+    .nav-link:hover{ background:rgba(255,255,255,.08); }
+    .logout-btn{ border:0; background:rgba(220,38,38,0.15); color:#fca5a5; font-weight:700; border-radius:999px; padding:8px 14px; cursor:pointer; font-size:.88rem; border:1px solid rgba(220,38,38,0.3); }
+    .logout-btn:hover{ background:rgba(220,38,38,0.25); }
+
+    /* Profil banner */
+    .profile-banner{
+      background:linear-gradient(120deg,rgba(15,118,110,0.5),rgba(21,94,117,0.4));
+      border:1px solid rgba(99,210,199,0.25);
+      backdrop-filter:blur(10px); border-radius:20px;
+      padding:20px 24px; margin-bottom:20px;
+      display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+    }
+    .avatar{ width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg,#99f6e4,#6ee7b7); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:1.6rem; font-weight:900; color:#065f46; overflow:hidden; }
+    .avatar img{ width:100%; height:100%; object-fit:cover; }
+    .profile-info h2{ margin:0 0 4px; font-family:"Playfair Display",serif; font-size:1.3rem; color:#f0fdfa; }
+    .profile-info p{ margin:0; font-size:.88rem; color:#99f6e4; opacity:.85; }
+    .profile-actions{ margin-left:auto; display:flex; gap:10px; flex-wrap:wrap; }
+    .btn-outline{ text-decoration:none; border:1.5px solid rgba(227,189,136,0.45); color:var(--cream); font-weight:700; border-radius:12px; padding:9px 16px; font-size:.9rem; background:rgba(255,255,255,.05); transition:background .15s; }
+    .btn-outline:hover{ background:rgba(255,255,255,.12); }
+
+    /* Stats */
+    .stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px; }
+    .stat-card{
+      background:var(--glass); border:1px solid var(--glass-line);
+      backdrop-filter:blur(12px); border-radius:16px; padding:16px;
+    }
+    .stat-label{ font-size:.75rem; color:var(--sand); text-transform:uppercase; font-weight:700; letter-spacing:.06em; }
+    .stat-val{ font-size:1.8rem; font-weight:900; margin-top:6px; color:#f0fdfa; }
+
+    /* Sections */
+    .section{ margin-bottom:24px; }
+    .section-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+    .section-title{ font-family:"Playfair Display",serif; color:#f0fdfa; margin:0 0 14px; font-size:1.2rem; }
+    .danger-link{
+      border:1px solid rgba(220,38,38,0.45);
+      background:rgba(220,38,38,0.15);
+      color:#fecaca;
+      border-radius:999px;
+      padding:8px 12px;
+      font-size:.82rem;
+      font-weight:700;
+      cursor:pointer;
+    }
+    .danger-link:disabled{ opacity:.55; cursor:not-allowed; }
+
+    /* Favoris */
+    .favs-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+    .fav-card{
+      background:rgba(255,255,255,0.92); border-radius:14px; overflow:hidden;
+      cursor:pointer; transition:transform .18s,box-shadow .18s; color:#111827;
+    }
+    .fav-card:hover{ transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,.3); }
+    .fav-img{ height:120px; background:linear-gradient(125deg,#d7c4a0,#c8d8cc); overflow:hidden; position:relative; }
+    .fav-img img{ width:100%; height:100%; object-fit:cover; }
+    .fav-meta{ padding:10px 12px; }
+    .fav-meta strong{ font-size:.92rem; display:block; margin-bottom:4px; }
+    .fav-price{ font-weight:800; color:var(--brand); font-size:.88rem; }
+    .remove-fav{ border:0; background:none; color:#dc2626; font-size:.8rem; cursor:pointer; margin-top:6px; padding:0; font-weight:700; }
+    .remove-fav:hover{ text-decoration:underline; }
+
+    /* Commandes */
+    .order-card{
+      background:var(--glass); border:1px solid var(--glass-line);
+      backdrop-filter:blur(10px); border-radius:14px; padding:14px 18px;
+      margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; gap:12px;
+    }
+    .order-main{ display:flex; align-items:center; gap:10px; min-width:0; }
+    .order-thumb{
+      width:52px; height:52px; border-radius:10px; flex-shrink:0;
+      background:linear-gradient(125deg,#d7c4a0,#c8d8cc);
+      border:1px solid rgba(227,189,136,0.25);
+      overflow:hidden;
+    }
+    .order-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .order-info strong{ color:#f0fdfa; font-size:.95rem; display:block; margin-bottom:4px; }
+    .order-info span{ color:var(--sand); font-size:.84rem; }
+    .order-status{ font-size:.75rem; font-weight:700; padding:5px 10px; border-radius:999px; white-space:nowrap; }
+    .status-pending{ background:#fef3c7; color:#92400e; }
+    .status-approved{ background:#dcfce7; color:#166534; }
+    .status-refused{ background:#fee2e2; color:#991b1b; }
+    .status-shipped{ background:#dbeafe; color:#1e40af; }
+    .status-delivered{ background:#dcfce7; color:#166534; }
+
+    /* Vide */
+    .empty-state{ text-align:center; padding:40px 20px; color:var(--sand); font-size:.93rem; opacity:.7; }
+
+    /* Loading */
+    .loading-text{ color:var(--sand); text-align:center; padding:30px; opacity:.7; }
+
+    @media (max-width:900px){ .stats{ grid-template-columns:repeat(2,1fr); } .favs-grid{ grid-template-columns:repeat(2,1fr); } }
+    @media (max-width:600px){ .stats{ grid-template-columns:1fr; } .favs-grid{ grid-template-columns:1fr 1fr; } .profile-banner{ flex-direction:column; } .profile-actions{ margin-left:0; } }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="photo-bg" aria-hidden="true"></div>
+    <div class="texture" aria-hidden="true"></div>
+
+    <div class="wrap">
+      <!-- Header -->
+      <header class="topbar">
+        <a class="logo" href="index.html">ArtSango</a>
+        <div class="nav-links">
+          <a class="nav-link" href="marketplace.html">🛍 Marketplace</a>
+          <a class="nav-link" href="panier.html">🛒 Panier</a>
+          <button class="logout-btn" id="logout-btn">Déconnexion</button>
+        </div>
+      </header>
+
+      <!-- État chargement / non connecté -->
+      <div id="loading-state" class="loading-text">Chargement de ton espace…</div>
+      <div id="not-connected" style="display:none;text-align:center;padding:60px 20px;">
+        <p style="font-size:1.1rem;color:var(--sand);">Tu n'es pas connecté.</p>
+        <a href="connexion-client.html" style="display:inline-block;margin-top:12px;background:linear-gradient(135deg,#cba56b,#bf6a3c);color:#23120a;font-weight:700;border-radius:12px;padding:12px 24px;text-decoration:none;">Se connecter</a>
+      </div>
+
+      <div id="dash-content" style="display:none;">
+
+        <!-- Bannière profil -->
+        <div class="profile-banner">
+          <div class="avatar" id="avatar-zone">👤</div>
+          <div class="profile-info">
+            <h2 id="client-name">—</h2>
+            <p id="client-email">—</p>
+          </div>
+          <div class="profile-actions">
+            <a class="btn-outline" href="marketplace.html">Explorer les créations</a>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <section class="stats">
+          <div class="stat-card">
+            <div class="stat-label">Commandes</div>
+            <div class="stat-val" id="stat-orders">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Favoris</div>
+            <div class="stat-val" id="stat-favs">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Panier</div>
+            <div class="stat-val" id="stat-cart">0</div>
+          </div>
+        </section>
+
+        <!-- Commandes -->
+        <section class="section">
+          <div class="section-head">
+            <h2 class="section-title" style="margin:0;">🧾 Mes commandes</h2>
+            <button id="clear-orders-btn" class="danger-link" type="button" onclick="clearOrderHistory()" disabled>Supprimer l'historique</button>
+          </div>
+          <div id="orders-list" class="loading-text">Chargement…</div>
+        </section>
+
+        <!-- Favoris -->
+        <section class="section">
+          <h2 class="section-title">❤️ Mes favoris</h2>
+          <div id="favs-container">
+            <p class="loading-text">Chargement…</p>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp }                                      from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut }               from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, getDoc, collection, query, where, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey:            "AIzaSyAghL7HcGVTWur9ijJzjWXywTgvCaiJ01M",
+      authDomain:        "art-sango.firebaseapp.com",
+      projectId:         "art-sango",
+      storageBucket:     "art-sango.firebasestorage.app",
+      messagingSenderId: "840868763552",
+      appId:             "1:840868763552:web:b7cb1ac710d3b9968436c5"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+    let currentOrders = [];
+
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      signOut(auth).then(() => window.location.href = 'index.html');
+    });
+
+    function getImageUrl(p) {
+      return p.imageUrl || p.imageURL || p.image || p.photoUrl || p.photo || p.img || '';
+    }
+
+    function getOrderImage(order) {
+      if (Array.isArray(order.items) && order.items.length) {
+        return getImageUrl(order.items[0]);
+      }
+      return getImageUrl(order);
+    }
+
+    function getFavIds() {
+      try { return JSON.parse(localStorage.getItem('artsango_favs') || '[]'); } catch { return []; }
+    }
+    function removeFavById(id) {
+      let favs = getFavIds().filter(f => f !== id);
+      localStorage.setItem('artsango_favs', JSON.stringify(favs));
+    }
+
+    function statusLabel(statut) {
+      const map = {
+        'en_attente':   ['En attente', 'status-pending'],
+        'a_expedier':   ['Validee', 'status-approved'],
+        'valide':       ['Validee', 'status-approved'],
+        'validee':      ['Validee', 'status-approved'],
+        'confirme':     ['Validee', 'status-approved'],
+        'confirmee':    ['Validee', 'status-approved'],
+        'expedie':      ['Expédié', 'status-shipped'],
+        'livre':        ['Livré', 'status-delivered'],
+        'refuse':       ['Refusee', 'status-refused'],
+        'refusee':      ['Refusee', 'status-refused'],
+        'annule':       ['Refusee', 'status-refused'],
+        'annulee':      ['Refusee', 'status-refused'],
+      };
+      return map[statut] || [statut || '—', 'status-pending'];
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+      document.getElementById('loading-state').style.display = 'none';
+
+      if (!user) {
+        document.getElementById('not-connected').style.display = 'block';
+        return;
+      }
+
+      // Charger profil client
+      let clientData = {};
+      try {
+        const clientSnap = await getDoc(doc(db, 'clients', user.uid));
+        if (clientSnap.exists()) clientData = clientSnap.data();
+      } catch {}
+
+      const displayName = clientData.name || clientData.displayName || user.displayName || user.email?.split('@')[0] || 'Client';
+      document.getElementById('client-name').textContent  = displayName;
+      document.getElementById('client-email').textContent = user.email || '';
+      // Initiales dans l'avatar
+      document.getElementById('avatar-zone').textContent = displayName.charAt(0).toUpperCase();
+
+      document.getElementById('dash-content').style.display = 'block';
+
+      // Stats panier
+      const cart = JSON.parse(localStorage.getItem('artsango_cart') || '[]');
+      document.getElementById('stat-cart').textContent = cart.length;
+
+      // Charger commandes
+      let orders = [];
+      try {
+        const ordersQ = query(collection(db, 'commandes'), where('clientUid', '==', user.uid));
+        const ordersSnap = await getDocs(ordersQ);
+        orders = ordersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      } catch {
+        // Compat ancienne structure
+        try {
+          const legacyQ = query(collection(db, 'commandes'), where('clientId', '==', user.uid));
+          const legacySnap = await getDocs(legacyQ);
+          orders = legacySnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        } catch {}
+      }
+
+      document.getElementById('stat-orders').textContent = orders.length;
+      currentOrders = orders;
+      document.getElementById('clear-orders-btn').disabled = orders.length === 0;
+
+      const ordersList = document.getElementById('orders-list');
+      if (!orders.length) {
+        ordersList.innerHTML = '<div class="empty-state">Aucune commande pour l\'instant.<br><a href="marketplace.html" style="color:#cba56b;font-weight:700;text-decoration:none;">Explorer la marketplace →</a></div>';
+      } else {
+        ordersList.innerHTML = orders.map(o => {
+          const [label, cls] = statusLabel(o.statut);
+          const date = o.createdAt?.toDate ? o.createdAt.toDate().toLocaleDateString('fr-FR') : (o.createdAt ? new Date(o.createdAt).toLocaleDateString('fr-FR') : '—');
+          const itemTitle = Array.isArray(o.items) && o.items.length
+            ? o.items.map(it => `${it.name || 'Produit'}${it.qty ? ` x${it.qty}` : ''}`).join(', ')
+            : (o.productName || 'Commande');
+          const itemImg = getOrderImage(o);
+          return `
+          <div class="order-card">
+            <div class="order-main">
+              <div class="order-thumb">${itemImg ? `<img src="${itemImg}" alt="Photo article">` : ''}</div>
+              <div class="order-info">
+                <strong>${itemTitle}</strong>
+                <span>${o.artisanName ? 'Artisan : ' + o.artisanName + ' · ' : ''}${date}</span>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;flex-shrink:0;">
+              <span style="font-weight:800;color:#f0fdfa;">${o.montant ? o.montant.toLocaleString('fr-FR') + ' XOF' : '—'}</span>
+              <span class="order-status ${cls}">${label}</span>
+            </div>
+          </div>`;
+        }).join('');
+      }
+
+      // Charger favoris depuis localStorage + Firestore pour les détails produits
+      const favIds = getFavIds();
+      document.getElementById('stat-favs').textContent = favIds.length;
+
+      const favsContainer = document.getElementById('favs-container');
+      if (!favIds.length) {
+        favsContainer.innerHTML = '<div class="empty-state">Aucun favori pour l\'instant.<br><a href="marketplace.html" style="color:#cba56b;font-weight:700;text-decoration:none;">Découvrir des créations →</a></div>';
+      } else {
+        // Récupérer les détails de chaque produit favori
+        const favProds = [];
+        for (const id of favIds) {
+          try {
+            const snap = await getDoc(doc(db, 'produits', id));
+            if (snap.exists()) favProds.push({ id: snap.id, ...snap.data() });
+          } catch {}
+        }
+        if (!favProds.length) {
+          favsContainer.innerHTML = '<div class="empty-state">Produits favoris introuvables.</div>';
+        } else {
+          favsContainer.innerHTML = `<div class="favs-grid">${
+            favProds.map(p => {
+              const img = getImageUrl(p);
+              return `
+              <div class="fav-card" onclick="window.location.href='produit-detail.html?id=${p.id}'">
+                <div class="fav-img">${img ? `<img src="${img}" loading="lazy">` : ''}</div>
+                <div class="fav-meta">
+                  <strong>${p.name || '—'}</strong>
+                  <div class="fav-price">${(p.price || 0).toLocaleString('fr-FR')} XOF</div>
+                  <button class="remove-fav" onclick="event.stopPropagation(); removeFav('${p.id}', this)">✕ Retirer</button>
+                </div>
+              </div>`;
+            }).join('')
+          }</div>`;
+        }
+      }
+    });
+
+    window.removeFav = function(id, btn) {
+      removeFavById(id);
+      btn.closest('.fav-card').remove();
+      const remaining = document.querySelectorAll('.fav-card').length;
+      document.getElementById('stat-favs').textContent = remaining;
+      if (!remaining) {
+        document.getElementById('favs-container').innerHTML = '<div class="empty-state">Aucun favori pour l\'instant.<br><a href="marketplace.html" style="color:#cba56b;font-weight:700;text-decoration:none;">Découvrir des créations →</a></div>';
+      }
+    };
+
+    window.clearOrderHistory = async function() {
+      if (!auth.currentUser || !currentOrders.length) return;
+
+      const confirmed = window.confirm('Supprimer tout ton historique de commandes ? Cette action est irreversible.');
+      if (!confirmed) return;
+
+      const btn = document.getElementById('clear-orders-btn');
+      const ordersList = document.getElementById('orders-list');
+      btn.disabled = true;
+      btn.textContent = 'Suppression...';
+
+      try {
+        for (const order of currentOrders) {
+          await deleteDoc(doc(db, 'commandes', order.id));
+        }
+
+        currentOrders = [];
+        document.getElementById('stat-orders').textContent = '0';
+        ordersList.innerHTML = '<div class="empty-state">Historique supprime.<br><a href="marketplace.html" style="color:#cba56b;font-weight:700;text-decoration:none;">Explorer la marketplace →</a></div>';
+        btn.textContent = 'Supprimer l\'historique';
+        btn.disabled = true;
+      } catch (e) {
+        btn.textContent = 'Supprimer l\'historique';
+        btn.disabled = currentOrders.length === 0;
+        alert('Impossible de supprimer l\'historique : ' + (e?.message || String(e)));
+      }
+    };
+  </script>
+</body>
+  <script type="module" src="./platform-logo.js"></script>
+</html>

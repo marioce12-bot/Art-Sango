@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>ArtSango AI Studio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <style>
+    :root{ --bg:#ece4d6; --card:#fff; --line:#ddceb7; --brand:#0f766e; }
+    *{ box-sizing:border-box; }
+    body{ margin:0; font-family:"Inter",Verdana,sans-serif; background:var(--bg); color:#1f2937; }
+    .wrap{ max-width:1040px; margin:0 auto; padding:20px; padding-bottom:calc(20px + env(safe-area-inset-bottom)); }
+    .hero{ background:linear-gradient(130deg,#0f766e,#14532d); color:#ecfeff; border-radius:14px; padding:20px 24px; }
+    .back-btn{ border:0; border-radius:999px; padding:10px 14px; font-weight:700; cursor:pointer; background:#ecfeff; color:#0f766e; margin-bottom:12px; }
+    .hero h1{ margin:0 0 6px; font-family:"Playfair Display",serif; }
+    .hero p{ margin:0; opacity:.9; font-size:.95rem; }
+    .grid{ margin-top:14px; display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .card{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; }
+    .card h3{ margin:0 0 12px; font-family:"Playfair Display",serif; }
+    label{ display:block; font-size:.82rem; font-weight:600; color:#374151; margin-bottom:5px; }
+    textarea{ width:100%; min-height:110px; border:1.5px solid #cbb89a; border-radius:10px; padding:10px 12px; font:inherit; font-size:.93rem; transition:border-color .15s; resize:vertical; }
+    textarea:focus{ outline:none; border-color:var(--brand); }
+    .btn{ margin-top:10px; border:0; background:var(--brand); color:white; font-weight:700; padding:10px 14px; border-radius:9px; cursor:pointer; font-size:.9rem; }
+    .btn:disabled{ opacity:.5; cursor:not-allowed; }
+    .out{ background:#f8fafc; border:1px dashed #d1d5db; border-radius:9px; padding:12px; margin-top:10px; line-height:1.6; min-height:60px; font-size:.9rem; color:#374151; white-space:pre-wrap; }
+    .copy-btn{ margin-top:6px; border:1px solid #d1c4ae; background:transparent; color:#6b7280; border-radius:7px; padding:5px 10px; cursor:pointer; font-size:.8rem; }
+    .copy-btn:hover{ background:#f3f4f6; }
+    @media (max-width:900px){ .grid{ grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <button class="back-btn" onclick="goBack('dashboard-artisan.html')">← Retour</button>
+      <h1>ArtSango AI Studio ✨</h1>
+      <p>Copilote marketing pour créateurs : bio, storytelling, contenu social, pricing.</p>
+    </section>
+
+    <section class="grid">
+      <!-- Bio artisan -->
+      <article class="card">
+        <h3>Générateur de bio pro</h3>
+        <label>Décris-toi en quelques mots</label>
+        <textarea id="bioInput" placeholder="Je suis artisan maroquinier, je travaille le cuir naturel depuis 8 ans à Cotonou…"></textarea>
+        <button class="btn" id="bio-btn" onclick="genBio()">Générer ma bio</button>
+        <div class="out" id="bioOut">Le résultat apparaîtra ici…</div>
+        <button class="copy-btn" onclick="copyText('bioOut')">📋 Copier</button>
+      </article>
+
+      <!-- Pricing -->
+      <article class="card">
+        <h3>Assistant pricing</h3>
+        <label>Coût matière, temps, positionnement</label>
+        <textarea id="priceInput" placeholder="Coût matière : 12 000 XOF&#10;Temps de fabrication : 4h&#10;Client cible : premium local"></textarea>
+        <button class="btn" id="price-btn" onclick="genPrice()">Suggérer un prix</button>
+        <div class="out" id="priceOut">Le résultat apparaîtra ici…</div>
+        <button class="copy-btn" onclick="copyText('priceOut')">📋 Copier</button>
+      </article>
+
+      <!-- Description produit -->
+      <article class="card">
+        <h3>Description produit</h3>
+        <label>Description brute de ton produit</label>
+        <textarea id="descInput" placeholder="Masque en bois sculpté à la main, 40 cm, bois de tek, peint à l'ocre naturel…"></textarea>
+        <button class="btn" id="desc-btn" onclick="genDesc()">Améliorer la description</button>
+        <div class="out" id="descOut">Le résultat apparaîtra ici…</div>
+        <button class="copy-btn" onclick="copyText('descOut')">📋 Copier</button>
+      </article>
+
+      <!-- Posts Instagram -->
+      <article class="card">
+        <h3>Posts Instagram (×3)</h3>
+        <label>Produit ou actualité à promouvoir</label>
+        <textarea id="instaInput" placeholder="Je viens de créer un nouveau sac en raphia naturel, collection harmattan…"></textarea>
+        <button class="btn" id="insta-btn" onclick="genInsta()">Créer 3 posts</button>
+        <div class="out" id="instaOut">Le résultat apparaîtra ici…</div>
+        <button class="copy-btn" onclick="copyText('instaOut')">📋 Copier</button>
+      </article>
+    </section>
+  </div>
+
+  <script>
+    // Pré-remplir si venant de produit-nouveau
+    const params = new URLSearchParams(location.search);
+    if (params.get('desc')) document.getElementById('descInput').value = params.get('desc');
+
+    // API IA (MVP local)
+    const ANTHROPIC_KEY = "sk-afri-ece49e64a8014ab2abf706232d8101b4";
+    const ANTHROPIC_BASE_URL = "https://build.lewisnote.com/v1/messages";
+
+    async function callClaude(prompt, outputId, btnId) {
+      const out = document.getElementById(outputId);
+      const btn = document.getElementById(btnId);
+      out.textContent = '⏳ Génération en cours…';
+      btn.disabled = true;
+      try {
+        const res = await fetch(ANTHROPIC_BASE_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type':      'application/json',
+            'Authorization':     `Bearer ${ANTHROPIC_KEY}`,
+            'anthropic-version': '2023-06-01',
+          },
+          body: JSON.stringify({
+            model:      'claude-opus-4-20250514',
+            max_tokens: 700,
+            messages: [{ role: 'user', content: prompt }],
+          }),
+        });
+        const data = await res.json();
+        if (data.error) throw new Error(data.error.message);
+        out.textContent = data.content?.[0]?.text || '(réponse vide)';
+      } catch (e) {
+        out.textContent = '❌ Erreur : ' + e.message + '\n\nVérifie que ta clé Anthropic est correcte.';
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    window.genBio = () => {
+      const src = document.getElementById('bioInput').value.trim();
+      if (!src) { alert('Décris-toi d\'abord.'); return; }
+      callClaude(
+        `Tu es un expert en branding pour artisans africains. Génère une bio professionnelle et inspirante (150-200 mots) pour un artisan qui se décrit ainsi : "${src}". La bio doit mettre en avant l'authenticité, le savoir-faire et l'histoire. Réponds uniquement avec la bio, sans explication.`,
+        'bioOut', 'bio-btn'
+      );
+    };
+
+    window.genPrice = () => {
+      const src = document.getElementById('priceInput').value.trim();
+      if (!src) { alert('Entre les informations de coût.'); return; }
+      callClaude(
+        `Tu es un expert en pricing pour l'artisanat africain. Analyse ces informations et suggère une fourchette de prix en XOF avec une justification claire : "${src}". Inclus : fourchette recommandée, positionnement marché, argument de valeur à communiquer au client. Réponds en français.`,
+        'priceOut', 'price-btn'
+      );
+    };
+
+    window.genDesc = () => {
+      const src = document.getElementById('descInput').value.trim();
+      if (!src) { alert('Entre une description brute.'); return; }
+      callClaude(
+        `Tu es un copywriter expert en artisanat africain. Améliore cette description produit pour la rendre attractive, poétique et vendeuse (100-150 mots) : "${src}". Mets en avant le savoir-faire, les matériaux, l'histoire et l'émotion. Réponds uniquement avec la description améliorée.`,
+        'descOut', 'desc-btn'
+      );
+    };
+
+    window.genInsta = () => {
+      const src = document.getElementById('instaInput').value.trim();
+      if (!src) { alert('Décris ce que tu veux promouvoir.'); return; }
+      callClaude(
+        `Tu es un social media manager pour des artisans africains. Crée 3 posts Instagram différents pour : "${src}". Chaque post doit avoir : accroche forte, storytelling, call-to-action et 5 hashtags pertinents. Sépare chaque post par une ligne. Réponds en français.`,
+        'instaOut', 'insta-btn'
+      );
+    };
+
+    window.copyText = (id) => {
+      const text = document.getElementById(id).textContent;
+      navigator.clipboard.writeText(text).then(() => alert('✅ Copié !'));
+    };
+
+    function goBack(fallback) {
+      if (window.history.length > 1) window.history.back(); else window.location.href = fallback;
+    }
+  </script>
+  <script type="module" src="./platform-logo.js"></script>
+</body>
+</html>

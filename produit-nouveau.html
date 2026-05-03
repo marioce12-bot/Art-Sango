@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Ajouter un produit - ArtSango</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <style>
+    :root{ --bg:#f8f3ea; --card:#fff; --line:#e8dcc8; --brand:#0f766e; --text:#1f2937; }
+    *{ box-sizing:border-box; }
+    body{ margin:0; font-family:"Inter",Verdana,sans-serif; background:var(--bg); color:var(--text); }
+    .wrap{ max-width:780px; margin:0 auto; padding:20px; padding-bottom:calc(20px + env(safe-area-inset-bottom)); }
+    .back-btn{ border:0; background:var(--brand); color:#fff; border-radius:999px; padding:10px 16px; font-weight:700; cursor:pointer; margin-bottom:16px; }
+    .card{ background:var(--card); border:1px solid var(--line); border-radius:16px; padding:28px; }
+    h1{ margin:0 0 4px; font-family:"Playfair Display",serif; }
+    .sub{ color:#6b7280; font-size:.9rem; margin:0 0 22px; }
+    .grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .full{ grid-column:1 / -1; }
+    label{ display:block; font-size:.83rem; font-weight:600; margin-bottom:5px; color:#374151; }
+    input, select, textarea{
+      width:100%; padding:10px 13px; border:1.5px solid #c9bca7; border-radius:10px;
+      font:inherit; font-size:.94rem; transition:border-color .15s; background:#fff;
+    }
+    input:focus, select:focus, textarea:focus{ outline:none; border-color:var(--brand); }
+    textarea{ min-height:92px; resize:vertical; }
+    .field{ margin-bottom:2px; }
+
+    /* UPLOAD */
+    .photo-section{ margin-bottom:6px; }
+    .photo-section > label{ font-size:.83rem; font-weight:600; margin-bottom:8px; color:#374151; display:block; }
+    .drop-zone{
+      border:2.5px dashed #c9bca7; border-radius:14px;
+      padding:28px 20px; text-align:center; cursor:pointer;
+      transition:border-color .2s, background .2s; background:#faf8f4;
+    }
+    .drop-zone:hover, .drop-zone.drag-over{ border-color:var(--brand); background:#f0fdf4; }
+    .drop-zone input{ display:none; }
+    .drop-text{ font-size:.9rem; color:#6b7280; }
+    .drop-text strong{ color:var(--brand); text-decoration:underline; cursor:pointer; }
+    .drop-hint{ font-size:.78rem; color:#9ca3af; margin-top:6px; }
+    .photo-previews{
+      display:grid; grid-template-columns:repeat(auto-fill,minmax(100px,1fr));
+      gap:10px; margin-top:12px;
+    }
+    .preview-item{
+      position:relative; border-radius:10px; overflow:hidden;
+      aspect-ratio:1; background:#e8dcc8; border:2px solid transparent;
+    }
+    .preview-item.main-photo{ border-color:var(--brand); }
+    .preview-item img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .preview-remove{
+      position:absolute; top:4px; right:4px;
+      background:rgba(220,38,38,0.88); color:#fff; border:0;
+      border-radius:999px; width:22px; height:22px;
+      font-size:.8rem; font-weight:900; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .main-label{
+      position:absolute; bottom:0; left:0; right:0;
+      background:rgba(15,118,110,0.9); color:#fff;
+      font-size:.67rem; font-weight:700; text-align:center; padding:3px;
+      letter-spacing:.04em; text-transform:uppercase;
+    }
+    .upload-status{ margin-top:10px; }
+    .progress-bar{ height:6px; background:#e8dcc8; border-radius:4px; overflow:hidden; margin-top:4px; }
+    .progress-fill{ height:100%; background:var(--brand); border-radius:4px; width:0%; transition:width .3s; }
+    .upload-text{ font-size:.78rem; color:#6b7280; }
+
+    /* INDICATIF */
+    .phone-row{ display:flex; gap:8px; }
+    .phone-prefix{
+      width:160px; flex-shrink:0; padding:10px 8px;
+      border:1.5px solid #c9bca7; border-radius:10px;
+      font:inherit; font-size:.85rem; background:#fff; cursor:pointer;
+    }
+    .phone-prefix:focus{ outline:none; border-color:var(--brand); }
+    .phone-number{ flex:1; }
+
+    /* ERREUR / SUBMIT */
+    .err{ color:#dc2626; font-size:.85rem; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:10px 12px; margin-bottom:14px; display:none; }
+    .btn-submit{ width:100%; border:0; background:var(--brand); color:#fff; font-weight:700; padding:13px; border-radius:10px; cursor:pointer; font-size:1rem; transition:background .15s; margin-top:8px; }
+    .btn-submit:disabled{ opacity:.5; cursor:not-allowed; }
+    .btn-submit:hover:not(:disabled){ background:#0d6661; }
+    a{ color:var(--brand); font-weight:600; text-decoration:none; }
+    @media(max-width:700px){ .grid{ grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <button class="back-btn" onclick="goBack('dashboard-artisan.html')">← Retour</button>
+    <div class="card">
+      <h1>Ajouter un produit</h1>
+      <p class="sub">Renseigne les informations de ta création. Jusqu'à 5 photos acceptées.</p>
+      <div class="err" id="err-msg"></div>
+
+      <!-- PHOTOS -->
+      <div class="photo-section full">
+        <label>Photos du produit <span style="color:#9ca3af;font-weight:400;">(max 5 — la 1re est la photo principale)</span></label>
+        <div class="drop-zone" id="drop-zone" onclick="document.getElementById('photo-input').click()">
+          <input type="file" id="photo-input" accept="image/jpeg,image/png,image/webp" multiple>
+          <div class="drop-text">Glisser les photos ici ou <strong>cliquer pour sélectionner</strong></div>
+          <div class="drop-hint">JPG, PNG ou WebP · max 5 Mo par photo · jusqu'à 5 photos</div>
+        </div>
+        <div class="photo-previews" id="photo-previews"></div>
+        <div class="upload-status" id="upload-status" style="display:none;">
+          <div class="upload-text" id="upload-text">Upload en cours...</div>
+          <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+        </div>
+      </div>
+
+      <div style="height:18px;"></div>
+
+      <div class="grid">
+        <div class="field full">
+          <label>Nom du produit *</label>
+          <input id="name" type="text" placeholder="Ex: Tissu kente doré">
+        </div>
+
+        <div class="field">
+          <label>Catégorie *</label>
+          <select id="category">
+            <option value="">— Choisir —</option>
+            <option>Mode</option><option>Décoration</option><option>Sculpture</option>
+            <option>Peinture</option><option>Bijoux</option><option>Poterie</option>
+            <option>Textile</option><option>Art mural</option><option>Maroquinerie</option>
+            <option>Artisanat bois</option><option>Cosmétique naturel</option>
+            <option>Autre (à préciser)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Prix (XOF) *</label>
+          <input id="price" type="number" min="0" placeholder="Ex: 15000">
+        </div>
+
+        <div class="field full" id="category-other-wrap" style="display:none;">
+          <label>Préciser la catégorie *</label>
+          <input id="category-other" type="text" placeholder="Ex: Vannerie, Broderie, Cuir...">
+        </div>
+
+        <div class="field">
+          <label>Pays *</label>
+          <select id="country">
+            <option value="">— Choisir —</option>
+            <option>Bénin</option><option>Côte d'Ivoire</option><option>Sénégal</option>
+            <option>Togo</option><option>Ghana</option><option>Nigeria</option>
+            <option>Cameroun</option><option>Mali</option><option>Burkina Faso</option>
+            <option>Congo</option><option>Gabon</option><option>Madagascar</option>
+            <option>Maroc</option><option>Éthiopie</option><option>Kenya</option>
+            <option>Tanzanie</option><option>Afrique du Sud</option>
+            <option>Autre (à préciser)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Stock disponible</label>
+          <input id="stock" type="number" min="0" placeholder="Ex: 3">
+        </div>
+
+        <div class="field full" id="country-other-wrap" style="display:none;">
+          <label>Préciser le pays *</label>
+          <input id="country-other" type="text" placeholder="Ex: Egypte, Tunisie...">
+        </div>
+
+        <!-- TELEPHONE AVEC INDICATIF OBLIGATOIRE -->
+        <div class="field full">
+          <label>Téléphone WhatsApp * <span style="color:#6b7280;font-weight:400;">— indicatif pays obligatoire</span></label>
+          <div class="phone-row">
+            <select class="phone-prefix" id="phone-prefix">
+              <option value="">Indicatif</option>
+              <option value="+229">+229 — Bénin</option>
+              <option value="+225">+225 — Côte d'Ivoire</option>
+              <option value="+221">+221 — Sénégal</option>
+              <option value="+228">+228 — Togo</option>
+              <option value="+233">+233 — Ghana</option>
+              <option value="+234">+234 — Nigeria</option>
+              <option value="+237">+237 — Cameroun</option>
+              <option value="+223">+223 — Mali</option>
+              <option value="+226">+226 — Burkina Faso</option>
+              <option value="+242">+242 — Congo</option>
+              <option value="+241">+241 — Gabon</option>
+              <option value="+261">+261 — Madagascar</option>
+              <option value="+212">+212 — Maroc</option>
+              <option value="+251">+251 — Éthiopie</option>
+              <option value="+254">+254 — Kenya</option>
+              <option value="+255">+255 — Tanzanie</option>
+              <option value="+27">+27 — Afrique du Sud</option>
+              <option value="+33">+33 — France</option>
+              <option value="+32">+32 — Belgique</option>
+              <option value="+41">+41 — Suisse</option>
+              <option value="+1">+1 — États-Unis / Canada</option>
+            </select>
+            <input class="phone-number" id="phone-number" type="tel" placeholder="XX XX XX XX">
+          </div>
+        </div>
+
+        <div class="field full">
+          <label>Description *</label>
+          <textarea id="description" placeholder="Matière, dimensions, techniques utilisées, histoire de la pièce..."></textarea>
+        </div>
+      </div>
+
+      <button class="btn-submit" id="submit-btn" onclick="doSubmit()">Publier le produit</button>
+      <p style="margin-top:14px;font-size:.85rem;color:#6b7280;text-align:center;">Le produit sera visible dans ta boutique immédiatement.</p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp }               from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, getDoc, collection, addDoc, serverTimestamp }
+      from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey:"AIzaSyAghL7HcGVTWur9ijJzjWXywTgvCaiJ01M", authDomain:"art-sango.firebaseapp.com",
+      projectId:"art-sango", storageBucket:"art-sango.firebasestorage.app",
+      messagingSenderId:"840868763552", appId:"1:840868763552:web:b7cb1ac710d3b9968436c5"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+    const IMGBB_KEY = "af6d7113f6f4673b0ab9084960da124e";
+
+    let currentUser = null;
+    let artisanData = {};
+    let selectedFiles = [];
+
+    onAuthStateChanged(auth, async user => {
+      if (!user) { window.location.href = 'connexion.html'; return; }
+      currentUser = user;
+      const snap = await getDoc(doc(db, 'artisans', user.uid));
+      if (!snap.exists()) return;
+      artisanData = snap.data();
+      // Pré-remplir pays
+      const sel = document.getElementById('country');
+      for (const opt of sel.options) {
+        if (opt.value === artisanData.country) { opt.selected = true; break; }
+      }
+      // Pré-remplir indicatif + numéro
+      const rawPhone = (artisanData.phone || artisanData.whatsapp || '').replace(/\s/g,'');
+      if (rawPhone) {
+        const prefSel = document.getElementById('phone-prefix');
+        for (const opt of prefSel.options) {
+          if (opt.value && rawPhone.startsWith(opt.value)) {
+            opt.selected = true;
+            document.getElementById('phone-number').value = rawPhone.slice(opt.value.length);
+            break;
+          }
+        }
+      }
+    });
+
+    document.getElementById('category').addEventListener('change', function() {
+      document.getElementById('category-other-wrap').style.display =
+        this.value === 'Autre (à préciser)' ? 'block' : 'none';
+    });
+    document.getElementById('country').addEventListener('change', function() {
+      document.getElementById('country-other-wrap').style.display =
+        this.value === 'Autre (à préciser)' ? 'block' : 'none';
+    });
+
+    // Drag & Drop
+    const dz = document.getElementById('drop-zone');
+    dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+    dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+    dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag-over'); handleFiles(Array.from(e.dataTransfer.files)); });
+    document.getElementById('photo-input').addEventListener('change', e => { handleFiles(Array.from(e.target.files)); e.target.value=''; });
+
+    function handleFiles(files) {
+      const valid = files.filter(f => f.type.startsWith('image/') && f.size <= 5*1024*1024);
+      const tooLarge = files.filter(f => f.size > 5*1024*1024);
+      if (tooLarge.length) showErr(`${tooLarge.length} fichier(s) ignoré(s) : dépasse 5 Mo.`);
+      const rem = 5 - selectedFiles.length;
+      if (!rem) { showErr('Maximum 5 photos atteint.'); return; }
+      valid.slice(0, rem).forEach(f => selectedFiles.push({ file:f, previewUrl:URL.createObjectURL(f), uploadedUrl:null }));
+      renderPreviews();
+    }
+
+    function renderPreviews() {
+      document.getElementById('photo-previews').innerHTML = selectedFiles.map((item, i) => `
+        <div class="preview-item ${i===0?'main-photo':''}">
+          <img src="${item.previewUrl}" alt="Photo ${i+1}">
+          ${i===0 ? '<div class="main-label">Photo principale</div>' : ''}
+          <button class="preview-remove" onclick="removePhoto(${i})">x</button>
+        </div>`).join('');
+    }
+
+    window.removePhoto = function(i) {
+      URL.revokeObjectURL(selectedFiles[i].previewUrl);
+      selectedFiles.splice(i, 1);
+      renderPreviews();
+    };
+
+    // ── Upload ImgBB : display_url = lien direct vers le fichier image ──
+    const toB64 = f => new Promise((res, rej) => { const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(f); });
+
+    async function uploadToImgBB(file) {
+      const b64 = await toB64(file);
+      const fd  = new FormData();
+      fd.append('image', b64.split(',')[1]);
+      const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method:'POST', body:fd });
+      if (!res.ok) throw new Error(`ImgBB HTTP ${res.status}`);
+      const json = await res.json();
+      if (!json.success) throw new Error(json?.error?.message || 'Réponse ImgBB invalide');
+      // display_url = URL directe vers l'image (pas la page HTML d'ImgBB)
+      const url = json.data?.display_url || json.data?.image?.url || json.data?.url;
+      if (!url) throw new Error('ImgBB : aucune URL retournée');
+      return url;
+    }
+
+    async function uploadAllPhotos() {
+      const statusEl = document.getElementById('upload-status');
+      const textEl   = document.getElementById('upload-text');
+      const fillEl   = document.getElementById('progress-fill');
+      const toUpload = selectedFiles.filter(f => !f.uploadedUrl);
+      if (!toUpload.length) return;
+      statusEl.style.display = 'block';
+      let done = 0;
+      for (const item of selectedFiles) {
+        if (item.uploadedUrl) continue;
+        textEl.textContent = `Upload photo ${done+1} sur ${toUpload.length}...`;
+        item.uploadedUrl = await uploadToImgBB(item.file);
+        done++;
+        fillEl.style.width = Math.round(done/toUpload.length*100) + '%';
+      }
+      textEl.textContent = 'Photos uploadées avec succès.';
+    }
+
+    window.doSubmit = async function() {
+      document.getElementById('err-msg').style.display = 'none';
+      const btn = document.getElementById('submit-btn');
+
+      const name     = document.getElementById('name').value.trim();
+      const price    = parseFloat(document.getElementById('price').value);
+      const desc     = document.getElementById('description').value.trim();
+      const stock    = parseInt(document.getElementById('stock').value) || 0;
+      const phonePfx = document.getElementById('phone-prefix').value;
+      const phoneNum = document.getElementById('phone-number').value.trim().replace(/\s/g,'');
+      let category   = document.getElementById('category').value;
+      let country    = document.getElementById('country').value;
+
+      if (category === 'Autre (à préciser)') {
+        const o = document.getElementById('category-other').value.trim();
+        if (!o) { showErr('Précise la catégorie.'); return; }
+        category = o;
+      }
+      if (country === 'Autre (à préciser)') {
+        const o = document.getElementById('country-other').value.trim();
+        if (!o) { showErr('Précise le pays.'); return; }
+        country = o;
+      }
+
+      if (!name)                            { showErr('Le nom est obligatoire.'); return; }
+      if (!category)                        { showErr('Choisis une catégorie.'); return; }
+      if (!price || isNaN(price) || price<0){ showErr('Entre un prix valide.'); return; }
+      if (!desc)                            { showErr('Ajoute une description.'); return; }
+      if (!phonePfx)                        { showErr("Sélectionne l'indicatif pays du numéro WhatsApp."); return; }
+      if (!phoneNum)                        { showErr('Entre le numéro de téléphone (sans indicatif).'); return; }
+
+      const fullPhone = phonePfx + phoneNum;
+
+      btn.disabled = true; btn.textContent = 'Publication en cours...';
+
+      try {
+        if (selectedFiles.length) await uploadAllPhotos();
+        const photos   = selectedFiles.map(f => f.uploadedUrl).filter(Boolean);
+        const imageUrl = photos[0] || '';
+
+        await addDoc(collection(db, 'produits'), {
+          name, category, price, description:desc,
+          country: country || artisanData.country || '',
+          stock, photos, imageUrl,
+          artisanId:   currentUser.uid,
+          artisanName: artisanData.brandName || '',
+          phone:       fullPhone,
+          verified:    artisanData.verified || false,
+          active:      true,
+          createdAt:   serverTimestamp(),
+        });
+
+        window.location.href = 'dashboard-artisan.html';
+      } catch(e) {
+        showErr('Erreur : ' + e.message);
+        btn.disabled = false; btn.textContent = 'Publier le produit';
+      }
+    };
+
+    function showErr(msg) {
+      const el = document.getElementById('err-msg');
+      el.textContent = msg; el.style.display = 'block';
+      el.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    }
+  </script>
+  <script>
+    function goBack(f){ if(window.history.length>1) window.history.back(); else window.location.href=f; }
+  </script>
+  <script type="module" src="./platform-logo.js"></script>
+</body>
+</html>
