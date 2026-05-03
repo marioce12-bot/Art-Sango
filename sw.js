@@ -81,9 +81,18 @@ self.addEventListener('notificationclick', (event) => {
 });
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE)).then(() => self.skipWaiting())
-  );
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    for (const resource of PRECACHE) {
+      try {
+        const response = await fetch(resource, { cache: 'no-cache' });
+        if (response && (response.ok || response.type === 'opaque')) {
+          await cache.put(resource, response.clone());
+        }
+      } catch {}
+    }
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener('activate', (event) => {

@@ -15,12 +15,14 @@ function guessMimeType(src = '') {
 }
 
 function buildManifestHref(logoUrl) {
-  const icon = logoUrl || './icon.svg';
+  const icon = logoUrl || new URL('./icon.svg', location.href).href;
+  const startUrl = new URL('./index.html', location.href).href;
   const type = guessMimeType(icon);
   const manifest = {
     name: 'ArtSango',
     short_name: 'ArtSango',
-    start_url: './index.html',
+    start_url: startUrl,
+    scope: new URL('./', location.href).href,
     display: 'standalone',
     background_color: '#11100e',
     theme_color: '#11100e',
