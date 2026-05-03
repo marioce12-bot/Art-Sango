@@ -94,6 +94,19 @@
     .filters input::placeholder { color: #9ca3af; }
     .filters select option { background: #1a0e08; color: var(--cream); }
 
+    .interest-shell {
+      margin-bottom: 18px;
+      padding: 16px;
+      background: rgba(14,12,10,0.45);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px;
+      backdrop-filter: blur(12px);
+    }
+    .interest-head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    .interest-title { margin:0; font-family: "Cormorant Garamond", Georgia, serif; font-size: 1.35rem; color: var(--cream); }
+    .interest-meta { margin-top: 4px; color: var(--sand); font-size: .85rem; line-height: 1.4; }
+    .interest-grid { margin-top: 12px; }
+
     /* ── Grille ── */
     .grid {
       display: grid;
@@ -212,6 +225,16 @@
       <p>Découvrez les œuvres d'artisans talentueux du continent</p>
     </div>
 
+    <section class="interest-shell" id="interest-shell" hidden>
+      <div class="interest-head">
+        <div>
+          <h2 class="interest-title">Centre d’intérêts</h2>
+          <p class="interest-meta" id="interest-meta"></p>
+        </div>
+      </div>
+      <div class="grid interest-grid" id="interest-grid"></div>
+    </section>
+
     <div class="filters">
       <input id="search-input" type="search" placeholder="Article, boutique, artisan…">
       <select id="cat-filter">
@@ -237,7 +260,7 @@
   <script type="module">
     import { initializeApp }   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, collection, getDocs, query, orderBy, doc, getDoc }
+    import { getFirestore, collection, getDocs, doc, getDoc }
       from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -253,10 +276,120 @@
     const db   = getFirestore(app);
     const auth = getAuth(app);
 
+    const params = new URLSearchParams(location.search);
+    const initialCat = params.get('cat') || '';
+    const initialSearch = params.get('q') || '';
+    const initialCountry = params.get('country') || '';
+
+    const searchInput = document.getElementById('search-input');
+    const catFilter = document.getElementById('cat-filter');
+    const countryFilter = document.getElementById('country-filter');
+    if (searchInput && initialSearch) searchInput.value = initialSearch;
+
+    function normalizeText(value = '') {
+      return String(value)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
+    }
+
+    function slugify(value = '') {
+      return normalizeText(value)
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    }
+
+    function tokenize(value = '') {
+      return normalizeText(value)
+        .split(/[^a-z0-9]+/)
+        .map(t => t.trim())
+        .filter(Boolean)
+        .filter(t => t.length > 1 && !STOP_WORDS.has(t));
+    }
+
+    function labelForSlug(select, slug) {
+      if (!select || !slug) return '';
+      const target = slugify(slug);
+      const options = Array.from(select.options || []);
+      const match = options.find(opt => slugify(opt.value || opt.textContent || '') === target || slugify(opt.textContent || '') === target);
+      return (match ? match.textContent.trim() : slug) || slug;
+    }
+
+    if (catFilter && initialCat) catFilter.value = labelForSlug(catFilter, initialCat);
+    if (countryFilter && initialCountry) countryFilter.value = labelForSlug(countryFilter, initialCountry);
+
     let allProducts  = [];
     let artisansData = {};
     let currentUser  = null, currentRole = '', authResolved = false;
     let resolveAuth; const authReady = new Promise(r => { resolveAuth = r; });
+    let searchDebounce = null;
+    let lastInterestSignature = '';
+
+    const INTEREST_KEY = 'artsango_marketplace_interest';
+    const FEATURED_LIMIT = 6;
+    const STOP_WORDS = new Set(['a','al','au','aux','de','des','du','et','en','la','le','les','pour','sur','un','une','the','of','with']);
+
+    function safeProfile() {
+      return {
+        recentSearches: [],
+        terms: {},
+        categories: {},
+        countries: {},
+        artisans: {},
+        products: {},
+        updatedAt: 0,
+      };
+    }
+
+    function loadInterestProfile() {
+      try {
+        const raw = JSON.parse(localStorage.getItem(INTEREST_KEY) || 'null');
+        if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return safeProfile();
+        return {
+          recentSearches: Array.isArray(raw.recentSearches) ? raw.recentSearches.filter(Boolean) : [],
+          terms: raw.terms && typeof raw.terms === 'object' ? raw.terms : {},
+          categories: raw.categories && typeof raw.categories === 'object' ? raw.categories : {},
+          countries: raw.countries && typeof raw.countries === 'object' ? raw.countries : {},
+          artisans: raw.artisans && typeof raw.artisans === 'object' ? raw.artisans : {},
+          products: raw.products && typeof raw.products === 'object' ? raw.products : {},
+          updatedAt: raw.updatedAt || 0,
+        };
+      } catch {
+        return safeProfile();
+      }
+    }
+
+    function saveInterestProfile(profile) {
+      try { localStorage.setItem(INTEREST_KEY, JSON.stringify(profile)); } catch {}
+    }
+
+    function bump(map, key, weight = 1) {
+      if (!key) return;
+      map[key] = (map[key] || 0) + weight;
+    }
+
+    function topEntries(map, limit = 3) {
+      return Object.entries(map || {})
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'fr'))
+        .slice(0, limit);
+    }
+
+    function hasInterestSignals(profile) {
+      if (!profile) return false;
+      const maps = [profile.terms, profile.categories, profile.countries, profile.artisans, profile.products];
+      return (profile.recentSearches || []).length > 0 || maps.some(map => Object.values(map || {}).some(v => Number(v) > 0));
+    }
+
+    function formatInterestSummary(profile) {
+      if (!profile) return '';
+      if ((profile.recentSearches || []).length) return profile.recentSearches.slice(0, 3).join(' · ');
+      const cats = topEntries(profile.categories, 3).map(([slug]) => labelForSlug(catFilter, slug));
+      if (cats.length) return cats.join(' · ');
+      const countries = topEntries(profile.countries, 3).map(([slug]) => labelForSlug(countryFilter, slug));
+      if (countries.length) return countries.join(' · ');
+      const terms = topEntries(profile.terms, 3).map(([term]) => term);
+      return terms.join(' · ');
+    }
 
     /* ── Auth ── */
     onAuthStateChanged(auth, async user => {
@@ -276,11 +409,106 @@
     });
 
     /* ── Utilitaires ── */
-    const getFavs    = () => { try { return JSON.parse(localStorage.getItem('artsango_favs')||'[]'); } catch { return []; } };
-    const toggleFav  = id => { let f=getFavs(); f=f.includes(id)?f.filter(x=>x!==id):[...f,id]; localStorage.setItem('artsango_favs',JSON.stringify(f)); };
-    const getImg     = p  => p.imageUrl||p.imageURL||p.image||p.photoUrl||p.photo||p.img||'';
-    const updateCartCount = () => document.getElementById('cart-count').textContent = JSON.parse(localStorage.getItem('artsango_cart')||'[]').length;
+    const getFavs = () => { try { return JSON.parse(localStorage.getItem('artsango_favs') || '[]'); } catch { return []; } };
+    const toggleFav = id => {
+      let f = getFavs();
+      f = f.includes(id) ? f.filter(x => x !== id) : [...f, id];
+      localStorage.setItem('artsango_favs', JSON.stringify(f));
+    };
+    const getImg = p => p.imageUrl || p.imageURL || p.image || p.photoUrl || p.photo || p.img || '';
+    const updateCartCount = () => document.getElementById('cart-count').textContent = JSON.parse(localStorage.getItem('artsango_cart') || '[]').length;
     updateCartCount();
+
+    function shuffleProducts(list) {
+      const arr = [...list];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function getFilterState() {
+      return {
+        query: searchInput?.value?.trim() || '',
+        cat: slugify(catFilter?.value || ''),
+        country: slugify(countryFilter?.value || ''),
+      };
+    }
+
+    function seedInitialInterestFromFilters() {
+      const state = getFilterState();
+      if (!state.query && !state.cat && !state.country) return;
+      lastInterestSignature = `${state.query}|${state.cat}|${state.country}`;
+      recordSearchInterest(state);
+    }
+
+    function recordSearchInterest(state) {
+      const profile = loadInterestProfile();
+      const q = (state.query || '').trim();
+      let summary = '';
+      if (q.length >= 2) {
+        summary = q.slice(0, 80);
+        tokenize(q).forEach(term => bump(profile.terms, term, 2));
+      } else {
+        const parts = [];
+        if (state.cat) parts.push(labelForSlug(catFilter, state.cat));
+        if (state.country) parts.push(labelForSlug(countryFilter, state.country));
+        summary = parts.join(' · ');
+      }
+      if (state.cat) bump(profile.categories, state.cat, 3);
+      if (state.country) bump(profile.countries, state.country, 1);
+      if (summary) {
+        const normalized = slugify(summary);
+        profile.recentSearches = [summary, ...(profile.recentSearches || []).filter(item => slugify(item) !== normalized)].slice(0, 8);
+      }
+      profile.updatedAt = Date.now();
+      saveInterestProfile(profile);
+    }
+
+    function recordProductInterest(p) {
+      const profile = loadInterestProfile();
+      const category = slugify(p.category || '');
+      const country = slugify(p.country || '');
+      if (category) bump(profile.categories, category, 2);
+      if (country) bump(profile.countries, country, 1);
+      if (p.artisanId) bump(profile.artisans, p.artisanId, 2);
+      if (p.id) bump(profile.products, p.id, 4);
+      const artisanName = artisansData[p.artisanId]?.brandName || p.artisanName || '';
+      tokenize([p.name || '', artisanName].join(' ')).forEach(term => bump(profile.terms, term, 1));
+      profile.updatedAt = Date.now();
+      saveInterestProfile(profile);
+    }
+
+    function scoreProduct(p, profile) {
+      let score = 0;
+      const name = normalizeText(p.name || '');
+      const shop = normalizeText(artisansData[p.artisanId]?.brandName || p.artisanName || '');
+      const category = normalizeText(p.category || '');
+      const country = normalizeText(p.country || '');
+      const categorySlug = slugify(p.category || '');
+      const countrySlug = slugify(p.country || '');
+
+      score += (profile.products?.[p.id] || 0) * 20;
+      score += (profile.artisans?.[p.artisanId] || 0) * 8;
+      score += (profile.categories?.[categorySlug] || 0) * 16;
+      score += (profile.countries?.[countrySlug] || 0) * 4;
+
+      for (const [term, count] of Object.entries(profile.terms || {})) {
+        if (name.includes(term) || shop.includes(term) || category.includes(term) || country.includes(term)) {
+          score += count * 4;
+        }
+      }
+      return score;
+    }
+
+    function rankProducts(list, profile) {
+      if (!hasInterestSignals(profile)) return [...list];
+      return [...list]
+        .map((p, index) => ({ p, index, score: scoreProduct(p, profile) }))
+        .sort((a, b) => b.score - a.score || a.index - b.index)
+        .map(item => item.p);
+    }
 
     function starsHtml(avg) {
       if (!avg) return '';
@@ -292,67 +520,27 @@
       setTimeout(() => t.classList.remove('show'), 2500);
     }
 
-    /* ── Chargement ── */
-    async function loadProducts() {
-      try {
-        const snap = await getDocs(query(collection(db,'produits'), orderBy('createdAt','desc')));
-        allProducts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      } catch(e) { console.warn(e.message); allProducts = []; }
+    function renderProductCard(p) {
+      const favs = new Set(getFavs());
+      const cartIds = new Set(JSON.parse(localStorage.getItem('artsango_cart') || '[]').map(i => i.id));
+      const isFav = favs.has(p.id);
+      const inCart = cartIds.has(p.id);
+      const img = getImg(p);
+      const art = artisansData[p.artisanId] || {};
+      const shopName = art.brandName || p.artisanName || '—';
+      const shopPhoto = art.profilePhoto || '';
+      const initials = shopName.trim().split(/\s+/).map(w => w[0]).join('').substring(0, 2).toUpperCase();
+      const avg = art.avgRating || 0, cnt = art.ratingCount || 0;
+      const boutUrl = 'boutique-vendeur.html?id=' + (p.artisanId || '');
 
-      const ids = [...new Set(allProducts.map(p => p.artisanId).filter(Boolean))];
-      await Promise.all(ids.map(async id => {
-        try { const s = await getDoc(doc(db,'artisans',id)); if (s.exists()) artisansData[id] = s.data(); } catch {}
-      }));
-      renderProducts(allProducts);
-    }
-
-    /* ── FILTRE CORRIGÉ : trim + split pour ignorer espaces parasites ── */
-    function filterProducts() {
-      const q   = document.getElementById('search-input').value.trim().toLowerCase();
-      const cat = document.getElementById('cat-filter').value;
-      const ctr = document.getElementById('country-filter').value;
-
-      const terms = q ? q.split(/\s+/).filter(Boolean) : [];
-
-      renderProducts(allProducts.filter(p => {
-        const shop = (artisansData[p.artisanId]?.brandName || p.artisanName || '').toLowerCase();
-        const name = (p.name || '').toLowerCase();
-        const matchSearch = terms.length === 0 || terms.every(t => name.includes(t) || shop.includes(t));
-        const matchCat = !cat || p.category === cat;
-        const matchCtr = !ctr || p.country === ctr;
-        return matchSearch && matchCat && matchCtr;
-      }));
-    }
-
-    document.getElementById('search-input').addEventListener('input', filterProducts);
-    document.getElementById('cat-filter').addEventListener('change', filterProducts);
-    document.getElementById('country-filter').addEventListener('change', filterProducts);
-
-    /* ── Rendu ── */
-    function renderProducts(list) {
-      const grid = document.getElementById('products-grid');
-      const favs = getFavs();
-      const cartIds = JSON.parse(localStorage.getItem('artsango_cart')||'[]').map(i => i.id);
-      if (!list.length) { grid.innerHTML = '<div class="empty">Aucune création trouvée.</div>'; return; }
-
-      grid.innerHTML = list.map(p => {
-        const isFav = favs.includes(p.id), inCart = cartIds.includes(p.id);
-        const img = getImg(p);
-        const art = artisansData[p.artisanId] || {};
-        const shopName = art.brandName || p.artisanName || '—';
-        const shopPhoto = art.profilePhoto || '';
-        const initials = shopName.trim().split(/\s+/).map(w => w[0]).join('').substring(0,2).toUpperCase();
-        const avg = art.avgRating || 0, cnt = art.ratingCount || 0;
-        const boutUrl = 'boutique-vendeur.html?id=' + (p.artisanId || '');
-
-        return `
+      return `
         <article class="item">
           <div class="img-wrap">
-            ${img ? `<img src="${img}" alt="${p.name||''}" loading="lazy">` : ''}
-            <button class="fav-btn" data-fav-id="${p.id}" title="${isFav?'Retirer des favoris':'Ajouter aux favoris'}">${isFav?'♥':'♡'}</button>
+            ${img ? `<img src="${img}" alt="${p.name || ''}" loading="lazy">` : ''}
+            <button class="fav-btn" data-fav-id="${p.id}" title="${isFav ? 'Retirer des favoris' : 'Ajouter aux favoris'}">${isFav ? '♥' : '♡'}</button>
           </div>
           <div class="card-body">
-            <h3>${p.name||'—'}</h3>
+            <h3>${p.name || '—'}</h3>
             <a class="shop-row" href="${boutUrl}">
               <div class="shop-avatar">
                 ${shopPhoto ? `<img src="${shopPhoto}" alt="${shopName}">` : initials}
@@ -363,28 +551,127 @@
               </div>
               ${art.verified ? '<span class="badge-ok">Vérifié</span>' : ''}
             </a>
-            <div class="price">${(p.price||0).toLocaleString('fr-FR')} XOF</div>
+            <div class="price">${(p.price || 0).toLocaleString('fr-FR')} XOF</div>
             <div class="card-actions">
-              <button class="btn-card btn-view"  data-view-id="${p.id}">Voir le produit</button>
-              <button class="btn-card btn-cart ${inCart?'added':''}" data-cart-id="${p.id}">${inCart?'Dans le panier':'Ajouter au panier'}</button>
-              <a      class="btn-card btn-boutique" href="${boutUrl}">La boutique</a>
+              <button class="btn-card btn-view" data-view-id="${p.id}">Voir le produit</button>
+              <button class="btn-card btn-cart ${inCart ? 'added' : ''}" data-cart-id="${p.id}">${inCart ? 'Dans le panier' : 'Ajouter au panier'}</button>
+              <a class="btn-card btn-boutique" href="${boutUrl}">La boutique</a>
             </div>
           </div>
         </article>`;
-      }).join('');
     }
 
-    /* ── Événements ── */
-    document.getElementById('products-grid').addEventListener('click', e => {
-      const fav  = e.target.closest('[data-fav-id]');
+    function renderProductGrid(gridId, list, emptyMessage) {
+      const grid = document.getElementById(gridId);
+      if (!grid) return;
+      if (!list.length) {
+        grid.innerHTML = `<div class="empty">${emptyMessage}</div>`;
+        return;
+      }
+      grid.innerHTML = list.map(renderProductCard).join('');
+    }
+
+    function renderInterestSection(featured, profile) {
+      const shell = document.getElementById('interest-shell');
+      const meta = document.getElementById('interest-meta');
+      const grid = document.getElementById('interest-grid');
+      if (!shell || !meta || !grid) return;
+      const show = hasInterestSignals(profile) && featured.length > 0;
+      shell.hidden = !show;
+      if (!show) {
+        grid.innerHTML = '';
+        meta.textContent = '';
+        return;
+      }
+      meta.textContent = formatInterestSummary(profile);
+      renderProductGrid('interest-grid', featured, '');
+    }
+
+    function renderMarketplaceView() {
+      const state = getFilterState();
+      const profile = loadInterestProfile();
+      const filtered = allProducts.filter(p => {
+        const art = artisansData[p.artisanId] || {};
+        const name = normalizeText(p.name || '');
+        const shop = normalizeText(art.brandName || p.artisanName || '');
+        const category = normalizeText(p.category || '');
+        const country = normalizeText(p.country || '');
+        const terms = state.query ? state.query.split(/\s+/).map(normalizeText).filter(Boolean) : [];
+        const matchSearch = terms.length === 0 || terms.every(t => name.includes(t) || shop.includes(t) || category.includes(t) || country.includes(t));
+        const matchCat = !state.cat || slugify(p.category || '') === state.cat;
+        const matchCountry = !state.country || slugify(p.country || '') === state.country;
+        return matchSearch && matchCat && matchCountry;
+      });
+
+      const ranked = rankProducts(filtered, profile);
+      const featured = hasInterestSignals(profile) ? ranked.slice(0, Math.min(FEATURED_LIMIT, ranked.length)) : [];
+      const featuredIds = new Set(featured.map(p => p.id));
+      const mainList = featured.length && ranked.length > featured.length ? ranked.filter(p => !featuredIds.has(p.id)) : ranked;
+      const emptyMessage = state.query || state.cat || state.country
+        ? 'Aucune création ne correspond à vos filtres.'
+        : 'Aucune création trouvée.';
+
+      renderInterestSection(featured, profile);
+      renderProductGrid('products-grid', mainList, emptyMessage);
+    }
+
+    function scheduleInterestCapture() {
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(() => {
+        const state = getFilterState();
+        const signature = `${state.query}|${state.cat}|${state.country}`;
+        if (signature === lastInterestSignature) return;
+        if (!state.query && !state.cat && !state.country) return;
+        lastInterestSignature = signature;
+        recordSearchInterest(state);
+        renderMarketplaceView();
+      }, 350);
+    }
+
+    function filterProducts() {
+      renderMarketplaceView();
+      scheduleInterestCapture();
+    }
+
+    if (searchInput) searchInput.addEventListener('input', filterProducts);
+    if (catFilter) catFilter.addEventListener('change', filterProducts);
+    if (countryFilter) countryFilter.addEventListener('change', filterProducts);
+
+    document.addEventListener('click', async e => {
+      const fav = e.target.closest('[data-fav-id]');
       const view = e.target.closest('[data-view-id]');
       const cart = e.target.closest('[data-cart-id]');
-      if (fav)  { e.stopPropagation(); toggleFav(fav.dataset.favId); fav.textContent = getFavs().includes(fav.dataset.favId) ? '♥' : '♡'; return; }
+      if (fav) {
+        e.stopPropagation();
+        const p = allProducts.find(x => x.id === fav.dataset.favId);
+        toggleFav(fav.dataset.favId);
+        if (p) recordProductInterest(p);
+        renderMarketplaceView();
+        return;
+      }
       if (view) { e.stopPropagation(); viewProduct(view.dataset.viewId); return; }
-      if (cart) { e.stopPropagation(); addToCart(cart.dataset.cartId, cart); return; }
+      if (cart) { e.stopPropagation(); addToCart(cart.dataset.cartId); return; }
     });
 
+    /* ── Chargement ── */
+    async function loadProducts() {
+      try {
+        const snap = await getDocs(collection(db,'produits'));
+        allProducts = shuffleProducts(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      } catch (e) { console.warn(e.message); allProducts = []; }
+
+      const ids = [...new Set(allProducts.map(p => p.artisanId).filter(Boolean))];
+      await Promise.all(ids.map(async id => {
+        try { const s = await getDoc(doc(db,'artisans',id)); if (s.exists()) artisansData[id] = s.data(); } catch {}
+      }));
+
+      seedInitialInterestFromFilters();
+      renderMarketplaceView();
+    }
+
     async function viewProduct(id) {
+      const p = allProducts.find(x => x.id === id);
+      if (p) recordProductInterest(p);
       if (!authResolved) await authReady;
       if (!currentUser || (currentRole !== 'client' && currentRole !== 'artisan')) {
         window.location.href = `connexion-client.html?next=${encodeURIComponent('produit-detail.html?id='+id)}`; return;
@@ -392,18 +679,20 @@
       window.location.href = 'produit-detail.html?id=' + id;
     }
 
-    function addToCart(id, btn) {
+    function addToCart(id) {
       const p = allProducts.find(x => x.id === id); if (!p) return;
-      let c = JSON.parse(localStorage.getItem('artsango_cart')||'[]');
+      let c = JSON.parse(localStorage.getItem('artsango_cart') || '[]');
       if (c.find(i => i.id === id)) { showToast('Déjà dans votre panier'); return; }
+      recordProductInterest(p);
       c.push({ id:p.id, name:p.name||'—', price:p.price||0, artisanId:p.artisanId||'', artisanName:p.artisanName||'', category:p.category||'', imageUrl:getImg(p) });
       localStorage.setItem('artsango_cart', JSON.stringify(c));
       updateCartCount();
-      btn.textContent = 'Dans le panier'; btn.classList.add('added');
+      renderMarketplaceView();
       showToast(`"${p.name||'Article'}" ajouté au panier`);
     }
 
     loadProducts();
+
   </script>
   <script type="module" src="./platform-logo.js"></script>
 </body>
