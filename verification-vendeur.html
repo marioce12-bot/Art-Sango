@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Demande de vérification - ArtSango</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --charcoal:#11100e; --earth:#3b271d; --terracotta:#8b4a2e;
+      --burnt-orange:#bf6a3c; --gold:#cba56b; --sand:#d7c3a1;
+      --cream:#f3e7d4; --glass:rgba(18,14,11,0.62); --glass-line:rgba(227,189,136,0.24);
+    }
+    *{ box-sizing:border-box; }
+    body{ margin:0; font-family:"Inter",Verdana,sans-serif; color:var(--cream); min-height:100dvh; }
+    .page{ position:relative; min-height:100dvh; isolation:isolate; }
+    .photo-bg{
+      position:fixed; inset:0; z-index:-3;
+      background-image:
+        linear-gradient(112deg,rgba(9,7,6,0.88) 12%,rgba(30,19,14,0.72) 45%,rgba(9,8,7,0.9) 100%),
+        url("https://images.unsplash.com/photo-1600566752229-250ed79470f8?auto=format&fit=crop&w=1800&q=80");
+      background-size:cover; background-position:center;
+    }
+    .texture{
+      position:fixed; inset:0; z-index:-2; pointer-events:none;
+      background:
+        radial-gradient(700px 380px at 80% 20%,rgba(191,106,60,0.22),transparent 70%),
+        radial-gradient(500px 280px at 12% 90%,rgba(203,165,107,0.14),transparent 72%);
+    }
+    .wrap{ max-width:980px; margin:0 auto; padding:18px; padding-bottom:calc(18px + env(safe-area-inset-bottom)); position:relative; z-index:1; }
+    .top{
+      display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
+      background:var(--glass); border:1px solid var(--glass-line);
+      backdrop-filter:blur(18px); border-radius:20px; padding:12px 18px; margin-bottom:20px;
+    }
+    .top-left{ display:flex; align-items:center; gap:12px; }
+    .back-btn{ border:0; background:rgba(255,255,255,0.1); color:var(--cream); border-radius:999px; padding:9px 14px; font-weight:700; cursor:pointer; font-size:.9rem; border:1px solid rgba(227,189,136,0.25); }
+    .dash-title{ margin:0; font-family:"Playfair Display",serif; font-size:1.3rem; color:var(--cream); }
+    .menu-wrap{ position:relative; }
+    .menu-toggle{
+      border:0; background:rgba(255,255,255,0.08); color:var(--cream);
+      border-radius:12px; width:42px; height:42px; cursor:pointer;
+      font-size:1.05rem; font-weight:800; border:1px solid rgba(227,189,136,0.22);
+    }
+    .menu-panel{
+      position:absolute; right:0; top:calc(100% + 10px); min-width:240px;
+      background:#1b1511; border:1px solid rgba(203,165,107,0.3); border-radius:14px;
+      padding:8px; box-shadow:0 18px 40px rgba(0,0,0,0.35); display:none; z-index:20;
+    }
+    .menu-panel.open{ display:block; }
+    .menu-panel a{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      text-decoration:none; color:var(--cream); font-weight:700; font-size:.88rem;
+      padding:10px 12px; border-radius:10px;
+    }
+    .menu-panel a:hover{ background:rgba(255,255,255,0.08); }
+    .menu-panel a.danger{ color:#fca5a5; }
+    .loading{ text-align:center; padding:60px; color:var(--sand); opacity:.7; }
+    .card{ background:rgba(18,14,11,0.55); border:1px solid var(--glass-line); backdrop-filter:blur(12px); border-radius:16px; padding:22px; }
+    .banner{ background:linear-gradient(120deg,rgba(15,118,110,0.5),rgba(21,94,117,0.4)); border:1px solid rgba(99,210,199,0.25); border-radius:20px; padding:20px 24px; margin-bottom:18px; }
+    .banner-top{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+    .verified-badge{ display:inline-flex; align-items:center; gap:5px; background:#dcfce7; color:#166534; font-size:.73rem; font-weight:700; padding:3px 8px; border-radius:999px; }
+    .unverified-badge{ background:#fef3c7; color:#92400e; }
+    .approved-badge{ background:#dcfce7; color:#166534; }
+    .rejected-badge{ background:#fee2e2; color:#991b1b; }
+    .idle-badge{ background:rgba(255,255,255,0.08); color:var(--sand); border:1px solid rgba(203,165,107,0.25); }
+    .form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; }
+    .form-group{ display:flex; flex-direction:column; gap:7px; }
+    .form-full{ grid-column:1 / -1; }
+    label{ font-size:.84rem; color:var(--sand); font-weight:700; }
+    input, select, textarea{
+      width:100%; border:1px solid rgba(203,165,107,0.25); border-radius:12px; background:rgba(0,0,0,0.22); color:var(--cream);
+      padding:12px 14px; font:inherit;
+    }
+    textarea{ min-height:106px; resize:vertical; }
+    .verification-mode-block{ background:rgba(255,255,255,0.04); border:1px solid rgba(203,165,107,0.18); border-radius:12px; padding:12px; }
+    .verification-mode-block .form-grid{ margin-top:10px; }
+    .verification-preview{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+    .verification-preview a{ display:inline-flex; }
+    .verification-preview img{ width:72px; height:72px; object-fit:cover; border-radius:10px; border:1px solid rgba(203,165,107,0.25); background:rgba(0,0,0,0.2); }
+    .verification-empty{ font-size:.84rem; color:var(--sand); }
+    .file-input{ font-size:.8rem; color:var(--sand); }
+    .save-row{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:16px; }
+    .save-btn{ border:0; border-radius:10px; padding:11px 16px; font-weight:700; cursor:pointer; background:linear-gradient(135deg,var(--gold),var(--burnt-orange)); color:#23120a; }
+    .save-btn:disabled{ opacity:.6; cursor:not-allowed; }
+    .save-status{ font-size:.86rem; color:var(--sand); }
+    .save-status.ok{ color:#86efac; }
+    .save-status.err{ color:#fca5a5; }
+    @media (max-width:720px){
+      .form-grid{ grid-template-columns:1fr; }
+      .banner-top, .top{ align-items:flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="photo-bg" aria-hidden="true"></div>
+    <div class="texture" aria-hidden="true"></div>
+
+    <div class="wrap">
+      <header class="top">
+        <div class="top-left">
+          <button class="back-btn" onclick="window.location.href='dashboard-artisan.html'">← Dashboard</button>
+          <h1 class="dash-title">Demande de vérification</h1>
+        </div>
+        <div class="menu-wrap">
+          <button class="menu-toggle" id="seller-menu-toggle" aria-label="Ouvrir le menu vendeur" aria-expanded="false">☰</button>
+          <div class="menu-panel" id="seller-menu-panel">
+            <a href="dashboard-artisan.html">Tableau de bord</a>
+            <a href="boutique-vendeur.html" id="seller-menu-shop-link">Voir ma boutique</a>
+            <a href="produit-nouveau.html">Ajouter un produit</a>
+            <a href="commandes.html">Commandes</a>
+            <a href="messagerie.html">Messagerie</a>
+            <a href="#" class="danger" id="seller-menu-logout">Déconnexion</a>
+          </div>
+        </div>
+      </header>
+
+      <div id="loading-state" class="loading">Chargement de ta demande de vérification...</div>
+
+      <div id="page-content" style="display:none;">
+        <section class="banner card" style="margin-bottom:18px;">
+          <div class="banner-top">
+            <div>
+              <div id="verification-main-badge" class="verified-badge unverified-badge">En attente de vérification</div>
+              <h2 style="margin:10px 0 6px;font-family:'Playfair Display',serif;">Boutique concernée : <span id="verification-shop-name">Ta boutique</span></h2>
+              <p id="verification-note" style="margin:0;color:var(--sand);line-height:1.5;">Renseigne les informations demandées et envoie les justificatifs pour obtenir le badge de boutique.</p>
+            </div>
+            <div id="verification-status-pill" class="verified-badge idle-badge">En attente de vérification</div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="verification-first-name">Prénom</label>
+              <input type="text" id="verification-first-name" placeholder="Prénom" maxlength="60">
+            </div>
+            <div class="form-group">
+              <label for="verification-last-name">Nom</label>
+              <input type="text" id="verification-last-name" placeholder="Nom" maxlength="60">
+            </div>
+            <div class="form-group form-full">
+              <label for="verification-shop-mode">Type de boutique</label>
+              <select id="verification-shop-mode" onchange="toggleVerificationMode()">
+                <option value="physical">Boutique physique</option>
+                <option value="online">Boutique en ligne</option>
+              </select>
+            </div>
+
+            <div class="form-group form-full verification-mode-block" id="verification-physical-block">
+              <label>Coordonnées boutique physique</label>
+              <div class="form-grid" style="margin-top:8px;">
+                <div class="form-group">
+                  <label for="verification-rccm">RCCM</label>
+                  <input type="text" id="verification-rccm" placeholder="Numéro RCCM" maxlength="80">
+                </div>
+                <div class="form-group">
+                  <label for="verification-location">Lieu</label>
+                  <input type="text" id="verification-location" placeholder="Adresse ou quartier" maxlength="120">
+                </div>
+                <div class="form-group">
+                  <label for="verification-shop-number">Numéro</label>
+                  <input type="text" id="verification-shop-number" placeholder="Numéro de boutique" maxlength="40">
+                </div>
+                <div class="form-group form-full">
+                  <label for="verification-physical-notes">Autres détails</label>
+                  <textarea id="verification-physical-notes" placeholder="Repères, horaires, accès..." maxlength="350"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group form-full verification-mode-block" id="verification-online-block" style="display:none;">
+              <label for="verification-activity-type">Type d'activité en ligne</label>
+              <textarea id="verification-activity-type" placeholder="Décris ton activité, tes canaux et ton fonctionnement..." maxlength="350"></textarea>
+            </div>
+
+            <div class="form-group form-full">
+              <label for="verification-id-front">Carte nationale - recto</label>
+              <input class="file-input" type="file" id="verification-id-front" accept="image/jpeg,image/png,image/webp">
+            </div>
+            <div class="form-group form-full">
+              <label for="verification-id-back">Carte nationale - verso</label>
+              <input class="file-input" type="file" id="verification-id-back" accept="image/jpeg,image/png,image/webp">
+            </div>
+
+            <div class="form-group form-full">
+              <label>Aperçu des justificatifs</label>
+              <div class="verification-preview" id="verification-preview"></div>
+            </div>
+          </div>
+
+          <div class="save-row">
+            <button class="save-btn" id="submit-verification-btn" onclick="submitVerificationRequest()">Envoyer la demande</button>
+            <span class="save-status" id="verification-request-status"></span>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { firebaseConfig } from "./firebase-config.js";
+
+    const ROLE_KEY = 'artsango_user_role';
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let currentUser = null;
+    let currentArtisanData = {};
+    let currentVerificationRequest = null;
+
+    const toB64 = f => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(f); });
+
+    async function uploadToImgBB(file) {
+      const b64 = await toB64(file);
+      const fd = new FormData();
+      fd.append('image', b64.split(',')[1]);
+      const res = await fetch(`https://api.imgbb.com/1/upload?key=AIzaSyAghL7HcGVTWur9ijJzjWXywTgvCaiJ01M`, { method: 'POST', body: fd });
+      if (!res.ok) throw new Error(`ImgBB HTTP ${res.status}`);
+      const json = await res.json();
+      if (!json.success) throw new Error(json?.error?.message || 'Réponse ImgBB invalide');
+      const url = json.data?.display_url || json.data?.image?.url || json.data?.url;
+      if (!url) throw new Error('ImgBB : aucune URL retournée');
+      return url;
+    }
+
+    function getVerificationState(artisan = {}, request = null) {
+      if (artisan.verified || request?.status === 'approved') return 'approved';
+      const raw = String(request?.status || artisan.verificationStatus || '').toLowerCase();
+      if (raw === 'pending') return 'pending';
+      if (raw === 'rejected' || raw === 'refused') return 'rejected';
+      return 'idle';
+    }
+
+    function getVerificationMeta(state) {
+      const map = {
+        approved: {
+          mainText: 'Boutique vérifiée',
+          pillText: 'Badge actif sur toute la plateforme',
+          badgeClass: 'approved-badge',
+          note: 'Badge actif sur toute la plateforme.',
+          statusText: 'Demande validée.',
+        },
+        pending: {
+          mainText: 'Demande en cours',
+          pillText: 'Demande transmise à l’administration',
+          badgeClass: 'unverified-badge',
+          note: 'L’équipe admin examine ta demande. Tu peux encore ajuster les informations.',
+          statusText: 'Demande transmise à l’administration.',
+        },
+        rejected: {
+          mainText: 'Demande refusée',
+          pillText: 'Demande refusée',
+          badgeClass: 'rejected-badge',
+          note: 'Corrige les champs demandés puis renvoie la demande.',
+          statusText: 'Demande refusée. Corrige puis renvoie.',
+        },
+        idle: {
+          mainText: 'Demande de vérification',
+          pillText: 'En attente de vérification',
+          badgeClass: 'idle-badge',
+          note: 'Renseigne les informations demandées et envoie les justificatifs pour obtenir le badge de boutique.',
+          statusText: '',
+        },
+      };
+      return map[state] || map.idle;
+    }
+
+    function updateVerificationModeVisibility(mode) {
+      const physical = document.getElementById('verification-physical-block');
+      const online = document.getElementById('verification-online-block');
+      if (!physical || !online) return;
+      const isOnline = String(mode || 'physical') === 'online';
+      physical.style.display = isOnline ? 'none' : 'block';
+      online.style.display = isOnline ? 'block' : 'none';
+    }
+
+    function renderVerificationPreview(request = null) {
+      const wrap = document.getElementById('verification-preview');
+      if (!wrap) return;
+      const front = request?.idCardFrontUrl || '';
+      const back = request?.idCardBackUrl || '';
+      const items = [];
+      if (front) items.push(`<a href="${front}" target="_blank" rel="noopener"><img src="${front}" alt="Carte nationale recto"></a>`);
+      if (back) items.push(`<a href="${back}" target="_blank" rel="noopener"><img src="${back}" alt="Carte nationale verso"></a>`);
+      wrap.innerHTML = items.length ? items.join('') : '<span class="verification-empty">Aucun justificatif envoyé pour le moment.</span>';
+    }
+
+    function fillVerificationForm(data = {}) {
+      const set = (id, value) => { const el = document.getElementById(id); if (el) el.value = value || ''; };
+      set('verification-first-name', data.ownerFirstName || '');
+      set('verification-last-name', data.ownerLastName || '');
+      set('verification-shop-mode', data.shopMode || 'physical');
+      set('verification-rccm', data.rccm || '');
+      set('verification-location', data.shopLocation || '');
+      set('verification-shop-number', data.shopNumber || '');
+      set('verification-physical-notes', data.physicalNotes || '');
+      set('verification-activity-type', data.activityType || '');
+      updateVerificationModeVisibility(data.shopMode || 'physical');
+      renderVerificationPreview(data);
+    }
+
+    function renderVerificationState(artisan = {}, request = null) {
+      const status = getVerificationState(artisan, request);
+      const meta = getVerificationMeta(status);
+      const mainBadge = document.getElementById('verification-main-badge');
+      const pill = document.getElementById('verification-status-pill');
+      const note = document.getElementById('verification-note');
+      const shopName = document.getElementById('verification-shop-name');
+      const statusText = document.getElementById('verification-request-status');
+      const btn = document.getElementById('submit-verification-btn');
+
+      if (mainBadge) {
+        mainBadge.className = `verified-badge ${meta.badgeClass}`.trim();
+        mainBadge.textContent = meta.mainText;
+      }
+      if (pill) {
+        pill.className = `verified-badge ${meta.badgeClass}`.trim();
+        pill.textContent = meta.pillText;
+      }
+      if (note) note.textContent = meta.note;
+      if (shopName) shopName.textContent = artisan.brandName || artisan.email || 'Ta boutique';
+      if (statusText) statusText.textContent = meta.statusText;
+
+      fillVerificationForm(request || artisan.verificationProfile || {});
+
+      const approved = status === 'approved';
+      document.querySelectorAll('#verification-first-name, #verification-last-name, #verification-shop-mode, #verification-rccm, #verification-location, #verification-shop-number, #verification-physical-notes, #verification-activity-type, #verification-id-front, #verification-id-back')
+        .forEach((el) => { el.disabled = approved; });
+      if (btn) btn.style.display = approved ? 'none' : 'inline-flex';
+      if (btn && !approved) {
+        btn.textContent = request?.status === 'pending'
+          ? 'Mettre à jour la demande'
+          : (request?.status === 'rejected' ? 'Renvoyer la demande' : 'Envoyer la demande');
+      }
+    }
+
+    window.toggleVerificationMode = function() {
+      const mode = document.getElementById('verification-shop-mode')?.value || 'physical';
+      updateVerificationModeVisibility(mode);
+    };
+
+    window.submitVerificationRequest = async function() {
+      if (!currentUser) return;
+      const btn = document.getElementById('submit-verification-btn');
+      const status = document.getElementById('verification-request-status');
+      if (btn) { btn.disabled = true; btn.textContent = 'Envoi...'; }
+      if (status) status.textContent = 'Téléversement des justificatifs...';
+
+      const get = (id) => (document.getElementById(id)?.value || '').trim();
+      const firstName = get('verification-first-name');
+      const lastName = get('verification-last-name');
+      const mode = document.getElementById('verification-shop-mode')?.value || 'physical';
+      const rccm = get('verification-rccm');
+      const shopLocation = get('verification-location');
+      const shopNumber = get('verification-shop-number');
+      const physicalNotes = get('verification-physical-notes');
+      const activityType = get('verification-activity-type');
+      const frontFile = document.getElementById('verification-id-front')?.files?.[0];
+      const backFile = document.getElementById('verification-id-back')?.files?.[0];
+
+      if (!firstName) { if (status) status.textContent = 'Le prénom est obligatoire.'; if (btn) btn.disabled = false; return; }
+      if (!lastName) { if (status) status.textContent = 'Le nom est obligatoire.'; if (btn) btn.disabled = false; return; }
+      if (mode === 'physical') {
+        if (!rccm) { if (status) status.textContent = 'Le RCCM est obligatoire pour une boutique physique.'; if (btn) btn.disabled = false; return; }
+        if (!shopLocation) { if (status) status.textContent = 'Le lieu est obligatoire pour une boutique physique.'; if (btn) btn.disabled = false; return; }
+        if (!shopNumber) { if (status) status.textContent = 'Le numéro de boutique est obligatoire pour une boutique physique.'; if (btn) btn.disabled = false; return; }
+      } else if (!activityType) {
+        if (status) status.textContent = 'Le type d'activité est obligatoire pour une boutique en ligne.';
+        if (btn) btn.disabled = false;
+        return;
+      }
+
+      const existingFront = currentVerificationRequest?.idCardFrontUrl || currentArtisanData.verificationProfile?.idCardFrontUrl || '';
+      const existingBack = currentVerificationRequest?.idCardBackUrl || currentArtisanData.verificationProfile?.idCardBackUrl || '';
+
+      try {
+        let frontUrl = existingFront;
+        let backUrl = existingBack;
+        if (frontFile) frontUrl = await uploadToImgBB(frontFile);
+        if (backFile) backUrl = await uploadToImgBB(backFile);
+        if (!frontUrl) throw new Error('Ajoute la photo recto de ta carte nationale.');
+        if (!backUrl) throw new Error('Ajoute la photo verso de ta carte nationale.');
+
+        const nowIso = new Date().toISOString();
+        const submittedAt = currentVerificationRequest?.submittedAt || nowIso;
+        const requestData = {
+          artisanUid: currentUser.uid,
+          artisanName: currentArtisanData.brandName || currentUser.email || '',
+          shopName: currentArtisanData.brandName || '',
+          ownerFirstName: firstName,
+          ownerLastName: lastName,
+          shopMode: mode,
+          rccm: mode === 'physical' ? rccm : '',
+          shopLocation: mode === 'physical' ? shopLocation : '',
+          shopNumber: mode === 'physical' ? shopNumber : '',
+          physicalNotes: mode === 'physical' ? physicalNotes : '',
+          activityType: mode === 'online' ? activityType : '',
+          idCardFrontUrl: frontUrl,
+          idCardBackUrl: backUrl,
+          status: 'pending',
+          reviewedAt: null,
+          reviewedBy: '',
+          reviewNote: '',
+          submittedAt,
+          updatedAt: nowIso,
+          email: currentArtisanData.email || currentUser.email || '',
+          phone: currentArtisanData.phone || '',
+          category: currentArtisanData.category || '',
+          city: currentArtisanData.city || '',
+          country: currentArtisanData.country || '',
+          profilePhoto: currentArtisanData.profilePhoto || '',
+        };
+
+        await setDoc(doc(db, 'verificationRequests', currentUser.uid), requestData, { merge: true });
+        await updateDoc(doc(db, 'artisans', currentUser.uid), {
+          verificationStatus: 'pending',
+          verificationRequestedAt: nowIso,
+          verificationProfile: requestData,
+          verified: false,
+          verifiedAt: null,
+          verifiedBadgeLabel: '',
+        });
+
+        currentVerificationRequest = requestData;
+        currentArtisanData = { ...currentArtisanData, verificationStatus: 'pending', verificationProfile: requestData, verified: false };
+        renderVerificationState(currentArtisanData, currentVerificationRequest);
+        if (status) status.textContent = 'Demande envoyée. L’équipe admin va la vérifier.';
+        if (btn) { btn.disabled = false; btn.textContent = 'Mettre à jour la demande'; }
+      } catch (e) {
+        if (status) status.textContent = 'Erreur : ' + e.message;
+        if (btn) { btn.disabled = false; btn.textContent = currentVerificationRequest?.status === 'pending' ? 'Mettre à jour la demande' : 'Envoyer la demande'; }
+      }
+    };
+
+    function closeMenu() {
+      const panel = document.getElementById('seller-menu-panel');
+      const toggle = document.getElementById('seller-menu-toggle');
+      if (!panel || !toggle) return;
+      panel.classList.remove('open');
+      toggle.setAttribute('aria-expanded', 'false');
+    }
+
+    document.getElementById('seller-menu-toggle').addEventListener('click', (event) => {
+      event.stopPropagation();
+      const panel = document.getElementById('seller-menu-panel');
+      const toggle = document.getElementById('seller-menu-toggle');
+      const isOpen = panel.classList.toggle('open');
+      toggle.setAttribute('aria-expanded', String(isOpen));
+    });
+
+    document.addEventListener('click', (event) => {
+      const panel = document.getElementById('seller-menu-panel');
+      const toggle = document.getElementById('seller-menu-toggle');
+      if (!panel.contains(event.target) && !toggle.contains(event.target)) closeMenu();
+    });
+
+    document.getElementById('seller-menu-logout').addEventListener('click', (e) => {
+      e.preventDefault();
+      signOut(auth).then(() => window.location.href = 'index.html');
+    });
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) { window.location.href = 'connexion.html'; return; }
+      if ((localStorage.getItem(ROLE_KEY) || '') === 'client') { window.location.href = 'dashboard-client.html'; return; }
+
+      currentUser = user;
+      document.getElementById('seller-menu-shop-link').href = 'boutique-vendeur.html?id=' + user.uid;
+
+      const aSnap = await getDoc(doc(db, 'artisans', user.uid));
+      const artisan = aSnap.exists() ? aSnap.data() : {};
+      currentArtisanData = { ...artisan };
+
+      try {
+        const requestSnap = await getDoc(doc(db, 'verificationRequests', user.uid));
+        currentVerificationRequest = requestSnap.exists() ? requestSnap.data() : null;
+      } catch {
+        currentVerificationRequest = null;
+      }
+
+      renderVerificationState(currentArtisanData, currentVerificationRequest);
+      document.getElementById('loading-state').style.display = 'none';
+      document.getElementById('page-content').style.display = 'block';
+    });
+  </script>
+</body>
+</html>

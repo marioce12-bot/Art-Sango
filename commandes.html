@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Commandes - ArtSango</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <!--
+    NOTIFICATION EMAIL : utilise EmailJS (gratuit jusqu'à 200 emails/mois)
+    1. Créer un compte sur https://www.emailjs.com
+    2. Créer un service email et un template avec les variables :
+       {{to_email}}, {{artisan_name}}, {{order_id}}, {{client_name}},
+       {{client_phone}}, {{montant}}, {{message_client}}
+    3. Remplacer EMAILJS_PUBLIC_KEY, EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID
+       dans le script ci-dessous.
+    ─────────────────────────────────────────────────────────────────────
+    Pour envoyer l'email à la COMMANDE (depuis la page panier/checkout),
+    appelle sendOrderNotification() avec les données de commande.
+    Cette page gère uniquement l'AFFICHAGE des commandes existantes.
+  -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <style>
+    :root {
+      --charcoal: #0e0c0a;
+      --gold: #c9a05a;
+      --burnt: #bf6a3c;
+      --sand: #d8c4a0;
+      --cream: #f4eadb;
+      --teal: #0f766e;
+      --glass: rgba(18,14,11,0.58);
+      --glass-line: rgba(227,189,136,0.22);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "DM Sans", sans-serif; color: var(--cream); min-height: 100dvh; }
+    .page { position: relative; min-height: 100dvh; isolation: isolate; }
+    .photo-bg{
+      position:fixed; inset:0; z-index:-3;
+      background-image:
+        linear-gradient(130deg,rgba(9,7,6,0.88) 0%,rgba(30,19,14,0.68) 50%,rgba(9,8,7,0.88) 100%),
+        url("https://images.unsplash.com/photo-1600566752229-250ed79470f8?auto=format&fit=crop&w=1800&q=80");
+      background-size:cover; background-position:center;
+    }
+    body[data-shop-theme="heritage"] .photo-bg{
+      background-image:
+        linear-gradient(130deg,rgba(9,7,6,0.88) 0%,rgba(30,19,14,0.68) 50%,rgba(9,8,7,0.88) 100%),
+        url("https://images.unsplash.com/photo-1600566752229-250ed79470f8?auto=format&fit=crop&w=1800&q=80");
+    }
+    body[data-shop-theme="savane"] .photo-bg{
+      background-image:
+        linear-gradient(130deg,rgba(33,17,8,0.86) 0%,rgba(56,32,10,0.68) 52%,rgba(14,10,7,0.9) 100%),
+        url("https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=1800&q=80");
+    }
+    body[data-shop-theme="lagune"] .photo-bg{
+      background-image:
+        linear-gradient(130deg,rgba(4,22,26,0.86) 0%,rgba(10,48,58,0.68) 52%,rgba(8,14,26,0.9) 100%),
+        url("https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=1800&q=80");
+    }
+    body[data-shop-theme="atelier"] .photo-bg{
+      background-image:
+        linear-gradient(130deg,rgba(26,12,34,0.86) 0%,rgba(39,24,62,0.68) 52%,rgba(12,14,22,0.9) 100%),
+        url("https://images.unsplash.com/photo-1452802447250-470a88ac82bc?auto=format&fit=crop&w=1800&q=80");
+    }
+    body[data-shop-theme="sahara"] .photo-bg{
+      background-image:
+        linear-gradient(130deg,rgba(42,18,6,0.86) 0%,rgba(72,38,12,0.68) 52%,rgba(20,12,26,0.9) 100%),
+        url("https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=1800&q=80");
+    }
+    body[data-shop-theme="kente"] .photo-bg{
+      background-image:
+        linear-gradient(130deg,rgba(42,20,8,0.86) 0%,rgba(92,34,14,0.68) 52%,rgba(14,24,20,0.9) 100%),
+        url("https://images.unsplash.com/photo-1465005198441-3f4dc1f6e707?auto=format&fit=crop&w=1800&q=80");
+    }
+    body[data-shop-theme="bogolan"] .photo-bg{
+      background-image:
+        linear-gradient(130deg,rgba(24,16,10,0.86) 0%,rgba(55,33,20,0.68) 52%,rgba(10,8,6,0.9) 100%),
+        url("https://images.unsplash.com/photo-1517089596392-fb9a9033e05b?auto=format&fit=crop&w=1800&q=80");
+    }
+    body[data-shop-theme="baobab"] .photo-bg{
+      background-image:
+        linear-gradient(130deg,rgba(28,18,8,0.86) 0%,rgba(64,40,18,0.68) 52%,rgba(14,20,10,0.9) 100%),
+        url("https://images.unsplash.com/photo-1473773508845-188df298d2d1?auto=format&fit=crop&w=1800&q=80");
+    }
+    body[data-shop-theme="nile"] .photo-bg{
+      background-image:
+        linear-gradient(130deg,rgba(6,24,30,0.86) 0%,rgba(12,52,64,0.68) 52%,rgba(8,14,26,0.9) 100%),
+        url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1800&q=80");
+    }
+    .texture{
+      position:fixed; inset:0; z-index:-2; pointer-events:none;
+      background:radial-gradient(700px 380px at 70% 20%,rgba(191,106,60,0.2),transparent 70%);
+    }
+
+    /* ── Topbar ── */
+    .topbar {
+      background: var(--glass);
+      border: 1px solid var(--glass-line);
+      border-radius: 20px;
+      padding: 12px 16px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      margin-bottom: 20px;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 14px; }
+    .logo {
+      font-family: "Cormorant Garamond", Georgia, serif;
+      font-weight: 700; font-size: 1.3rem;
+      color: var(--cream); text-decoration: none;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .logo img { width: 28px; height: 28px; border-radius: 6px; object-fit: cover; border: 1px solid rgba(227,189,136,0.35); display:none; }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      text-decoration: none; font-weight: 600; font-size: .85rem;
+      color: var(--cream); padding: 8px 14px; border-radius: 8px;
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(227,189,136,0.25);
+      transition: background .15s;
+    }
+    .back-btn:hover { background: rgba(255,255,255,0.15); }
+    .page-title {
+      font-family: "Cormorant Garamond", Georgia, serif;
+      font-size: 1.4rem; font-weight: 700; color: var(--cream);
+    }
+
+    /* ── Contenu ── */
+    .wrap {
+      max-width: 1100px; margin: 0 auto;
+      padding: 28px 20px calc(28px + env(safe-area-inset-bottom));
+    }
+
+    /* ── Stats rapides ── */
+    .stats-row {
+      display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 22px;
+    }
+    .stat-card {
+      flex: 1; min-width: 140px;
+      background: var(--glass); border: 1px solid var(--glass-line); border-radius: 12px;
+      padding: 16px 18px;
+      backdrop-filter: blur(10px);
+    }
+    .stat-card .stat-label { font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: var(--sand); font-weight: 600; margin-bottom: 4px; }
+    .stat-card .stat-value { font-size: 1.5rem; font-weight: 700; color: #f0fdfa; }
+
+    .mode-switch { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+    .mode-btn {
+      border:1px solid rgba(203,165,107,0.35); background:rgba(255,255,255,0.08);
+      color:var(--sand); border-radius:999px; padding:8px 13px; font-size:.82rem; font-weight:700; cursor:pointer;
+    }
+    .mode-btn.active { background:linear-gradient(135deg,var(--gold),var(--burnt)); color:#23120a; border-color:transparent; }
+
+    /* ── Tableau ── */
+    .table-wrap {
+      background: var(--glass); border: 1px solid var(--glass-line); border-radius: 14px;
+      overflow: hidden;
+      backdrop-filter: blur(12px);
+    }
+    .table-header {
+      padding: 14px 18px; border-bottom: 1px solid var(--glass-line);
+      display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+    }
+    .table-header h2 { font-size: 1rem; font-weight: 700; color: #f0fdfa; }
+    .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; }
+    .filter-bar select {
+      padding: 7px 10px; border: 1px solid rgba(203,165,107,0.35); border-radius: 8px;
+      font: inherit; font-size: .82rem; color: var(--cream); background: rgba(0,0,0,0.24); cursor: pointer;
+    }
+
+    table { width: 100%; border-collapse: collapse; min-width: 600px; }
+    th { background: rgba(255,255,255,0.05); padding: 11px 14px; text-align: left; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--sand); font-weight: 700; border-bottom: 1px solid var(--glass-line); }
+    td { padding: 13px 14px; border-bottom: 1px solid rgba(227,189,136,0.14); font-size: .88rem; vertical-align: top; color: var(--cream); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.04); }
+
+    .order-id { font-family: monospace; font-size: .8rem; color: var(--sand); }
+    .client-name { font-weight: 600; color: #f0fdfa; }
+    .client-phone { color: var(--sand); font-size: .8rem; margin-top: 2px; }
+    .amount { font-weight: 700; color: #f0cf96; }
+
+    /* Statut badge */
+    .badge {
+      display: inline-block; padding: 4px 10px; border-radius: 999px;
+      font-weight: 700; font-size: .72rem; white-space: nowrap;
+    }
+    .badge-en_attente { background: #fef3c7; color: #92400e; }
+    .badge-confirmee  { background: #dcfce7; color: #166534; }
+    .badge-a_expedier { background: #dbeafe; color: #1e40af; }
+    .badge-livree     { background: #f3f4f6; color: #374151; }
+    .badge-refusee    { background: #fee2e2; color: #991b1b; }
+
+    .stat-select {
+      border: 1px solid rgba(203,165,107,0.35); border-radius: 7px;
+      padding: 5px 8px; font: inherit; font-size: .82rem; cursor: pointer;
+      background: rgba(0,0,0,0.24); color: var(--cream); margin-top: 5px;
+    }
+
+    .action-link {
+      display: inline-block; margin-top: 6px; font-size: .8rem;
+      font-weight: 600; text-decoration: none; color: var(--teal);
+    }
+    .action-link:hover { text-decoration: underline; }
+    .action-link.whatsapp { color: #16a34a; }
+
+    .msg-text { color: var(--sand); font-size: .82rem; max-width: 220px; line-height: 1.4; }
+
+    .empty { text-align: center; padding: 60px; color: var(--sand); }
+    .loading { text-align: center; padding: 40px; color: var(--sand); }
+
+    .overflow-x { overflow-x: auto; }
+
+    @media (max-width: 640px) {
+      .topbar { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="photo-bg" aria-hidden="true"></div>
+    <div class="texture" aria-hidden="true"></div>
+
+    <div class="wrap">
+      <header class="topbar">
+        <div class="topbar-left">
+          <a class="logo" href="index.html"><img class="platform-logo-dynamic" alt="Logo ArtSango"><span>ArtSango</span></a>
+          <span style="color:#8f7a5d;">|</span>
+          <span class="page-title">Mes commandes</span>
+        </div>
+        <a class="back-btn" href="dashboard-artisan.html">Retour au tableau de bord</a>
+      </header>
+
+      <div class="mode-switch" id="mode-switch" style="display:none;">
+        <button id="mode-sales" class="mode-btn active" type="button" onclick="setOrdersView('sales')">Commandes recues</button>
+        <button id="mode-purchases" class="mode-btn" type="button" onclick="setOrdersView('purchases')">Mes achats</button>
+      </div>
+
+    <!-- Stats -->
+    <div class="stats-row" id="stats-row" style="display:none;">
+      <div class="stat-card"><div class="stat-label" id="stat-total-label">Total commandes</div><div class="stat-value" id="stat-total">—</div></div>
+      <div class="stat-card"><div class="stat-label">En attente</div><div class="stat-value" id="stat-attente">—</div></div>
+      <div class="stat-card"><div class="stat-label" id="stat-conf-label">Confirmées</div><div class="stat-value" id="stat-confirmees">—</div></div>
+      <div class="stat-card"><div class="stat-label" id="stat-ca-label">Chiffre d'affaires</div><div class="stat-value" id="stat-ca">—</div></div>
+    </div>
+
+    <div class="loading" id="loading">Chargement des commandes…</div>
+
+    <div class="table-wrap" id="table-wrap" style="display:none;">
+      <div class="table-header">
+        <h2 id="table-title">Toutes les commandes</h2>
+        <div class="filter-bar">
+          <select id="filter-statut" onchange="applyFilter()">
+            <option value="">Tous les statuts</option>
+            <option value="en_attente">En attente</option>
+            <option value="confirmee">Confirmée</option>
+            <option value="a_expedier">À expédier</option>
+            <option value="livree">Livrée</option>
+            <option value="refusee">Refusée</option>
+          </select>
+        </div>
+      </div>
+      <div class="overflow-x">
+        <table>
+          <thead>
+            <tr>
+              <th>Référence</th>
+              <th id="col-counterpart">Client</th>
+              <th>Montant</th>
+              <th>Statut</th>
+              <th>Date</th>
+              <th>Détails</th>
+            </tr>
+          </thead>
+          <tbody id="orders-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="empty" id="empty" style="display:none;">Aucune commande pour l'instant.</div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp }  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, collection, query, where, getDocs, doc, updateDoc, orderBy, getDoc }
+      from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    /* ── Config Firebase ── */
+    const firebaseConfig = {
+      apiKey:"AIzaSyAghL7HcGVTWur9ijJzjWXywTgvCaiJ01M",
+      authDomain:"art-sango.firebaseapp.com",
+      projectId:"art-sango",
+      storageBucket:"art-sango.firebasestorage.app",
+      messagingSenderId:"840868763552",
+      appId:"1:840868763552:web:b7cb1ac710d3b9968436c5"
+    };
+
+    /* ── Config EmailJS (à renseigner) ── */
+    const EMAILJS_PUBLIC_KEY  = 'XLD7E5T9f0z40q6F3';
+    const EMAILJS_SERVICE_ID  = 'service_f2dcr5x';
+    const EMAILJS_TEMPLATE_ID = 'template_y5vsooe';
+
+    const STATUTS = {
+      en_attente:'En attente', confirmee:'Confirmée',
+      a_expedier:'À expédier', livree:'Livrée', refusee:'Refusée'
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    let salesOrders = [];
+    let purchaseOrders = [];
+    let currentView = 'sales';
+    let currentUid = '';
+    let statsResetAtMs = 0;
+
+    function getOrderTimeMs(o) {
+      if (!o?.createdAt) return 0;
+      if (o.createdAt?.toDate) return o.createdAt.toDate().getTime();
+      const t = new Date(o.createdAt).getTime();
+      return Number.isFinite(t) ? t : 0;
+    }
+
+    function getCurrentOrders() {
+      return currentView === 'purchases' ? purchaseOrders : salesOrders;
+    }
+
+    function toggleModeButtons() {
+      document.getElementById('mode-sales').classList.toggle('active', currentView === 'sales');
+      document.getElementById('mode-purchases').classList.toggle('active', currentView === 'purchases');
+    }
+
+    function applyTheme(themeKey) {
+      document.body.setAttribute('data-shop-theme', themeKey || 'heritage');
+    }
+
+    window.setOrdersView = function(view) {
+      currentView = view === 'purchases' ? 'purchases' : 'sales';
+      toggleModeButtons();
+      document.getElementById('filter-statut').value = '';
+
+      document.getElementById('table-title').textContent = currentView === 'sales' ? 'Commandes reçues' : 'Mes achats chez d\'autres vendeurs';
+      document.getElementById('col-counterpart').textContent = currentView === 'sales' ? 'Client' : 'Vendeur';
+
+      renderStats(getCurrentOrders());
+      renderOrders(getCurrentOrders());
+
+      const hasRows = getCurrentOrders().length > 0;
+      document.getElementById('table-wrap').style.display = hasRows ? 'block' : 'none';
+      document.getElementById('stats-row').style.display = hasRows ? 'flex' : 'none';
+      document.getElementById('empty').style.display = hasRows ? 'none' : 'block';
+    };
+
+    /* ── Envoi email de notification (appeler depuis le checkout) ── */
+    window.sendOrderNotification = async function({ toEmail, artisanName, orderId, clientName, clientPhone, montant, messageClient }) {
+      if (!EMAILJS_PUBLIC_KEY || EMAILJS_PUBLIC_KEY === 'VOTRE_PUBLIC_KEY') return;
+      try {
+        emailjs.init(EMAILJS_PUBLIC_KEY);
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+          to_email:       toEmail,
+          artisan_name:   artisanName,
+          order_id:       orderId,
+          client_name:    clientName,
+          client_phone:   clientPhone,
+          montant:        montant,
+          message_client: messageClient || '—',
+          marketplace_url: window.location.origin + '/commandes-artisan.html'
+        });
+        console.log('Email de notification envoyé à', toEmail);
+      } catch(e) {
+        console.warn('Erreur envoi email:', e);
+      }
+    };
+
+    /* ── Chargement commandes ── */
+    onAuthStateChanged(auth, async user => {
+      if (!user) { window.location.href = 'connexion.html'; return; }
+
+      currentUid = user.uid;
+
+      /* Profil artisan (thème dashboard) */
+      try {
+        const aSnap = await getDoc(doc(db,'artisans',user.uid));
+        if (aSnap.exists()) {
+          const aData = aSnap.data() || {};
+          applyTheme(aData.shopTheme || 'heritage');
+          statsResetAtMs = aData.statsResetAt ? new Date(aData.statsResetAt).getTime() : 0;
+        }
+      } catch {}
+
+      try {
+        const snap = await getDocs(
+          query(collection(db,'commandes'), where('artisanId','==',user.uid), orderBy('createdAt','desc'))
+        );
+        salesOrders = snap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter((o) => statsResetAtMs > 0 ? getOrderTimeMs(o) > statsResetAtMs : true);
+      } catch(e) {
+        console.warn('Erreur chargement:', e.message);
+        /* Fallback sans orderBy si index manquant */
+        try {
+          const snap2 = await getDocs(query(collection(db,'commandes'), where('artisanId','==',user.uid)));
+          salesOrders = snap2.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => {
+            const ta = a.createdAt?.toDate?.()?.getTime() || 0;
+            const tb = b.createdAt?.toDate?.()?.getTime() || 0;
+            return tb - ta;
+          }).filter((o) => statsResetAtMs > 0 ? getOrderTimeMs(o) > statsResetAtMs : true);
+        } catch(e2) { console.warn(e2.message); salesOrders = []; }
+      }
+
+      try {
+        const pSnap = await getDocs(
+          query(collection(db,'commandes'), where('clientUid','==',user.uid), orderBy('createdAt','desc'))
+        );
+        purchaseOrders = pSnap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter(o => o.artisanId !== user.uid);
+      } catch (e) {
+        console.warn('Erreur chargement achats:', e.message);
+        try {
+          const pSnap2 = await getDocs(query(collection(db,'commandes'), where('clientUid','==',user.uid)));
+          purchaseOrders = pSnap2.docs
+            .map(d => ({ id: d.id, ...d.data() }))
+            .filter(o => o.artisanId !== user.uid)
+            .sort((a,b) => {
+              const ta = a.createdAt?.toDate?.()?.getTime() || 0;
+              const tb = b.createdAt?.toDate?.()?.getTime() || 0;
+              return tb - ta;
+            });
+        } catch (e2) { console.warn(e2.message); purchaseOrders = []; }
+      }
+
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('mode-switch').style.display = 'flex';
+      window.setOrdersView('sales');
+
+      try {
+        const { setupNotifications, startOrderNotifications } = await import('./messaging-service.js');
+        await setupNotifications({ db, currentUser: user, role: 'artisan' });
+        if (typeof window.notificationUnsubscribe === 'function') window.notificationUnsubscribe();
+        window.notificationUnsubscribe = startOrderNotifications({
+          db,
+          currentUser: user,
+          basePath: 'commandes.html',
+        });
+      } catch (e) {
+        console.warn('Notifications non configurées:', e.message);
+      }
+    });
+
+    /* ── Stats ── */
+    function renderStats(orders) {
+      const isPurchases = currentView === 'purchases';
+      document.getElementById('stat-total-label').textContent = isPurchases ? 'Total achats' : 'Total commandes';
+      document.getElementById('stat-conf-label').textContent = isPurchases ? 'Validées' : 'Confirmées';
+      document.getElementById('stat-ca-label').textContent = isPurchases ? 'Montant achats' : 'Chiffre d\'affaires';
+      document.getElementById('stat-total').textContent     = orders.length;
+      document.getElementById('stat-attente').textContent   = orders.filter(o => (o.statut||'en_attente') === 'en_attente').length;
+      document.getElementById('stat-confirmees').textContent= orders.filter(o => o.statut === 'confirmee').length;
+      const ca = orders.filter(o => o.statut !== 'refusee').reduce((s,o) => s + (o.montant||0), 0);
+      document.getElementById('stat-ca').textContent        = ca.toLocaleString('fr-FR') + ' XOF';
+    }
+
+    /* ── Filtre ── */
+    window.applyFilter = function() {
+      const val = document.getElementById('filter-statut').value;
+      const base = getCurrentOrders();
+      renderOrders(val ? base.filter(o => (o.statut||'en_attente') === val) : base);
+    };
+
+    /* ── Rendu tableau ── */
+    function renderOrders(orders) {
+      const tbody = document.getElementById('orders-body');
+      if (!orders.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">Aucune commande pour ce filtre.</td></tr>'; return; }
+
+      tbody.innerHTML = orders.map(o => {
+        const date     = o.createdAt?.toDate ? o.createdAt.toDate().toLocaleDateString('fr-FR') : '—';
+        const statut   = o.statut || 'en_attente';
+        const shortId  = o.id.substring(0,8).toUpperCase();
+        const isPurchases = currentView === 'purchases';
+        const counterpartName = isPurchases ? (o.artisanName || '—') : (o.clientName || '—');
+        const counterpartPhone = isPurchases ? (o.artisanPhone || o.artisanEmail || '') : (o.clientPhone || '');
+        const phoneRaw = (isPurchases ? '' : (o.clientWhatsapp || o.clientPhone || '')).replace(/\D/g,'');
+        const waMsg    = encodeURIComponent(`Bonjour ${o.clientName||''}, votre commande #${shortId} sur ArtSango a été reçue. Nous vous contacterons pour finaliser la livraison. Merci.`);
+        const waLink   = phoneRaw ? `https://wa.me/${phoneRaw}?text=${waMsg}` : '';
+
+        return `
+        <tr>
+          <td><span class="order-id">#${shortId}</span></td>
+          <td>
+            <div class="client-name">${counterpartName}</div>
+            <div class="client-phone">${counterpartPhone}</div>
+          </td>
+          <td><span class="amount">${(o.montant||0).toLocaleString('fr-FR')} XOF</span></td>
+          <td>
+            <span class="badge badge-${statut}">${STATUTS[statut]||statut}</span><br>
+            ${isPurchases
+              ? `<span style="font-size:.75rem;color:var(--sand);">Suivi par le vendeur</span>`
+              : `<select class="stat-select" onchange="updateStatut('${o.id}', this)">
+                   ${Object.entries(STATUTS).map(([k,v]) => `<option value="${k}" ${k===statut?'selected':''}>${v}</option>`).join('')}
+                 </select>`}
+          </td>
+          <td>${date}</td>
+          <td>
+            <div class="msg-text">${o.clientMessage||'—'}</div>
+            ${o.deliveryMode === 'livraison' && o.mapsLink
+              ? `<a class="action-link" href="${o.mapsLink}" target="_blank" rel="noopener">Voir la localisation</a>`
+              : ''}
+            ${waLink && !isPurchases
+              ? `<a class="action-link whatsapp" href="${waLink}" target="_blank" rel="noopener">Contacter le client sur WhatsApp</a>`
+              : ''}
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    /* ── Mise à jour statut ── */
+    window.updateStatut = async function(orderId, selectEl) {
+      const newStatut = selectEl.value;
+      /* Mettre à jour le badge visuellement */
+      const badge = selectEl.closest('td').querySelector('.badge');
+      if (badge) {
+        badge.className = 'badge badge-' + newStatut;
+        badge.textContent = STATUTS[newStatut] || newStatut;
+      }
+      try {
+        await updateDoc(doc(db,'commandes', orderId), { statut: newStatut });
+        /* Mettre à jour localement */
+        const o = salesOrders.find(x => x.id === orderId);
+        if (o) o.statut = newStatut;
+        renderStats(getCurrentOrders());
+      } catch(e) {
+        alert('Erreur lors de la mise à jour : ' + e.message);
+      }
+    };
+  </script>
+  <script type="module" src="./platform-logo.js"></script>
+  <script defer src="./sw-register.js"></script>
+  <script defer src="./mobile-nav.js"></script>
+
+  <!--
+  ══════════════════════════════════════════════════════════════════════
+  COMMENT ENVOYER L'EMAIL QUAND UNE COMMANDE EST PASSÉE (depuis panier.html)
+  ══════════════════════════════════════════════════════════════════════
+  Après avoir sauvegardé la commande dans Firestore, appelle cette fonction
+  dans ton fichier panier.html :
+
+    await sendOrderEmailToArtisan({
+      toEmail:       artisanData.email,          // email du vendeur
+      artisanName:   artisanData.brandName,
+      orderId:       docRef.id,
+      clientName:    formData.clientName,
+      clientPhone:   formData.clientPhone,
+      montant:       totalAmount,
+      messageClient: formData.message
+    });
+
+  Template EmailJS suggéré :
+  ─────────────────────────────────────────────────────────────────────
+  Sujet : Nouvelle commande #{{order_id}} sur ArtSango
+
+  Bonjour {{artisan_name}},
+
+  Vous avez reçu une nouvelle commande !
+
+  Référence  : #{{order_id}}
+  Client     : {{client_name}}
+  Téléphone  : {{client_phone}}
+  Montant    : {{montant}} XOF
+  Message    : {{message_client}}
+
+  Connectez-vous pour gérer cette commande :
+  {{marketplace_url}}
+
+  L'équipe ArtSango
+  ─────────────────────────────────────────────────────────────────────
+  -->
+</body>
+</html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Inscription Artisan - ArtSango</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{ --charcoal:#0e0c0a; --burnt:#bf6a3c; --gold:#c9a05a; --sand:#d8c4a0; --cream:#f4eadb; --brand:#0f766e; --text:#f4eadb; --glass:rgba(14,12,10,0.62); --glass-border:rgba(201,160,90,0.24); }
+    *{ box-sizing:border-box; }
+    body{ margin:0; font-family:"DM Sans",Verdana,sans-serif; background:var(--charcoal); color:var(--text); }
+    .bg { position:fixed; inset:0; z-index:-2; background-image:linear-gradient(125deg, rgba(10,8,6,.88) 0%, rgba(26,16,10,.6) 50%, rgba(10,8,6,.92) 100%), url("https://images.unsplash.com/photo-1541580621-cb2562a7a8a3?auto=format&fit=crop&w=1800&q=80"); background-size:cover; background-position:center; }
+    .wrap{ max-width:760px; margin:0 auto; padding:20px; padding-bottom:calc(20px + env(safe-area-inset-bottom)); }
+    .card{ background:var(--glass); border:1px solid var(--glass-border); border-radius:16px; padding:28px; backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); }
+    h1{ margin:0 0 4px; font-family:"Cormorant Garamond",serif; font-size:2rem; color:#fbf3e5; }
+    .sub{ color:var(--sand); font-size:.9rem; margin:0 0 22px; }
+    .grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .full{ grid-column:1 / -1; }
+    label{ display:block; font-size:.83rem; font-weight:600; margin-bottom:5px; color:#e8d2b4; }
+    input, select, textarea{
+      width:100%; padding:10px 13px; border:1.5px solid rgba(201,160,90,.35); border-radius:10px;
+      font:inherit; font-size:.94rem; transition:border-color .15s; background:rgba(10,8,6,.45); color:var(--cream);
+    }
+    input:focus, select:focus, textarea:focus{ outline:none; border-color:var(--brand); }
+    textarea{ min-height:92px; resize:vertical; }
+    .err{ color:#dc2626; font-size:.85rem; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:10px 12px; margin-bottom:14px; display:none; }
+    .btn-submit{ width:100%; border:0; background:linear-gradient(135deg,var(--gold),var(--burnt)); color:#23120a; font-weight:700; padding:13px; border-radius:10px; cursor:pointer; font-size:1rem; transition:opacity .15s; }
+    .btn-submit:disabled{ opacity:.5; cursor:not-allowed; }
+    .btn-submit:hover:not(:disabled){ background:#0d6661; }
+    a{ color:var(--gold); font-weight:600; text-decoration:none; }
+    .field{ margin-bottom:2px; }
+
+    /* INDICATIF */
+    .phone-row{ display:flex; gap:8px; }
+    .phone-prefix{
+      width:160px; flex-shrink:0; padding:10px 8px;
+      border:1.5px solid rgba(201,160,90,.35); border-radius:10px;
+      font:inherit; font-size:.85rem; background:rgba(10,8,6,.45); color:var(--cream); cursor:pointer;
+    }
+    .phone-prefix:focus{ outline:none; border-color:var(--brand); }
+    .phone-number{ flex:1; }
+
+    /* Case politique */
+    .policy-box{ grid-column:1 / -1; display:flex; align-items:flex-start; gap:8px; margin-top:4px; font-size:.88rem; color:var(--sand); }
+    .policy-box input{ width:auto; margin:2px 0 0; }
+
+    @media(max-width:700px){ .grid{ grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <div class="bg" aria-hidden="true"></div>
+  <div class="wrap">
+    <div class="card">
+      <h1>Créer mon compte artisan</h1>
+      <p class="sub">Renseigne les informations de base. ArtSango AI t'aidera ensuite à compléter ton profil de marque.</p>
+      <div class="err" id="err-msg"></div>
+      <div class="grid">
+        <div class="field">
+          <label>Nom de la marque *</label>
+          <input id="brandName" type="text" placeholder="Ex: Atelier Kora">
+        </div>
+        <div class="field">
+          <label>Catégorie principale *</label>
+          <select id="category">
+            <option value="">— Choisir —</option>
+            <option>Mode</option><option>Décoration</option><option>Sculpture</option>
+            <option>Peinture</option><option>Bijoux</option><option>Poterie</option>
+            <option>Textile</option><option>Art mural</option><option>Maroquinerie</option>
+            <option>Artisanat bois</option><option>Cosmétique naturel</option><option>Autre</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Pays *</label>
+          <select id="country">
+            <option value="">— Choisir —</option>
+            <option>Bénin</option><option>Côte d'Ivoire</option><option>Sénégal</option>
+            <option>Togo</option><option>Ghana</option><option>Nigeria</option>
+            <option>Cameroun</option><option>Mali</option><option>Burkina Faso</option>
+            <option>Congo</option><option>Gabon</option><option>Madagascar</option>
+            <option>Maroc</option><option>Éthiopie</option><option>Kenya</option>
+            <option>Tanzanie</option><option>Afrique du Sud</option><option>Autre</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Ville</label>
+          <input id="city" type="text" placeholder="Cotonou">
+        </div>
+
+        <!-- TELEPHONE AVEC INDICATIF OBLIGATOIRE -->
+        <div class="field full">
+          <label>Téléphone WhatsApp * <span style="color:#6b7280;font-weight:400;">— indicatif pays obligatoire</span></label>
+          <div class="phone-row">
+            <select class="phone-prefix" id="phone-prefix">
+              <option value="">Indicatif</option>
+              <option value="+229">+229 — Bénin</option>
+              <option value="+225">+225 — Côte d'Ivoire</option>
+              <option value="+221">+221 — Sénégal</option>
+              <option value="+228">+228 — Togo</option>
+              <option value="+233">+233 — Ghana</option>
+              <option value="+234">+234 — Nigeria</option>
+              <option value="+237">+237 — Cameroun</option>
+              <option value="+223">+223 — Mali</option>
+              <option value="+226">+226 — Burkina Faso</option>
+              <option value="+242">+242 — Congo</option>
+              <option value="+241">+241 — Gabon</option>
+              <option value="+261">+261 — Madagascar</option>
+              <option value="+212">+212 — Maroc</option>
+              <option value="+251">+251 — Éthiopie</option>
+              <option value="+254">+254 — Kenya</option>
+              <option value="+255">+255 — Tanzanie</option>
+              <option value="+27">+27 — Afrique du Sud</option>
+              <option value="+33">+33 — France</option>
+              <option value="+32">+32 — Belgique</option>
+              <option value="+41">+41 — Suisse</option>
+              <option value="+1">+1 — États-Unis / Canada</option>
+            </select>
+            <input class="phone-number" id="phone-number" type="tel" placeholder="XX XX XX XX">
+          </div>
+        </div>
+
+        <div class="field full">
+          <label>Mini présentation</label>
+          <textarea id="bio" placeholder="Qui es-tu, que crées-tu, pour qui ?"></textarea>
+        </div>
+        <div class="field">
+          <label>Email *</label>
+          <input id="email" type="email" placeholder="contact@..." autocomplete="email">
+        </div>
+        <div class="field">
+          <label>Mot de passe *</label>
+          <input id="password" type="password" placeholder="minimum 6 caractères" autocomplete="new-password">
+        </div>
+        <label class="policy-box" for="policy-ok">
+          <input id="policy-ok" type="checkbox">
+          <span>J'accepte la <a href="politique-confidentialite.html" target="_blank" rel="noopener">politique de confidentialité</a> et le traitement de mes données pour la gestion de ma boutique.</span>
+        </label>
+        <div class="full">
+          <button class="btn-submit" id="reg-btn" onclick="doRegister()">Créer mon compte</button>
+        </div>
+      </div>
+      <p style="margin-top:16px;font-size:.9rem">Déjà inscrit ? <a href="connexion.html">Se connecter</a></p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp }                               from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword }     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey:            "AIzaSyAghL7HcGVTWur9ijJzjWXywTgvCaiJ01M",
+      authDomain:        "art-sango.firebaseapp.com",
+      projectId:         "art-sango",
+      storageBucket:     "art-sango.firebasestorage.app",
+      messagingSenderId: "840868763552",
+      appId:             "1:840868763552:web:b7cb1ac710d3b9968436c5"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getFirestore(app);
+
+    window.doRegister = async function() {
+      const errEl = document.getElementById('err-msg');
+      const btn   = document.getElementById('reg-btn');
+      errEl.style.display = 'none';
+
+      const brandName  = document.getElementById('brandName').value.trim();
+      const category   = document.getElementById('category').value;
+      const country    = document.getElementById('country').value;
+      const city       = document.getElementById('city').value.trim();
+      const phonePfx   = document.getElementById('phone-prefix').value;
+      const phoneNum   = document.getElementById('phone-number').value.trim().replace(/\s/g,'');
+      const bio        = document.getElementById('bio').value.trim();
+      const email      = document.getElementById('email').value.trim();
+      const password   = document.getElementById('password').value;
+      const policyOk   = document.getElementById('policy-ok').checked;
+
+      if (!brandName)  { showErr('Le nom de marque est obligatoire.'); return; }
+      if (!email)      { showErr("L'adresse email est obligatoire."); return; }
+      if (!password)   { showErr('Le mot de passe est obligatoire.'); return; }
+      if (password.length < 6) { showErr('Le mot de passe doit faire au moins 6 caractères.'); return; }
+      if (!phonePfx)   { showErr("Sélectionne l'indicatif pays du numéro WhatsApp."); return; }
+      if (!phoneNum)   { showErr('Entre le numéro de téléphone (sans indicatif).'); return; }
+      if (!policyOk)   { showErr('Tu dois accepter la politique de confidentialité.'); return; }
+
+      const fullPhone = phonePfx + phoneNum;
+
+      btn.disabled = true;
+      btn.textContent = 'Création en cours...';
+
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        const uid  = cred.user.uid;
+
+        await setDoc(doc(db, 'artisans', uid), {
+          uid, brandName, category, country, city,
+          phone: fullPhone,
+          bio, email,
+          role:         'artisan',
+          verified:     false,
+          profilePhoto: '',
+          createdAt:    serverTimestamp(),
+        });
+
+        window.location.href = 'dashboard-artisan.html';
+      } catch(e) {
+        const msgs = {
+          'auth/email-already-in-use': 'Cet email est déjà utilisé.',
+          'auth/invalid-email':        'Adresse email invalide.',
+          'auth/weak-password':        'Mot de passe trop faible.',
+        };
+        showErr(msgs[e.code] || 'Erreur : ' + e.message);
+        btn.disabled = false;
+        btn.textContent = 'Créer mon compte';
+      }
+    };
+
+    function showErr(msg) {
+      const el = document.getElementById('err-msg');
+      el.textContent = msg; el.style.display = 'block';
+    }
+  </script>
+  <script type="module" src="./platform-logo.js"></script>
+</body>
+</html>

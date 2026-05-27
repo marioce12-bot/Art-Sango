@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Messagerie - ArtSango</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --charcoal:#0e0c0a; --burnt:#bf6a3c; --gold:#c9a05a; --sand:#d8c4a0; --cream:#f4eadb;
+      --glass:rgba(18,14,11,0.62); --glass-line:rgba(227,189,136,0.22);
+    }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:"DM Sans",sans-serif; color:var(--cream); min-height:100dvh; background:var(--charcoal); }
+    .bg {
+      position: fixed; inset: 0; z-index: -2;
+      background-image:
+        linear-gradient(125deg, rgba(10,8,6,0.9) 0%, rgba(26,16,10,0.62) 50%, rgba(10,8,6,0.93) 100%),
+        url("https://images.unsplash.com/photo-1541580621-cb2562a7a8a3?auto=format&fit=crop&w=1800&q=80");
+      background-size: cover; background-position: center;
+    }
+
+    .topbar {
+      position: fixed; top: calc(14px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%);
+      width: min(1160px, calc(100% - 32px)); z-index: 100;
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding: 12px 16px; border-radius: 16px;
+      border:1px solid var(--glass-line); background:var(--glass);
+      backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    }
+    .logo { text-decoration:none; color:var(--cream); font-family:"Cormorant Garamond",serif; font-size:1.35rem; font-weight:700; display:flex; align-items:center; gap:8px; }
+    .logo img { width:30px; height:30px; border-radius:7px; object-fit:cover; border:1px solid rgba(227,189,136,0.35); display:none; }
+    .top-actions { display:flex; gap:8px; }
+    .top-actions a {
+      text-decoration:none; font-size:.82rem; font-weight:700; color:var(--sand);
+      border:1px solid rgba(203,165,107,0.3); border-radius:999px; padding:8px 12px;
+      background:rgba(255,255,255,0.08);
+    }
+    .wrap { max-width:1160px; margin:0 auto; padding: calc(94px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom)); }
+
+    .layout {
+      display:grid; grid-template-columns: 360px 1fr; gap:12px;
+      min-height: calc(100dvh - 140px);
+      max-height: calc(100dvh - 140px);
+    }
+
+    .panel {
+      border:1px solid var(--glass-line); border-radius:16px; background:var(--glass);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      overflow:hidden;
+    }
+
+    .list-head, .chat-head {
+      padding:12px 14px; border-bottom:1px solid rgba(227,189,136,0.2);
+      display:flex; align-items:center; justify-content:space-between; gap:8px;
+    }
+    .list-head h2, .chat-head h2 { font-family:"Cormorant Garamond",serif; font-size:1.25rem; color:#f0fdfa; }
+    .small { color:var(--sand); font-size:.78rem; }
+
+    .conv-search {
+      padding:10px 12px;
+      border-bottom:1px solid rgba(227,189,136,0.18);
+    }
+    .conv-search input {
+      width:100%; border:1.5px solid rgba(203,165,107,0.3); border-radius:10px;
+      background:rgba(0,0,0,0.28); color:var(--cream); font:inherit; font-size:.84rem; padding:8px 10px;
+    }
+    .conv-search input:focus { outline:none; border-color:#0f766e; }
+
+    .conv-list { max-height: calc(100dvh - 292px); overflow:auto; }
+    .conv-item {
+      padding:12px 14px; border-bottom:1px solid rgba(227,189,136,0.12); cursor:pointer;
+      display:grid; grid-template-columns:36px 1fr; gap:10px;
+    }
+    .conv-item:hover { background:rgba(255,255,255,0.05); }
+    .conv-item.active { background:rgba(255,255,255,0.1); }
+    .conv-avatar {
+      width:36px; height:36px; border-radius:50%;
+      background:linear-gradient(135deg,var(--gold),var(--burnt));
+      color:#1f130b; font-weight:800; font-size:.8rem;
+      display:flex; align-items:center; justify-content:center;
+      border:1px solid rgba(227,189,136,0.28);
+      overflow:hidden;
+      text-decoration:none;
+    }
+    .conv-avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .conv-main { min-width:0; }
+    .conv-top { display:flex; justify-content:space-between; gap:10px; align-items:center; }
+    .conv-name { color:#f3e7d4; font-size:.9rem; font-weight:700; }
+    .conv-time { color:var(--sand); font-size:.72rem; }
+    .conv-last { color:var(--sand); font-size:.8rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .dot { width:7px; height:7px; border-radius:50%; background:#f59e0b; margin-left:4px; display:inline-block; }
+
+    .chat-body { display:grid; grid-template-rows:auto 1fr auto; height:100%; overflow:hidden; }
+    .chat-user { display:flex; align-items:center; gap:8px; min-width:0; }
+    .chat-avatar {
+      width:34px; height:34px; border-radius:50%;
+      border:1px solid rgba(227,189,136,0.28);
+      overflow:hidden;
+      background:linear-gradient(135deg,var(--gold),var(--burnt));
+      color:#1f130b; font-weight:800; font-size:.74rem;
+      display:flex; align-items:center; justify-content:center;
+      flex-shrink:0;
+    }
+    .chat-avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .chat-name-wrap{ min-width:0; }
+    .chat-profile-link{ text-decoration:none; color:#f0fdfa; font-weight:700; font-size:.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; }
+    .messages { min-height:0; max-height: calc(100dvh - 300px); overflow:auto; padding:14px; display:grid; gap:10px; padding-bottom:18px; }
+    .msg-row { display:flex; align-items:flex-end; gap:8px; }
+    .msg-row.me { justify-content:flex-end; }
+    .msg-avatar {
+      width:26px; height:26px; border-radius:50%;
+      border:1px solid rgba(227,189,136,0.24);
+      overflow:hidden;
+      background:linear-gradient(135deg,var(--gold),var(--burnt));
+      color:#1f130b; font-weight:800; font-size:.62rem;
+      display:flex; align-items:center; justify-content:center;
+      flex-shrink:0;
+    }
+    .msg-avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
+    .msg-row.me .msg-avatar{ order:2; }
+    .bubble {
+      max-width:min(80%, 520px);
+      border-radius:12px; padding:9px 11px; border:1px solid rgba(227,189,136,0.18);
+      background:rgba(255,255,255,0.08); color:#f3e7d4;
+      font-size:.86rem; line-height:1.5;
+    }
+    .msg-row.me .bubble { background:rgba(15,118,110,0.25); border-color:rgba(99,210,199,0.28); }
+    .bubble img, .bubble video { max-width:100%; border-radius:10px; display:block; margin-top:6px; }
+    .msg-meta { margin-top:4px; font-size:.68rem; color:var(--sand); }
+    .msg-tools { display:flex; justify-content:flex-end; margin-top:6px; position:relative; }
+    .msg-more {
+      width:22px; height:22px; border-radius:999px;
+      border:1px solid rgba(203,165,107,0.35);
+      background:rgba(255,255,255,0.08);
+      color:var(--cream); font-weight:800; line-height:1; cursor:pointer;
+    }
+    .msg-menu {
+      position:absolute; top:26px; right:0; min-width:130px;
+      border:1px solid rgba(227,189,136,0.25);
+      background:rgba(15,12,10,0.97);
+      border-radius:10px; padding:4px;
+      display:none; z-index:5;
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    }
+    .msg-menu.open { display:block; }
+
+    /* Bouton supprimer avec confirmation visuelle */
+    .msg-del {
+      width:100%;
+      border:1px solid rgba(220,38,38,0.4);
+      background:rgba(220,38,38,0.12);
+      color:#fca5a5;
+      border-radius:8px;
+      padding:7px 10px;
+      font-size:.72rem;
+      font-weight:700;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      gap:6px;
+      transition: background .15s, border-color .15s;
+    }
+    .msg-del:hover {
+      background:rgba(220,38,38,0.25);
+      border-color:rgba(220,38,38,0.65);
+    }
+    .msg-del svg { flex-shrink:0; }
+
+    /* ── Modale confirmation suppression – style ArtSango ── */
+    .del-modal-overlay {
+      position:fixed; inset:0; z-index:999;
+      background:rgba(6,4,3,0.78);
+      display:flex; align-items:center; justify-content:center;
+      padding:20px;
+      backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    }
+    .del-modal-overlay.hidden { display:none; }
+    .del-modal {
+      background:var(--glass);
+      border:1px solid var(--glass-line);
+      border-radius:20px;
+      padding:28px 24px 22px;
+      max-width:300px; width:100%;
+      text-align:center;
+      backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+    }
+    .del-modal-sep {
+      width:32px; height:2px; border-radius:2px;
+      background:linear-gradient(90deg,var(--gold),var(--burnt));
+      margin:0 auto 16px;
+    }
+    .del-modal h3 {
+      font-family:"Cormorant Garamond",serif;
+      font-size:1.35rem; font-weight:700;
+      color:var(--cream); margin-bottom:8px;
+    }
+    .del-modal p {
+      font-size:.8rem; color:var(--sand);
+      margin-bottom:22px; line-height:1.55;
+    }
+    .del-modal-actions { display:flex; gap:8px; }
+    .del-cancel {
+      flex:1;
+      border:1px solid rgba(203,165,107,0.32); border-radius:10px;
+      background:rgba(255,255,255,0.06); color:var(--sand);
+      padding:10px 0; font-family:"DM Sans",sans-serif;
+      font-size:.84rem; font-weight:600; cursor:pointer;
+    }
+    .del-confirm {
+      flex:1;
+      border:1px solid rgba(201,160,90,0.45); border-radius:10px;
+      background:linear-gradient(135deg,rgba(191,106,60,0.35),rgba(201,160,90,0.2));
+      color:var(--cream); padding:10px 0;
+      font-family:"DM Sans",sans-serif;
+      font-size:.84rem; font-weight:700; cursor:pointer;
+    }
+    .del-confirm:disabled { opacity:.45; cursor:not-allowed; }
+
+    .composer {
+      border-top:1px solid rgba(227,189,136,0.2); padding:10px;
+      display:grid; grid-template-columns:1fr auto auto; gap:8px;
+      background:rgba(18,14,11,0.86);
+      position:sticky; bottom:0; z-index:2;
+    }
+    .composer textarea {
+      width:100%; resize:none; min-height:42px; max-height:120px;
+      border:1.5px solid rgba(203,165,107,0.3); border-radius:10px;
+      background:rgba(0,0,0,0.3); color:var(--cream); padding:9px 11px; font:inherit; font-size:.86rem;
+    }
+    .composer textarea:focus { outline:none; border-color:#0f766e; }
+    .icon-btn, .send-btn {
+      border:1px solid rgba(203,165,107,0.35); border-radius:10px; padding:0 12px; cursor:pointer;
+      background:rgba(255,255,255,0.08); color:var(--cream); font-weight:700; font-size:.82rem;
+      min-height:42px; display:flex; align-items:center; justify-content:center;
+    }
+    .send-btn { background:linear-gradient(135deg,var(--gold),var(--burnt)); color:#23120a; border:none; }
+    .empty { padding:20px; color:var(--sand); font-size:.86rem; }
+
+    .chat-back {
+      display:none;
+      border:1px solid rgba(203,165,107,0.35);
+      background:rgba(255,255,255,0.08);
+      color:var(--cream); border-radius:999px;
+      padding:6px 10px; font-size:.75rem; font-weight:700; cursor:pointer;
+    }
+    .chat-reset {
+      border:1px solid rgba(203,165,107,0.35);
+      background:rgba(255,255,255,0.08);
+      color:var(--cream); border-radius:999px;
+      padding:6px 10px; font-size:.75rem; font-weight:700; cursor:pointer;
+      opacity:.45; pointer-events:none;
+    }
+    .chat-reset.active { opacity:1; pointer-events:auto; }
+
+    /* ===== MOBILE ===== */
+    @media (max-width: 900px) {
+      .wrap {
+        padding: calc(88px + env(safe-area-inset-top)) 10px calc(94px + env(safe-area-inset-bottom));
+      }
+      .layout {
+        grid-template-columns: 1fr;
+        min-height: calc(100dvh - 190px);
+        max-height: calc(100dvh - 190px);
+      }
+      .topbar {
+        flex-direction: row; align-items: center;
+        width: calc(100% - 20px); padding: 10px 12px;
+      }
+      .top-actions { display:none; }
+      .conv-list { max-height: calc(100dvh - 292px); }
+      .chat-back { display:inline-flex; align-items:center; }
+      .chat-reset { display:none; }
+
+      body.mobile-chat-open aside.panel { display:none; }
+      body:not(.mobile-chat-open) .chat-body { display:none; }
+
+      /* Cacher la topbar en mode conversation */
+      body.mobile-chat-open .topbar { display: none !important; }
+
+      /* chat-body : plein écran total, plus de topbar au-dessus */
+      body.mobile-chat-open .chat-body {
+        position: fixed;
+        left: 0; right: 0;
+        top: 0; bottom: 0;
+        z-index: 95;
+        display: flex !important;
+        flex-direction: column;
+        overflow: hidden;
+        border-radius: 0;
+      }
+
+      /* header conversation : respecter l'encoche */
+      body.mobile-chat-open .chat-head {
+        flex: 0 0 auto;
+        padding-top: calc(12px + env(safe-area-inset-top));
+      }
+
+      /* messages : absorbe tout l'espace restant */
+      body.mobile-chat-open .messages {
+        flex: 1 1 0;
+        min-height: 0;
+        max-height: none;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 10px 10px 12px;
+      }
+
+      /* composer : colle au bas, height naturelle */
+      body.mobile-chat-open .composer {
+        flex: 0 0 auto;
+        position: static !important;
+        padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+        border-top: 1px solid rgba(227,189,136,0.25);
+        background: rgba(14,12,10,0.97);
+        display: grid !important;
+        grid-template-columns: 1fr auto auto;
+        gap: 8px;
+      }
+
+      body.mobile-chat-open .composer textarea {
+        font-size: .84rem;
+      }
+
+      body.mobile-chat-open .mobile-bottom-nav {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg" aria-hidden="true"></div>
+
+  <!-- Modal confirmation suppression -->
+  <div class="del-modal-overlay hidden" id="del-modal-overlay">
+    <div class="del-modal">
+      <div class="del-modal-sep"></div>
+      <h3>Supprimer ce message ?</h3>
+      <p>Cette action est irréversible. Le message sera supprimé définitivement.</p>
+      <div class="del-modal-actions">
+        <button class="del-cancel" id="del-cancel-btn" type="button">Annuler</button>
+        <button class="del-confirm" id="del-confirm-btn" type="button">Supprimer</button>
+      </div>
+    </div>
+  </div>
+
+  <header class="topbar">
+    <a class="logo" href="index.html"><img class="platform-logo-dynamic" alt="Logo ArtSango"><span>ArtSango</span></a>
+    <div class="top-actions">
+      <a href="marketplace.html">Marketplace</a>
+      <a href="dashboard-client.html" id="dash-link">Mon espace</a>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="layout">
+      <aside class="panel">
+        <div class="list-head">
+          <h2>Messagerie</h2>
+          <span class="small" id="conv-count">0</span>
+        </div>
+        <div class="conv-search">
+          <input id="conv-search" type="search" placeholder="Rechercher une conversation...">
+        </div>
+        <div class="conv-list" id="conv-list"><div class="empty">Chargement…</div></div>
+      </aside>
+
+      <section class="panel chat-body">
+        <div class="chat-head">
+          <button class="chat-back" id="chat-back-btn" type="button">Retour</button>
+          <button class="chat-reset" id="chat-reset-btn" type="button">Retour messagerie</button>
+          <div class="chat-user">
+            <div class="chat-avatar" id="chat-avatar">AR</div>
+            <div class="chat-name-wrap">
+              <a id="chat-profile-link" class="chat-profile-link" href="#">Sélectionne une conversation</a>
+              <span class="small" id="chat-subtitle"></span>
+            </div>
+          </div>
+        </div>
+        <div class="messages" id="messages"><div class="empty">Aucun message pour l'instant.</div></div>
+        <div class="composer">
+          <textarea id="msg-input" placeholder="Ecrire un message..."></textarea>
+          <label class="icon-btn" for="media-input" title="Joindre un fichier">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66L9.41 17.41a2 2 0 01-2.83-2.83l8.49-8.48"/>
+            </svg>
+          </label>
+          <button class="send-btn" id="send-btn" type="button">Envoyer</button>
+          <input id="media-input" type="file" accept="image/*,video/*" style="display:none;">
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      getFirestore, collection, query, where, orderBy, getDocs, getDoc,
+      doc, setDoc, updateDoc, addDoc, serverTimestamp, arrayUnion, arrayRemove, deleteDoc, limit
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey:"AIzaSyAghL7HcGVTWur9ijJzjWXywTgvCaiJ01M", authDomain:"art-sango.firebaseapp.com",
+      projectId:"art-sango", storageBucket:"art-sango.firebasestorage.app",
+      messagingSenderId:"840868763552", appId:"1:840868763552:web:b7cb1ac710d3b9968436c5"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+
+    const IMGBB_KEY = "af6d7113f6f4673b0ab9084960da124e";
+    const MAX_VIDEO_SIZE = 8 * 1024 * 1024;
+
+    let currentUser = null;
+    let myProfile = { name: 'Utilisateur', role: 'client' };
+    let conversations = [];
+    let filteredConversations = [];
+    let activeConversationId = '';
+    let activeConversation = null;
+    let pendingFile = null;
+    let pollTimer = null;
+    let messagingServiceModule = null;
+
+    async function loadMessagingService() {
+      if (!messagingServiceModule) {
+        messagingServiceModule = await import('./messaging-service.js');
+      }
+      return messagingServiceModule;
+    }
+
+    async function sendConversationPush({ recipientUid, title, body, url, tag, data = {} }) {
+      if (!recipientUid || !title) return;
+      try {
+        const { sendPushToUser } = await loadMessagingService();
+        if (typeof sendPushToUser !== 'function') return;
+        await sendPushToUser({
+          db,
+          recipientUid,
+          title,
+          body,
+          url,
+          kind: 'message',
+          tag,
+          data,
+        });
+      } catch (e) {
+        console.warn('Push message failed:', e.message);
+      }
+    }
+
+    // ── Modal suppression ──────────────────────────────────────────────
+    let pendingDeleteId = null;
+    const delOverlay   = document.getElementById('del-modal-overlay');
+    const delCancelBtn = document.getElementById('del-cancel-btn');
+    const delConfirmBtn= document.getElementById('del-confirm-btn');
+
+    function openDeleteModal(messageId) {
+      pendingDeleteId = messageId;
+      delOverlay.classList.remove('hidden');
+    }
+    function closeDeleteModal() {
+      pendingDeleteId = null;
+      delOverlay.classList.add('hidden');
+      delConfirmBtn.disabled = false;
+      delConfirmBtn.textContent = 'Supprimer';
+    }
+    delCancelBtn.addEventListener('click', closeDeleteModal);
+    delOverlay.addEventListener('click', (e) => { if (e.target === delOverlay) closeDeleteModal(); });
+    delConfirmBtn.addEventListener('click', async () => {
+      if (!pendingDeleteId) return;
+      delConfirmBtn.disabled = true;
+      delConfirmBtn.textContent = 'Suppression…';
+      await doDeleteMessage(pendingDeleteId);
+      closeDeleteModal();
+    });
+    // ──────────────────────────────────────────────────────────────────
+
+    const params = new URLSearchParams(location.search);
+    const targetArtisanId = params.get('artisanId') || '';
+    const targetProductId = params.get('productId') || '';
+    const targetProductName = params.get('productName') || '';
+    const isNewSession = localStorage.getItem('artsango_new_session') === '1';
+    if (isNewSession) localStorage.removeItem('artsango_new_session');
+    const autoOpenConversation = !isNewSession && params.get('open') === '1';
+
+    const profileCache = new Map();
+
+    function convId(a, b) { return [a, b].sort().join('__'); }
+
+    function formatDate(ts) {
+      if (!ts) return '';
+      const d = ts.toDate ? ts.toDate() : new Date(ts);
+      return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function dateToMs(ts) {
+      if (!ts) return 0;
+      if (typeof ts.toDate === 'function') return ts.toDate().getTime();
+      const t = new Date(ts).getTime();
+      return Number.isFinite(t) ? t : 0;
+    }
+
+    function initials(name) {
+      const n = String(name || '').trim();
+      if (!n) return 'AR';
+      return n.split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() || '').join('') || 'AR';
+    }
+
+    function applyConversationFilter() {
+      const term = (document.getElementById('conv-search')?.value || '').trim().toLowerCase();
+      if (!term) {
+        filteredConversations = [...conversations];
+      } else {
+        filteredConversations = conversations.filter((c) => {
+          const other = (c.participants || []).find((p) => p !== currentUser.uid) || '';
+          const name = String(c.participantNames?.[other] || '').toLowerCase();
+          const last = String(c.lastMessage || '').toLowerCase();
+          return name.includes(term) || last.includes(term);
+        });
+      }
+    }
+
+    async function profileOf(uid) {
+      if (profileCache.has(uid)) return profileCache.get(uid);
+      try {
+        const a = await getDoc(doc(db, 'artisans', uid));
+        if (a.exists()) {
+          const d = a.data() || {};
+          const result = { role: 'artisan', name: d.brandName || 'Artisan', photo: d.profilePhoto || '', link: `boutique-vendeur.html?id=${uid}` };
+          profileCache.set(uid, result); return result;
+        }
+      } catch {}
+      try {
+        const c = await getDoc(doc(db, 'clients', uid));
+        if (c.exists()) {
+          const d = c.data() || {};
+          const result = { role: 'client', name: d.fullName || d.name || 'Client', photo: d.profilePhoto || '', link: 'dashboard-client.html' };
+          profileCache.set(uid, result); return result;
+        }
+      } catch {}
+      const result = { role: 'client', name: 'Utilisateur', photo: '', link: '#' };
+      profileCache.set(uid, result); return result;
+    }
+
+    async function loadMyProfile() {
+      myProfile = await profileOf(currentUser.uid);
+      localStorage.setItem('artsango_user_role', myProfile.role);
+      document.getElementById('dash-link').href = myProfile.role === 'artisan' ? 'dashboard-artisan.html' : 'dashboard-client.html';
+    }
+
+    async function ensureConversationWithArtisan() {
+      if (!targetArtisanId || !currentUser || currentUser.uid === targetArtisanId) return;
+      const id = convId(currentUser.uid, targetArtisanId);
+      const artisanProfile = await profileOf(targetArtisanId);
+      await setDoc(doc(db, 'conversations', id), {
+        participants: [currentUser.uid, targetArtisanId],
+        participantNames: { [currentUser.uid]: myProfile.name, [targetArtisanId]: artisanProfile.name },
+        participantRoles: { [currentUser.uid]: myProfile.role, [targetArtisanId]: artisanProfile.role },
+        participantPhotos: { [currentUser.uid]: myProfile.photo || '', [targetArtisanId]: artisanProfile.photo || '' },
+        participantLinks: { [currentUser.uid]: myProfile.link || '#', [targetArtisanId]: artisanProfile.link || '#' },
+        unreadFor: [], updatedAt: serverTimestamp(), createdAt: serverTimestamp()
+      }, { merge: true });
+
+      let canSendIntro = false;
+      try {
+        const existing = await getDocs(collection(db, 'conversations', id, 'messages'));
+        canSendIntro = existing.empty;
+      } catch { canSendIntro = true; }
+
+      if (canSendIntro && (targetProductId || targetProductName)) {
+        const intro = `Bonjour, je suis interesse par ${targetProductName || 'ce produit'} (${targetProductId || ''}).`;
+        await addDoc(collection(db, 'conversations', id, 'messages'), {
+          senderUid: currentUser.uid, senderName: myProfile.name,
+          text: intro, mediaUrl: '', mediaType: '', createdAt: serverTimestamp()
+        });
+        await updateDoc(doc(db, 'conversations', id), {
+          lastMessage: intro, lastAt: serverTimestamp(),
+          lastSender: currentUser.uid, unreadFor: arrayUnion(targetArtisanId)
+        });
+        await sendConversationPush({
+          recipientUid: targetArtisanId,
+          title: `Nouveau message de ${myProfile.name || 'Utilisateur'}`,
+          body: intro,
+          url: `messagerie.html?artisanId=${encodeURIComponent(currentUser.uid)}&open=1`,
+          tag: `message-${id}`,
+          data: { conversationId: id, senderUid: currentUser.uid, recipientUid: targetArtisanId },
+        });
+      }
+    }
+
+    async function loadConversations() {
+      let rows = [];
+      try {
+        const snap = await getDocs(query(collection(db, 'conversations'), where('participants', 'array-contains', currentUser.uid), orderBy('lastAt', 'desc')));
+        rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      } catch {
+        const snap = await getDocs(query(collection(db, 'conversations'), where('participants', 'array-contains', currentUser.uid)));
+        rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      }
+      conversations = rows.sort((a, b) => {
+        const ta = dateToMs(a.lastAt) || dateToMs(a.updatedAt) || dateToMs(a.createdAt);
+        const tb = dateToMs(b.lastAt) || dateToMs(b.updatedAt) || dateToMs(b.createdAt);
+        return tb - ta;
+      });
+      applyConversationFilter();
+      renderConversationList();
+      hydrateConversationMeta().then(() => { applyConversationFilter(); renderConversationList(); }).catch(() => {});
+    }
+
+    async function hydrateConversationMeta() {
+      for (const c of conversations) {
+        const p = c.participants || [];
+        if (!p.length) continue;
+        const names = c.participantNames || {};
+        const roles = c.participantRoles || {};
+        const photos = c.participantPhotos || {};
+        const links = c.participantLinks || {};
+        let changed = false;
+        for (const uid of p) {
+          const hasAll = names[uid] && roles[uid] && (links[uid] !== undefined) && (photos[uid] !== undefined);
+          if (hasAll) continue;
+          const prof = await profileOf(uid);
+          if (!names[uid]) { names[uid] = prof.name || 'Utilisateur'; changed = true; }
+          if (!roles[uid]) { roles[uid] = prof.role || 'client'; changed = true; }
+          if (photos[uid] === undefined) { photos[uid] = prof.photo || ''; changed = true; }
+          if (links[uid] === undefined) { links[uid] = prof.link || '#'; changed = true; }
+        }
+        if (changed) {
+          c.participantNames = names; c.participantRoles = roles;
+          c.participantPhotos = photos; c.participantLinks = links;
+          await setDoc(doc(db, 'conversations', c.id), { participantNames: names, participantRoles: roles, participantPhotos: photos, participantLinks: links }, { merge: true }).catch(() => {});
+        }
+      }
+    }
+
+    function renderConversationList() {
+      const el = document.getElementById('conv-list');
+      document.getElementById('conv-count').textContent = String(conversations.length);
+      if (!filteredConversations.length) {
+        el.innerHTML = '<div class="empty">Aucune conversation.</div>';
+        return;
+      }
+      el.innerHTML = filteredConversations.map(c => {
+        const other = (c.participants || []).find(p => p !== currentUser.uid) || '';
+        const name = c.participantNames?.[other] || 'Conversation';
+        const photo = c.participantPhotos?.[other] || '';
+        const profileLink = c.participantLinks?.[other] || (c.participantRoles?.[other] === 'artisan' ? `boutique-vendeur.html?id=${other}` : '#');
+        const unread = Array.isArray(c.unreadFor) && c.unreadFor.includes(currentUser.uid);
+        return `
+          <div class="conv-item ${c.id === activeConversationId ? 'active' : ''}" data-id="${c.id}">
+            <a class="conv-avatar" href="${profileLink}" title="Voir le profil" onclick="event.stopPropagation();">${photo ? `<img src="${photo}" alt="${name}">` : initials(name)}</a>
+            <div class="conv-main">
+              <div class="conv-top">
+                <div class="conv-name">${name}${unread ? '<span class="dot"></span>' : ''}</div>
+                <div class="conv-time">${formatDate(c.lastAt)}</div>
+              </div>
+              <div class="conv-last">${c.lastMessage || 'Nouvelle conversation'}</div>
+            </div>
+          </div>`;
+      }).join('');
+      el.querySelectorAll('.conv-item').forEach((row) => {
+        row.addEventListener('click', () => openConversation(row.getAttribute('data-id') || ''));
+      });
+    }
+
+    async function openConversation(id) {
+      activeConversationId = id;
+      activeConversation = conversations.find(c => c.id === id) || null;
+      renderConversationList();
+      if (window.innerWidth <= 900) document.body.classList.add('mobile-chat-open');
+      if (!activeConversation) return;
+      const other = (activeConversation.participants || []).find(p => p !== currentUser.uid) || '';
+      const name = activeConversation.participantNames?.[other] || 'Conversation';
+      const photo = activeConversation.participantPhotos?.[other] || '';
+      const link = activeConversation.participantLinks?.[other] || (activeConversation.participantRoles?.[other] === 'artisan' ? `boutique-vendeur.html?id=${other}` : '#');
+      const chatAvatar = document.getElementById('chat-avatar');
+      chatAvatar.innerHTML = photo ? `<img src="${photo}" alt="${name}">` : initials(name);
+      const profileLinkEl = document.getElementById('chat-profile-link');
+      profileLinkEl.textContent = name;
+      profileLinkEl.href = link;
+      document.getElementById('chat-subtitle').textContent = activeConversation.participantRoles?.[other] === 'artisan' ? 'Boutique' : 'Client';
+      await updateDoc(doc(db, 'conversations', id), { unreadFor: arrayRemove(currentUser.uid), updatedAt: serverTimestamp() }).catch(() => {});
+      await loadMessages();
+      const resetBtn = document.getElementById('chat-reset-btn');
+      if (resetBtn) resetBtn.classList.add('active');
+    }
+
+    function resetToInboxView() {
+      activeConversationId = '';
+      activeConversation = null;
+      renderConversationList();
+      const chatAvatar = document.getElementById('chat-avatar');
+      const profileLinkEl = document.getElementById('chat-profile-link');
+      chatAvatar.innerHTML = 'AR';
+      profileLinkEl.textContent = 'Sélectionne une conversation';
+      profileLinkEl.href = '#';
+      document.getElementById('chat-subtitle').textContent = '';
+      document.getElementById('messages').innerHTML = '<div class="empty">Aucune conversation sélectionnée.</div>';
+      document.body.classList.remove('mobile-chat-open');
+      const resetBtn = document.getElementById('chat-reset-btn');
+      if (resetBtn) resetBtn.classList.remove('active');
+    }
+
+    async function loadMessages() {
+      const box = document.getElementById('messages');
+      if (!activeConversationId) {
+        box.innerHTML = '<div class="empty">Aucune conversation sélectionnée.</div>';
+        return;
+      }
+      let rows = [];
+      try {
+        const snap = await getDocs(query(collection(db, 'conversations', activeConversationId, 'messages'), orderBy('createdAt', 'asc')));
+        rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      } catch {
+        const snap = await getDocs(collection(db, 'conversations', activeConversationId, 'messages'));
+        rows = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      }
+      if (!rows.length) {
+        box.innerHTML = '<div class="empty">Commencez la conversation.</div>';
+        return;
+      }
+      box.innerHTML = rows.map(m => {
+        const me = m.senderUid === currentUser.uid;
+        const pName = me ? (myProfile.name || 'Moi') : (activeConversation?.participantNames?.[m.senderUid] || m.senderName || 'Utilisateur');
+        const pPhoto = me ? (myProfile.photo || '') : (activeConversation?.participantPhotos?.[m.senderUid] || '');
+        const media = m.mediaUrl
+          ? (m.mediaType === 'video'
+            ? `<video src="${m.mediaUrl}" controls playsinline preload="metadata"></video>`
+            : `<img src="${m.mediaUrl}" alt="Media">`)
+          : '';
+        return `
+          <div class="msg-row ${me ? 'me' : ''}">
+            <div class="msg-avatar">${pPhoto ? `<img src="${pPhoto}" alt="${pName}">` : initials(pName)}</div>
+            <div class="bubble">
+              ${m.text ? `<div>${m.text}</div>` : ''}
+              ${media}
+              ${me ? `
+                <div class="msg-tools">
+                  <button class="msg-more" type="button" onclick="toggleMsgMenu(event,'${m.id}')">···</button>
+                  <div class="msg-menu" id="msg-menu-${m.id}">
+                    <button class="msg-del" type="button" onclick="requestDeleteMessage('${m.id}')">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                      Supprimer
+                    </button>
+                  </div>
+                </div>` : ''}
+              <div class="msg-meta">${m.senderName || 'Utilisateur'} · ${formatDate(m.createdAt)}</div>
+            </div>
+          </div>`;
+      }).join('');
+      box.scrollTop = box.scrollHeight;
+    }
+
+    window.closeAllMsgMenus = function() {
+      document.querySelectorAll('.msg-menu.open').forEach((el) => el.classList.remove('open'));
+    };
+    window.toggleMsgMenu = function(ev, messageId) {
+      if (ev) ev.stopPropagation();
+      const target = document.getElementById(`msg-menu-${messageId}`);
+      if (!target) return;
+      const open = target.classList.contains('open');
+      window.closeAllMsgMenus();
+      if (!open) target.classList.add('open');
+    };
+
+    // Ouvre la modale au lieu du confirm() natif
+    window.requestDeleteMessage = function(messageId) {
+      window.closeAllMsgMenus();
+      openDeleteModal(messageId);
+    };
+
+    async function doDeleteMessage(messageId) {
+      if (!activeConversationId || !messageId) return;
+      try {
+        await deleteDoc(doc(db, 'conversations', activeConversationId, 'messages', messageId));
+        let latest = null;
+        try {
+          const snap = await getDocs(query(collection(db, 'conversations', activeConversationId, 'messages'), orderBy('createdAt', 'desc'), limit(1)));
+          latest = snap.docs[0] ? snap.docs[0].data() : null;
+        } catch {
+          const snap = await getDocs(collection(db, 'conversations', activeConversationId, 'messages'));
+          const all = snap.docs.map(d => d.data()).sort((a,b) => dateToMs(b.createdAt) - dateToMs(a.createdAt));
+          latest = all[0] || null;
+        }
+        await updateDoc(doc(db, 'conversations', activeConversationId), {
+          lastMessage: latest ? (latest.text || (latest.mediaType === 'video' ? 'Video' : 'Image')) : '',
+          lastAt: latest?.createdAt || serverTimestamp(),
+          lastSender: latest?.senderUid || ''
+        }).catch(() => {});
+        await loadConversations();
+        await loadMessages();
+      } catch (e) {
+        alert('Impossible de supprimer le message : ' + (e?.message || String(e)));
+      }
+    }
+
+    // Garder window.deleteMessage pour rétrocompatibilité
+    window.deleteMessage = window.requestDeleteMessage;
+
+    async function uploadMedia(file) {
+      if (!file) return { url: '', type: '' };
+      const isVideo = file.type.startsWith('video/');
+      if (isVideo && file.size > MAX_VIDEO_SIZE) throw new Error('Video trop lourde (max 8 Mo).');
+      try {
+        const ext = (file.name.split('.').pop() || (isVideo ? 'mp4' : 'jpg')).toLowerCase();
+        const path = `messages/${currentUser.uid}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+        const storageRef = ref(storage, path);
+        await uploadBytes(storageRef, file, { contentType: file.type || (isVideo ? 'video/mp4' : 'image/jpeg') });
+        const url = await getDownloadURL(storageRef);
+        return { url, type: isVideo ? 'video' : 'image' };
+      } catch {
+        if (isVideo) throw new Error('Upload video indisponible.');
+        const toB64 = await new Promise((resolve, reject) => {
+          const r = new FileReader();
+          r.onload = () => resolve(String(r.result));
+          r.onerror = reject;
+          r.readAsDataURL(file);
+        });
+        const fd = new FormData();
+        fd.append('image', toB64.split(',')[1]);
+        const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method: 'POST', body: fd });
+        if (!res.ok) throw new Error('Upload image indisponible');
+        const json = await res.json();
+        const url = json?.data?.display_url || '';
+        if (!url) throw new Error('Image non uploadée');
+        return { url, type: 'image' };
+      }
+    }
+
+    async function sendMessage() {
+      if (!activeConversationId || !activeConversation) return;
+      const input = document.getElementById('msg-input');
+      const text = input.value.trim();
+      if (!text && !pendingFile) return;
+      const btn = document.getElementById('send-btn');
+      btn.disabled = true; btn.textContent = 'Envoi...';
+      try {
+        const media = pendingFile ? await uploadMedia(pendingFile) : { url: '', type: '' };
+        const otherUid = (activeConversation.participants || []).find(p => p !== currentUser.uid) || '';
+        await addDoc(collection(db, 'conversations', activeConversationId, 'messages'), {
+          senderUid: currentUser.uid, senderName: myProfile.name,
+          text, mediaUrl: media.url, mediaType: media.type, createdAt: serverTimestamp()
+        });
+        await updateDoc(doc(db, 'conversations', activeConversationId), {
+          lastMessage: text || (media.type === 'video' ? 'Video' : 'Image'),
+          lastAt: serverTimestamp(), lastSender: currentUser.uid,
+          unreadFor: otherUid ? arrayUnion(otherUid) : []
+        });
+        if (otherUid) {
+          const preview = text || (media.type === 'video' ? 'Nouvelle video' : media.type === 'image' ? 'Nouvelle image' : 'Nouveau message');
+          await sendConversationPush({
+            recipientUid: otherUid,
+            title: `Nouveau message de ${myProfile.name || 'Utilisateur'}`,
+            body: preview,
+            url: `messagerie.html?artisanId=${encodeURIComponent(currentUser.uid)}&open=1`,
+            tag: `message-${activeConversationId}`,
+            data: { conversationId: activeConversationId, senderUid: currentUser.uid, recipientUid: otherUid },
+          });
+        }
+        input.value = '';
+        pendingFile = null;
+        document.getElementById('media-input').value = '';
+        await loadConversations();
+        await loadMessages();
+      } catch (e) {
+        alert('Impossible d\'envoyer: ' + (e?.message || String(e)));
+      } finally {
+        btn.disabled = false; btn.textContent = 'Envoyer';
+      }
+    }
+
+    document.getElementById('send-btn').addEventListener('click', sendMessage);
+    document.getElementById('msg-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    });
+    document.getElementById('media-input').addEventListener('change', (e) => {
+      pendingFile = e.target.files?.[0] || null;
+    });
+    document.getElementById('conv-search').addEventListener('input', () => {
+      applyConversationFilter(); renderConversationList();
+    });
+    document.getElementById('chat-back-btn').addEventListener('click', resetToInboxView);
+    document.getElementById('chat-reset-btn').addEventListener('click', resetToInboxView);
+    document.addEventListener('click', () => window.closeAllMsgMenus());
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 900) document.body.classList.remove('mobile-chat-open');
+    });
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = 'connexion-client.html?next=' + encodeURIComponent('messagerie.html' + location.search);
+        return;
+      }
+      currentUser = user;
+      await loadMyProfile();
+      await ensureConversationWithArtisan();
+      await loadConversations();
+      const wanted = autoOpenConversation && targetArtisanId ? convId(currentUser.uid, targetArtisanId) : '';
+      if (wanted && conversations.some(c => c.id === wanted)) await openConversation(wanted);
+      if (!wanted && window.innerWidth <= 900) document.body.classList.remove('mobile-chat-open');
+      if (pollTimer) clearInterval(pollTimer);
+      pollTimer = setInterval(async () => {
+        await loadConversations();
+        if (activeConversationId) await loadMessages();
+      }, 4500);
+      
+      // 🔔 Initialiser les notifications
+      try {
+        const { setupNotifications, startConversationNotifications } = await import('./messaging-service.js');
+        await setupNotifications({ db, currentUser, role: myProfile.role });
+        if (typeof window.notificationUnsubscribe === 'function') window.notificationUnsubscribe();
+        window.notificationUnsubscribe = startConversationNotifications({
+          db,
+          currentUser,
+          getActiveConversationId: () => activeConversationId || '',
+          basePath: 'messagerie.html',
+        });
+      } catch (e) {
+        console.warn('Notifications non configurées:', e.message);
+      }
+    });
+  </script>
+
+  <script type="module" src="./platform-logo.js"></script>
+  <script defer src="./sw-register.js"></script>
+  <script defer src="./mobile-nav.js"></script>
+</body>
+</html>

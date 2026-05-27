@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Boutique - ArtSango</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --brand:#0f766e; --gold:#cba56b; --burnt:#bf6a3c;
+      --glass:rgba(18,14,11,0.58); --glass-line:rgba(227,189,136,0.22);
+    }
+    body[data-shop-theme="heritage"] .photo-bg{
+      background-image:
+        linear-gradient(130deg,rgba(9,7,6,0.88) 0%,rgba(30,19,14,0.68) 50%,rgba(9,8,7,0.88) 100%),
+        url("https://images.unsplash.com/photo-1600566752229-250ed79470f8?auto=format&fit=crop&w=1800&q=80");
+    }
+    body[data-shop-theme="savane"] .photo-bg{
+      background-image:
+        linear-gradient(130deg,rgba(33,17,8,0.86) 0%,rgba(56,32,10,0.65) 52%,rgba(14,10,7,0.88) 100%),
+        url("https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=1800&q=80");
+    }
+    body[data-shop-theme="lagune"] .photo-bg{
+      background-image:
+        linear-gradient(130deg,rgba(4,22,26,0.86) 0%,rgba(10,48,58,0.68) 50%,rgba(8,14,26,0.9) 100%),
+        url("https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=1800&q=80");
+    }
+    body[data-shop-theme="atelier"] .photo-bg{
+      background-image:
+        linear-gradient(130deg,rgba(26,12,34,0.86) 0%,rgba(39,24,62,0.7) 52%,rgba(12,14,22,0.9) 100%),
+        url("https://images.unsplash.com/photo-1452802447250-470a88ac82bc?auto=format&fit=crop&w=1800&q=80");
+    }
+    body[data-shop-theme="sahara"] .photo-bg{
+      background-image:
+        linear-gradient(130deg,rgba(42,18,6,0.86) 0%,rgba(72,38,12,0.68) 52%,rgba(20,12,26,0.9) 100%),
+        url("https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&w=1800&q=80");
+    }
+    body[data-shop-theme="kente"] .photo-bg{
+      background-image:
+        linear-gradient(130deg,rgba(42,20,8,0.86) 0%,rgba(92,34,14,0.68) 52%,rgba(14,24,20,0.9) 100%),
+        url("https://images.unsplash.com/photo-1465005198441-3f4dc1f6e707?auto=format&fit=crop&w=1800&q=80");
+    }
+    body[data-shop-theme="bogolan"] .photo-bg{
+      background-image:
+        linear-gradient(130deg,rgba(24,16,10,0.86) 0%,rgba(55,33,20,0.68) 52%,rgba(10,8,6,0.9) 100%),
+        url("https://images.unsplash.com/photo-1517089596392-fb9a9033e05b?auto=format&fit=crop&w=1800&q=80");
+    }
+    body[data-shop-theme="baobab"] .photo-bg{
+      background-image:
+        linear-gradient(130deg,rgba(28,18,8,0.86) 0%,rgba(64,40,18,0.68) 52%,rgba(14,20,10,0.9) 100%),
+        url("https://images.unsplash.com/photo-1473773508845-188df298d2d1?auto=format&fit=crop&w=1800&q=80");
+    }
+    body[data-shop-theme="nile"] .photo-bg{
+      background-image:
+        linear-gradient(130deg,rgba(6,24,30,0.86) 0%,rgba(12,52,64,0.68) 52%,rgba(8,14,26,0.9) 100%),
+        url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1800&q=80");
+    }
+    *{ box-sizing:border-box; }
+    body{ margin:0; font-family:"Inter",sans-serif; color:#111827; min-height:100dvh; }
+
+    /* Fond */
+    .page{ position:relative; min-height:100dvh; isolation:isolate; }
+    .photo-bg{
+      position:fixed; inset:0; z-index:-3;
+      background-image:
+        linear-gradient(130deg,rgba(9,7,6,0.88) 0%,rgba(30,19,14,0.68) 50%,rgba(9,8,7,0.88) 100%),
+        url("https://images.unsplash.com/photo-1600566752229-250ed79470f8?auto=format&fit=crop&w=1800&q=80");
+      background-size:cover; background-position:center;
+    }
+    .texture{
+      position:fixed; inset:0; z-index:-2; pointer-events:none;
+      background:radial-gradient(700px 380px at 70% 20%,rgba(191,106,60,0.2),transparent 70%);
+    }
+
+    .wrap{ max-width:1100px; margin:0 auto; padding:18px; padding-bottom:calc(28px + env(safe-area-inset-bottom)); position:relative; z-index:1; }
+
+    /* Header nav */
+    .top{
+      display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
+      background:var(--glass); border:1px solid var(--glass-line);
+      backdrop-filter:blur(18px); border-radius:20px; padding:12px 16px; margin-bottom:20px;
+    }
+    .back-btn{ border:0; background:rgba(255,255,255,0.1); color:#f3e7d4; border-radius:999px; padding:9px 14px; font-weight:700; cursor:pointer; font-size:.9rem; border:1px solid rgba(227,189,136,0.25); }
+    .logo-link{ text-decoration:none; color:#f3e7d4; font-family:"Cormorant Garamond",serif; font-weight:700; font-size:1.3rem; display:flex; align-items:center; gap:9px; }
+    .logo-link img{ width:30px; height:30px; border-radius:7px; object-fit:cover; border:1px solid rgba(227,189,136,0.35); display:none; }
+    .top-actions{ display:flex; align-items:center; gap:8px; }
+    .cart-btn, .reviews-btn, .contact-btn{ text-decoration:none; background:rgba(255,255,255,0.14); color:#f3e7d4; border:1px solid rgba(227,189,136,0.35); border-radius:999px; padding:9px 16px; font-weight:700; font-size:.9rem; }
+    .reviews-btn{ cursor:pointer; }
+
+    /* ===== HERO BOUTIQUE ===== */
+    .shop-hero{
+      position:relative; border-radius:24px; overflow:hidden;
+      background:linear-gradient(135deg,rgba(15,118,110,0.45),rgba(21,94,117,0.35));
+      border:1px solid rgba(99,210,199,0.2);
+      backdrop-filter:blur(14px);
+      padding:32px 28px 24px; margin-bottom:20px;
+    }
+    /* Bannière dégradé derrière */
+    .shop-hero::before{
+      content:''; position:absolute; inset:0; z-index:0;
+      background:linear-gradient(120deg,rgba(15,118,110,0.6) 0%,rgba(30,80,90,0.4) 100%);
+    }
+    .hero-inner{ position:relative; z-index:1; display:flex; gap:22px; align-items:flex-start; flex-wrap:wrap; }
+
+    /* Logo boutique */
+    .shop-logo-wrap{ position:relative; flex-shrink:0; }
+    .shop-logo{
+      width:90px; height:90px; border-radius:50%;
+      background:linear-gradient(135deg,#0f766e,#1d4ed8);
+      display:flex; align-items:center; justify-content:center;
+      font-size:2rem; font-weight:900; color:#fff;
+      border:3px solid rgba(255,255,255,0.3); overflow:hidden;
+    }
+    .shop-logo img{ width:100%; height:100%; object-fit:cover; }
+    .avg-rating-badge{
+      position:absolute; top:-8px; left:50%; transform:translateX(-50%);
+      background:#f59e0b; color:#fff; font-size:.72rem; font-weight:800;
+      padding:3px 8px; border-radius:999px; white-space:nowrap;
+      box-shadow:0 2px 8px rgba(0,0,0,.3);
+    }
+
+    /* Infos boutique */
+    .shop-details{ flex:1; min-width:0; }
+    .shop-details h1{ font-family:"Cormorant Garamond",serif; margin:0 0 4px; font-size:2rem; color:#f0fdfa; line-height:1.2; }
+    .shop-subtitle{ font-size:.88rem; color:#99f6e4; margin-bottom:8px; }
+    .shop-badges{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+    .badge{ font-size:.74rem; font-weight:700; padding:3px 10px; border-radius:999px; }
+    .badge-v{ background:#dcfce7; color:#166534; }
+    .badge-cat{ background:rgba(203,165,107,0.2); color:#d7c3a1; border:1px solid rgba(203,165,107,0.3); }
+    .shop-description{ font-size:.9rem; color:#d7c3a1; line-height:1.6; max-width:600px; margin-bottom:12px; }
+
+    /* Étoiles moyennes */
+    .rating-row{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .stars-big{ font-size:1.3rem; color:#f59e0b; letter-spacing:1px; }
+    .rating-text{ font-size:.88rem; color:#d7c3a1; }
+    .rating-count{ font-size:.82rem; color:#9ca3af; }
+
+
+    /* Stats boutique */
+    .shop-stats{ display:flex; gap:20px; margin-top:14px; flex-wrap:wrap; }
+    .shop-stat{ text-align:center; }
+    .shop-stat .sv{ font-size:1.3rem; font-weight:900; color:#f0fdfa; }
+    .shop-stat .sl{ font-size:.72rem; color:#99f6e4; text-transform:uppercase; letter-spacing:.06em; }
+
+    /* ===== SECTION PRODUITS ===== */
+    .section-title{
+      font-family:"Cormorant Garamond",serif; font-size:1.5rem; color:#f3e7d4;
+      margin:0 0 14px; display:flex; align-items:center; gap:10px;
+    }
+    .section-title::after{ content:''; flex:1; height:1px; background:rgba(227,189,136,0.25); }
+
+    .products-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:28px; }
+    .prod-card{
+      background:var(--glass); border:1px solid var(--glass-line); border-radius:14px; overflow:hidden;
+      transition:transform .18s, box-shadow .18s, border-color .18s;
+      backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    }
+    .prod-card:hover{ transform:translateY(-3px); box-shadow:0 8px 24px rgba(0,0,0,.28); border-color:rgba(227,189,136,0.38); }
+    .prod-img{ height:140px; background:#d7c4a0; overflow:hidden; border-bottom:1px solid rgba(227,189,136,0.2); }
+    .prod-img img{ width:100%; height:100%; object-fit:cover; }
+    .prod-body{ padding:10px; }
+    .prod-body h3{ margin:0 0 4px; font-size:.9rem; color:#f3e7d4; }
+    .prod-price{ font-weight:800; color:var(--gold); font-size:.88rem; }
+    .prod-btns{ display:flex; gap:6px; margin-top:8px; }
+    .pb{ flex:1; border:0; border-radius:8px; padding:7px; font-weight:700; font-size:.76rem; cursor:pointer; transition:opacity .15s; }
+    .pb-view{ background:linear-gradient(135deg,var(--gold),var(--burnt)); color:#23120a; }
+    .pb-cart{ background:rgba(255,255,255,0.08); color:#f3e7d4; border:1.5px solid rgba(227,189,136,0.35); }
+    .pb-cart.added{ background:#f0fdf4; color:#166534; border-color:#86efac; }
+    .empty-prod{ grid-column:1/-1; text-align:center; padding:40px; color:#d7c3a1; }
+
+    /* ===== AVIS ===== */
+    .reviews-wrap{
+      background:rgba(18,14,11,0.5); border:1px solid rgba(227,189,136,0.2);
+      backdrop-filter:blur(12px); border-radius:20px; padding:22px; margin-bottom:20px;
+    }
+    .reviews-wrap.is-hidden{ display:none; }
+
+    /* Résumé rating */
+    .rating-summary{
+      display:flex; gap:24px; align-items:center; flex-wrap:wrap;
+      padding-bottom:18px; border-bottom:1px solid rgba(227,189,136,0.18); margin-bottom:18px;
+    }
+    .big-score{ text-align:center; }
+    .big-score .num{ font-size:3.5rem; font-weight:900; color:#f0fdfa; line-height:1; }
+    .big-score .smax{ font-size:.85rem; color:#9ca3af; }
+    .bars{ flex:1; min-width:200px; }
+    .bar-row{ display:flex; align-items:center; gap:8px; margin-bottom:4px; font-size:.78rem; color:#d7c3a1; }
+    .bar-track{ flex:1; height:6px; background:rgba(255,255,255,0.1); border-radius:4px; overflow:hidden; }
+    .bar-fill{ height:100%; background:#f59e0b; border-radius:4px; transition:width .5s ease; }
+
+    /* Liste avis */
+    .review-item{
+      padding:14px 0; border-bottom:1px solid rgba(227,189,136,0.12);
+    }
+    .review-item:last-child{ border-bottom:0; }
+    .rev-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:8px; }
+    .rev-author{ font-weight:700; font-size:.88rem; color:#f3e7d4; }
+    .rev-date{ font-size:.76rem; color:#9ca3af; }
+    .rev-stars{ color:#f59e0b; font-size:.95rem; }
+    .rev-text{ font-size:.88rem; color:#d7c3a1; line-height:1.6; }
+
+    /* Formulaire avis */
+    .review-form{
+      background:rgba(255,255,255,0.04); border:1px solid rgba(227,189,136,0.18);
+      border-radius:14px; padding:18px; margin-top:18px;
+    }
+    .review-form h3{ margin:0 0 12px; color:#f3e7d4; font-size:1rem; }
+
+    /* Sélecteur d'étoiles */
+    .star-selector{ display:flex; gap:6px; margin-bottom:14px; flex-direction:row-reverse; justify-content:flex-end; }
+    .star-selector input{ display:none; }
+    .star-selector label{ font-size:1.8rem; color:#4b5563; cursor:pointer; transition:color .1s; }
+    .star-selector label:hover,
+    .star-selector label:hover ~ label,
+    .star-selector input:checked ~ label{ color:#f59e0b; }
+
+    .rev-textarea{
+      width:100%; padding:11px 13px; border:1.5px solid rgba(203,165,107,0.3);
+      border-radius:10px; font:inherit; font-size:.9rem; background:rgba(0,0,0,0.3);
+      color:#f3e7d4; resize:vertical; min-height:80px; margin-bottom:12px;
+    }
+    .rev-textarea::placeholder{ color:#6b7280; }
+    .rev-textarea:focus{ outline:none; border-color:var(--brand); }
+    .rev-submit{
+      border:0; border-radius:10px; padding:11px 22px;
+      background:linear-gradient(135deg,var(--gold),var(--burnt)); color:#23120a;
+      font-weight:800; cursor:pointer; font-size:.9rem; transition:transform .15s;
+    }
+    .rev-submit:hover{ transform:translateY(-1px); }
+    .rev-submit:disabled{ opacity:.5; cursor:not-allowed; }
+    .rev-info{ font-size:.82rem; color:#9ca3af; margin-top:10px; }
+    .rev-success{ color:#86efac; font-size:.88rem; font-weight:700; margin-top:8px; }
+
+    /* Toast */
+    #toast{
+      position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
+      background:#0f766e; color:#fff; padding:12px 22px; border-radius:12px;
+      font-weight:700; font-size:.9rem; opacity:0; pointer-events:none;
+      transition:opacity .25s, transform .25s; z-index:9999;
+    }
+    #toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+    .loader{ text-align:center; padding:60px; color:#d7c3a1; }
+
+    @media (max-width:900px){ .products-grid{ grid-template-columns:repeat(2,1fr); } }
+    @media (max-width:580px){
+      .products-grid{ grid-template-columns:repeat(2,1fr); gap:8px; }
+      .hero-inner{ flex-direction:column; }
+      .prod-img{ height:108px; }
+      .prod-body{ padding:8px; }
+      .prod-body h3{ font-size:.8rem; }
+      .prod-price{ font-size:.78rem; }
+      .pb{ font-size:.66rem; padding:6px; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+  <div class="photo-bg" aria-hidden="true"></div>
+  <div class="texture"  aria-hidden="true"></div>
+
+  <div class="wrap">
+    <!-- Nav -->
+    <header class="top">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="back-btn" onclick="history.length>1?history.back():location.href='marketplace.html'">← Retour</button>
+        <a class="logo-link" href="index.html"><img class="platform-logo-dynamic" alt="Logo ArtSango"><span>ArtSango</span></a>
+      </div>
+      <div class="top-actions">
+        <a class="contact-btn" id="contact-shop-btn" href="#">Contacter la boutique</a>
+        <button type="button" class="reviews-btn" id="open-reviews-btn" onclick="showReviews()">Avis clients</button>
+        <a class="cart-btn" href="panier.html">Panier (<span id="cart-count">0</span>)</a>
+      </div>
+    </header>
+
+    <div id="loader" class="loader">Chargement de la boutique…</div>
+    <div id="shop-content" style="display:none;">
+
+      <!-- ===== HERO ===== -->
+      <div class="shop-hero">
+        <div class="hero-inner">
+          <div class="shop-logo-wrap">
+            <div class="shop-logo" id="shop-logo-el">?</div>
+            <div class="avg-rating-badge" id="rating-badge" style="display:none;"></div>
+          </div>
+          <div class="shop-details">
+            <h1 id="shop-name">—</h1>
+            <p class="shop-subtitle" id="shop-subtitle">—</p>
+            <div class="shop-badges" id="shop-badges"></div>
+            <p class="shop-description" id="shop-description"></p>
+            <div class="rating-row" id="rating-row"></div>
+            <div class="shop-stats" id="shop-stats"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== PRODUITS ===== -->
+      <div id="catalog-sections-wrap">
+        <h2 class="section-title">Ses créations</h2>
+        <div class="products-grid">
+          <div class="empty-prod">Chargement…</div>
+        </div>
+      </div>
+
+      <!-- ===== AVIS ===== -->
+      <h2 class="section-title" id="reviews-title">Avis clients</h2>
+      <div class="reviews-wrap is-hidden" id="reviews-wrap">
+        <div class="rating-summary" id="rating-summary"></div>
+        <div id="reviews-list"></div>
+        <div id="review-form-wrap"></div>
+      </div>
+
+    </div>
+  </div>
+  <div id="toast"></div>
+</div>
+
+<script type="module">
+import { initializeApp }                                           from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged }                             from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, collection, query,
+  where, orderBy, getDocs, addDoc, serverTimestamp, updateDoc, increment
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey:"AIzaSyAghL7HcGVTWur9ijJzjWXywTgvCaiJ01M", authDomain:"art-sango.firebaseapp.com",
+  projectId:"art-sango", storageBucket:"art-sango.firebasestorage.app",
+  messagingSenderId:"840868763552", appId:"1:840868763552:web:b7cb1ac710d3b9968436c5"
+};
+const app  = initializeApp(firebaseConfig);
+const db   = getFirestore(app);
+const auth = getAuth(app);
+
+const params   = new URLSearchParams(location.search);
+const artisanId= params.get('id') || '';
+if(!artisanId){ document.getElementById('loader').textContent = 'Boutique introuvable.'; }
+
+let currentUser=null, currentRole='', allProducts=[];
+let reviews=[], artisanData={};
+let authReadyResolved = false;
+let resolveAuthReady;
+const authReady = new Promise((resolve) => { resolveAuthReady = resolve; });
+const DEFAULT_CATALOG_SECTION = 'Ses créations';
+
+window.showReviews = function(){
+  const wrap = document.getElementById('reviews-wrap');
+  const title = document.getElementById('reviews-title');
+  if (!wrap || !title) return;
+  wrap.classList.remove('is-hidden');
+  title.scrollIntoView({ behavior:'smooth', block:'start' });
+};
+
+const getImg=p=>p.imageUrl||p.imageURL||p.image||p.photoUrl||p.photo||p.img||'';
+const updateCartCount=()=>document.getElementById('cart-count').textContent=JSON.parse(localStorage.getItem('artsango_cart')||'[]').length;
+updateCartCount();
+
+function normalizeSectionName(value){
+  return (value || '').trim().replace(/\s+/g,' ').slice(0,40);
+}
+
+function getProductSection(product){
+  return normalizeSectionName(product.catalogSection || product.section || '');
+}
+
+function getCatalogSectionNames(){
+  const configured = Array.isArray(artisanData.shopSections)
+    ? artisanData.shopSections.map(normalizeSectionName).filter(Boolean)
+    : [];
+  const fromProducts = [...new Set(allProducts.map(getProductSection).filter(Boolean))];
+  const names = [...configured];
+  fromProducts.forEach((name) => {
+    if (!names.some((item) => item.toLowerCase() === name.toLowerCase())) names.push(name);
+  });
+  return names.length ? names : [DEFAULT_CATALOG_SECTION];
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+function starsText(avg, size=''){
+  if(!avg&&avg!==0) return '';
+  const full=Math.floor(avg), half=(avg-full)>=0.5;
+  return '<span style="color:#f59e0b;font-size:'+size+'">'+'★'.repeat(full)+(half?'½':'')+'☆'.repeat(5-full-(half?1:0))+'</span>';
+}
+
+/* ---- Auth ---- */
+onAuthStateChanged(auth, async user=>{
+  currentUser=user; currentRole='';
+  if(!user) return;
+  try{
+    const a=await getDoc(doc(db,'artisans',user.uid));
+    if(a.exists()) currentRole='artisan';
+    else{ const c=await getDoc(doc(db,'clients',user.uid)); if(c.exists()) currentRole='client'; }
+  }catch{}
+  setupContactLink();
+  renderReviewForm();
+  if(!authReadyResolved){ authReadyResolved = true; resolveAuthReady(); }
+});
+
+setTimeout(() => {
+  if(!authReadyResolved){ authReadyResolved = true; resolveAuthReady(); }
+}, 1400);
+
+async function recordShopVisit(){
+  if(!artisanId || !artisanData || !Object.keys(artisanData).length) return;
+  if(currentUser?.uid && currentUser.uid === artisanId) return;
+
+  const d = new Date();
+  const day = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const viewer = currentUser?.uid ? `u_${currentUser.uid}` : 'anon';
+  const key = `artsango_shop_view_${artisanId}_${viewer}_${day}`;
+  if(localStorage.getItem(key)) return;
+
+  localStorage.setItem(key, '1');
+  try{
+    await updateDoc(doc(db,'artisans',artisanId), { views: increment(1), lastViewAt: serverTimestamp() });
+  }catch{
+    localStorage.removeItem(key);
+  }
+}
+
+/* ---- Chargement principal ---- */
+async function init(){
+  if(!artisanId) return;
+  try{
+    /* Artisan */
+    const aSnap=await getDoc(doc(db,'artisans',artisanId));
+    artisanData=aSnap.exists()?aSnap.data():{};
+
+    /* Produits */
+    const pSnap=await getDocs(query(collection(db,'produits'),where('artisanId','==',artisanId)));
+    allProducts=pSnap.docs.map(d=>({id:d.id,...d.data()}));
+
+    /* Avis */
+    try{
+      const rSnap=await getDocs(query(collection(db,'avis'),where('artisanId','==',artisanId),orderBy('createdAt','desc')));
+      reviews=rSnap.docs.map(d=>({id:d.id,...d.data()}));
+    }catch{ reviews=[]; }
+
+    renderHero();
+    setupContactLink();
+    renderProducts();
+    renderRatingSummary();
+    renderReviewsList();
+    renderReviewForm();
+    await authReady;
+    await recordShopVisit();
+  }catch(e){ document.getElementById('loader').textContent='Erreur: '+e.message; return; }
+
+  document.getElementById('loader').style.display='none';
+  document.getElementById('shop-content').style.display='block';
+}
+
+function setupContactLink(){
+  const link = document.getElementById('contact-shop-btn');
+  if(!link) return;
+  if(!artisanId){ link.style.display='none'; return; }
+  if(currentUser?.uid && currentUser.uid === artisanId){
+    link.style.display='none';
+    return;
+  }
+  link.style.display='inline-flex';
+  link.href = `messagerie.html?artisanId=${encodeURIComponent(artisanId)}`;
+}
+
+/* ---- Hero ---- */
+function renderHero(){
+  const n=artisanData.brandName||'Boutique';
+  document.title=n+' - ArtSango';
+  document.body.setAttribute('data-shop-theme', artisanData.shopTheme || 'heritage');
+  document.getElementById('shop-name').textContent=n;
+  document.getElementById('shop-subtitle').textContent=
+    [artisanData.category, artisanData.city, artisanData.country].filter(Boolean).join(' · ') || 'Artisan';
+
+  /* Logo */
+  const logoEl=document.getElementById('shop-logo-el');
+  if(artisanData.profilePhoto){
+    logoEl.innerHTML=`<img src="${artisanData.profilePhoto}" alt="${n}">`;
+  } else {
+    logoEl.textContent=n.trim().split(/\s+/).map(w=>w[0]).join('').substring(0,2).toUpperCase();
+  }
+
+  /* Badges */
+  const badges=document.getElementById('shop-badges');
+  if(artisanData.verified) badges.innerHTML+='<span class="badge badge-v">✓ Artisan vérifié</span>';
+  if(artisanData.category) badges.innerHTML+=`<span class="badge badge-cat">${artisanData.category}</span>`;
+
+  /* Description */
+  const desc=document.getElementById('shop-description');
+  desc.textContent=artisanData.description||artisanData.bio||'';
+  if(!desc.textContent) desc.style.display='none';
+
+  /* Rating moyen */
+  const avg=computeAvg();
+  if(avg>0){
+    const badge=document.getElementById('rating-badge');
+    badge.textContent='★ '+avg.toFixed(1); badge.style.display='block';
+    document.getElementById('rating-row').innerHTML=
+      starsText(avg,'1.2rem')+
+      `<span class="rating-text">${avg.toFixed(1)} / 5</span>`+
+      `<span class="rating-count">(${reviews.length} avis)</span>`;
+  }
+
+  const reviewBtn = document.getElementById('open-reviews-btn');
+  if (reviewBtn) reviewBtn.textContent = `Avis clients (${reviews.length})`;
+
+  /* Stats */
+  document.getElementById('shop-stats').innerHTML=`
+    <div class="shop-stat"><div class="sv">${allProducts.length}</div><div class="sl">Créations</div></div>
+    <div class="shop-stat"><div class="sv">${getCatalogSectionNames().length}</div><div class="sl">Sections</div></div>
+    <div class="shop-stat"><div class="sv">${reviews.length}</div><div class="sl">Avis</div></div>
+    ${artisanData.city?`<div class="shop-stat"><div class="sv">📍</div><div class="sl">${artisanData.city}</div></div>`:''}
+  `;
+}
+
+function computeAvg(){
+  if(!reviews.length) return 0;
+  return Math.round((reviews.reduce((s,r)=>s+(r.rating||0),0)/reviews.length)*10)/10;
+}
+
+/* ---- Produits ---- */
+function renderProducts(){
+  const wrap=document.getElementById('catalog-sections-wrap');
+  if(!wrap) return;
+  const cartIds=JSON.parse(localStorage.getItem('artsango_cart')||'[]').map(i=>i.id);
+  if(!allProducts.length){
+    wrap.innerHTML=`
+      <h2 class="section-title">${DEFAULT_CATALOG_SECTION}</h2>
+      <div class="products-grid"><div class="empty-prod">Aucun produit pour l'instant.</div></div>
+    `;
+    return;
+  }
+
+  const sectionNames = getCatalogSectionNames();
+  const grouped = new Map(sectionNames.map((name) => [name, []]));
+  allProducts.forEach((product) => {
+    const section = getProductSection(product) || sectionNames[0] || DEFAULT_CATALOG_SECTION;
+    if (!grouped.has(section)) grouped.set(section, []);
+    grouped.get(section).push(product);
+  });
+
+  wrap.innerHTML=[...grouped.entries()].map(([sectionName, products])=>`
+    <h2 class="section-title">${sectionName}</h2>
+    <div class="products-grid">
+      ${products.length ? products.map((p)=>{
+        const img=getImg(p); const inCart=cartIds.includes(p.id);
+        return `
+        <div class="prod-card">
+          <div class="prod-img">${img?`<img src="${img}" alt="${p.name||''}" loading="lazy">`:'🎨'}</div>
+          <div class="prod-body">
+            <h3>${p.name||'—'}</h3>
+            <div class="prod-price">${(p.price||0).toLocaleString('fr-FR')} XOF</div>
+            <div class="prod-btns">
+              <button class="pb pb-view" data-view-id="${p.id}">Voir</button>
+              <button class="pb pb-cart ${inCart?'added':''}" data-cart-id="${p.id}">${inCart?'✓':'🛒 Panier'}</button>
+            </div>
+          </div>
+        </div>`;
+      }).join('') : '<div class="empty-prod">Aucun produit dans cette section.</div>'}
+    </div>
+  `).join('');
+}
+
+document.getElementById('catalog-sections-wrap')?.addEventListener('click',e=>{
+  const v=e.target.closest('[data-view-id]');
+  const c=e.target.closest('[data-cart-id]');
+  if(v){ location.href='produit-detail.html?id='+v.dataset.viewId; return; }
+  if(c){ addToCart(c.dataset.cartId,c); }
+});
+
+function addToCart(id,btn){
+  const p=allProducts.find(x=>x.id===id); if(!p) return;
+  let c=JSON.parse(localStorage.getItem('artsango_cart')||'[]');
+  if(c.find(i=>i.id===id)){ showToast('Déjà dans ton panier 🛒'); return; }
+  c.push({id:p.id,name:p.name||'—',price:p.price||0,artisanId,artisanName:artisanData.brandName||'',category:p.category||'',imageUrl:getImg(p)});
+  localStorage.setItem('artsango_cart',JSON.stringify(c));
+  updateCartCount();
+  btn.textContent='✓'; btn.classList.add('added');
+  showToast(`"${p.name}" ajouté !`);
+}
+
+/* ---- Résumé rating (barres) ---- */
+function renderRatingSummary(){
+  const counts=[0,0,0,0,0];
+  reviews.forEach(r=>{ const s=Math.round(r.rating||0); if(s>=1&&s<=5) counts[s-1]++; });
+  const total=reviews.length||1;
+  const avg=computeAvg();
+
+  document.getElementById('rating-summary').innerHTML=`
+    <div class="big-score">
+      <div class="num">${avg>0?avg.toFixed(1):'—'}</div>
+      <div>${avg>0?starsText(avg,'1rem'):''}</div>
+      <div class="smax">${reviews.length} avis</div>
+    </div>
+    <div class="bars">
+      ${[5,4,3,2,1].map(s=>`
+        <div class="bar-row">
+          <span style="width:14px;text-align:right;">${s}</span>
+          <span style="color:#f59e0b;font-size:.85rem;">★</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.round(counts[s-1]/total*100)}%"></div></div>
+          <span style="width:24px;">${counts[s-1]}</span>
+        </div>`).join('')}
+    </div>
+  `;
+}
+
+/* ---- Liste avis ---- */
+function renderReviewsList(){
+  const el=document.getElementById('reviews-list');
+  if(!reviews.length){ el.innerHTML='<p style="color:#9ca3af;font-size:.88rem;">Aucun avis pour l\'instant. Soyez le premier !</p>'; return; }
+  el.innerHTML=reviews.map(r=>{
+    const dt=r.createdAt?.toDate?new Date(r.createdAt.toDate()).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}):'';
+    return `
+    <div class="review-item">
+      <div class="rev-header">
+        <span class="rev-author">👤 ${r.clientName||'Anonyme'}</span>
+        <span class="rev-date">${dt}</span>
+      </div>
+      <div class="rev-stars">${'★'.repeat(r.rating||0)}${'☆'.repeat(5-(r.rating||0))}</div>
+      ${r.comment?`<p class="rev-text">${r.comment}</p>`:''}
+    </div>`;
+  }).join('');
+}
+
+/* ---- Formulaire avis ---- */
+function renderReviewForm(){
+  const wrap=document.getElementById('review-form-wrap');
+  if(!currentUser){
+    wrap.innerHTML=`<p class="rev-info">👉 <a href="connexion-client.html?next=${encodeURIComponent(location.href)}" style="color:#cba56b;font-weight:700;">Connecte-toi</a> pour laisser un avis.</p>`;
+    return;
+  }
+  if(currentUser.uid===artisanId){
+    wrap.innerHTML='<p class="rev-info" style="color:#9ca3af;">Vous ne pouvez pas noter votre propre boutique.</p>'; return;
+  }
+  /* Vérifie si déjà noté */
+  if(reviews.find(r=>r.clientUid===currentUser.uid)){
+    wrap.innerHTML='<p class="rev-info" style="color:#86efac;">✓ Vous avez déjà laissé un avis sur cette boutique.</p>'; return;
+  }
+
+  wrap.innerHTML=`
+  <div class="review-form">
+    <h3>✍️ Laisser un avis</h3>
+    <div class="star-selector">
+      <input type="radio" name="rev-star" id="s5" value="5"><label for="s5" title="5">★</label>
+      <input type="radio" name="rev-star" id="s4" value="4"><label for="s4" title="4">★</label>
+      <input type="radio" name="rev-star" id="s3" value="3"><label for="s3" title="3">★</label>
+      <input type="radio" name="rev-star" id="s2" value="2"><label for="s2" title="2">★</label>
+      <input type="radio" name="rev-star" id="s1" value="1"><label for="s1" title="1">★</label>
+    </div>
+    <textarea class="rev-textarea" id="rev-comment" placeholder="Partagez votre expérience avec cette boutique…"></textarea>
+    <button class="rev-submit" id="rev-submit-btn">Publier mon avis</button>
+    <div class="rev-success" id="rev-success" style="display:none;">✓ Avis publié, merci !</div>
+  </div>`;
+
+  document.getElementById('rev-submit-btn').addEventListener('click', submitReview);
+}
+
+async function submitReview(){
+  const btn=document.getElementById('rev-submit-btn');
+  const starVal=document.querySelector('input[name="rev-star"]:checked')?.value;
+  const comment=(document.getElementById('rev-comment')?.value||'').trim();
+  if(!starVal){ showToast('Choisis une note en étoiles !'); return; }
+  btn.disabled=true; btn.textContent='Publication…';
+
+  /* Nom du client */
+  let clientName='Anonyme';
+  try{
+    const cs=await getDoc(doc(db,'clients',currentUser.uid));
+    if(cs.exists()) clientName=cs.data().fullName||cs.data().name||'Anonyme';
+    else{
+      const as=await getDoc(doc(db,'artisans',currentUser.uid));
+      if(as.exists()) clientName=as.data().brandName||'Anonyme';
+    }
+  }catch{}
+
+  try{
+    await addDoc(collection(db,'avis'),{
+      artisanId, clientUid:currentUser.uid, clientName,
+      rating:parseInt(starVal,10), comment, createdAt:serverTimestamp()
+    });
+
+    /* Met à jour avgRating sur artisan */
+    const newCount=(artisanData.ratingCount||0)+1;
+    const newAvg=Math.round(((artisanData.avgRating||0)*(newCount-1)+parseInt(starVal,10))/newCount*10)/10;
+    await updateDoc(doc(db,'artisans',artisanId),{ avgRating:newAvg, ratingCount:newCount });
+
+    /* Recharge les avis */
+    const rSnap=await getDocs(query(collection(db,'avis'),where('artisanId','==',artisanId),orderBy('createdAt','desc')));
+    reviews=rSnap.docs.map(d=>({id:d.id,...d.data()}));
+    renderRatingSummary();
+    renderReviewsList();
+
+    document.getElementById('rev-success').style.display='block';
+    btn.style.display='none';
+    showToast('Avis publié ! Merci 🎉');
+  }catch(e){
+    showToast('Erreur: '+e.message); btn.disabled=false; btn.textContent='Publier mon avis';
+  }
+}
+
+init();
+</script>
+<script type="module" src="./platform-logo.js"></script>
+<script defer src="./sw-register.js"></script>
+<script defer src="./mobile-nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "ArtSango",
+  "short_name": "ArtSango",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#11100e",
+  "theme_color": "#11100e",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

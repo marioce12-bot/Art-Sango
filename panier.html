@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Panier - ArtSango</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --charcoal: #0e0c0a;
+      --burnt: #bf6a3c;
+      --gold: #c9a05a;
+      --sand: #d8c4a0;
+      --cream: #f4eadb;
+      --teal: #0f766e;
+      --glass: rgba(14,12,10,0.65);
+      --glass-border: rgba(201,160,90,0.2);
+      --card-bg: #fdf8f2;
+      --card-border: #e8dcc8;
+    }
+    *{ box-sizing:border-box; }
+    body{ margin:0; font-family:"DM Sans",sans-serif; background:var(--charcoal); color:var(--cream); min-height:100dvh; }
+    .bg {
+      position: fixed; inset: 0; z-index: -2;
+      background-image:
+        linear-gradient(125deg, rgba(10,8,6,0.88) 0%, rgba(26,16,10,0.6) 50%, rgba(10,8,6,0.92) 100%),
+        url("https://images.unsplash.com/photo-1541580621-cb2562a7a8a3?auto=format&fit=crop&w=1800&q=80");
+      background-size: cover; background-position: center;
+    }
+    .topbar {
+      position: fixed;
+      top: calc(14px + env(safe-area-inset-top));
+      left: 50%; transform: translateX(-50%);
+      width: min(1160px, calc(100% - 32px));
+      z-index: 100;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 12px 18px;
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    }
+    .logo {
+      font-family: "Cormorant Garamond", Georgia, serif;
+      font-weight: 700; font-size: 1.35rem;
+      color: var(--cream); text-decoration: none;
+      display: flex; align-items: center; gap: 9px;
+    }
+    .logo img { width: 32px; height: 32px; border-radius: 7px; object-fit: cover; display: none; }
+    .topbar-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .btn-nav {
+      text-decoration: none; font-size: .85rem; font-weight: 600;
+      padding: 9px 16px; border-radius: 9px; transition: opacity .15s;
+      border: none; cursor: pointer;
+    }
+    .btn-nav:hover { opacity: .85; }
+    .btn-gold { background: linear-gradient(135deg, var(--gold), var(--burnt)); color: #1a0d06; }
+    .btn-ghost { background: rgba(255,255,255,0.1); color: var(--cream); border: 1px solid var(--glass-border); }
+
+    .wrap{ max-width:980px; margin:0 auto; padding: calc(100px + env(safe-area-inset-top)) 16px calc(32px + env(safe-area-inset-bottom)); }
+    h1{ font-family:"Cormorant Garamond",serif; margin:0 0 18px; font-size:2.2rem; }
+    .item{ background:var(--card-bg); border:1px solid var(--card-border); border-radius:14px; padding:14px; display:flex; align-items:center; gap:14px; margin-bottom:10px; color:#111827; }
+    .item-img{ width:72px; height:72px; border-radius:10px; background:linear-gradient(125deg,#d7c4a0,#c8d8cc); flex-shrink:0; overflow:hidden; border:1px solid #e4d7c3; }
+    .item-img img{ width:100%; height:100%; object-fit:cover; }
+    .item-info{ flex:1; }
+    .item-name{ font-weight:700; margin:0 0 4px; }
+    .item-artisan{ color:#6b7280; font-size:.85rem; }
+    .item-price{ font-weight:800; color:var(--teal); }
+    .remove-btn{ border:0; background:transparent; cursor:pointer; color:#dc2626; font-size:1.2rem; padding:4px 8px; border-radius:8px; }
+    .summary{ background:var(--card-bg); border:1px solid var(--card-border); border-radius:14px; padding:18px; margin-top:14px; color:#111827; }
+    .sum-row{ display:flex; justify-content:space-between; margin-bottom:8px; font-size:.95rem; }
+    .sum-total{ font-weight:800; font-size:1.15rem; border-top:1px solid #e8dcc8; padding-top:12px; margin-top:8px; }
+    .btn{ display:block; text-align:center; border:0; border-radius:12px; padding:13px; font-weight:800; font-size:1rem; cursor:pointer; text-decoration:none; margin-top:10px; }
+    .btn-main{ background:var(--teal); color:#fff; }
+    .btn-ghost{ background:transparent; border:2px solid #d1c4ae; color:#374151; }
+    .empty{ text-align:center; padding:60px; color:var(--sand); background:rgba(14,12,10,0.58); border:1px solid var(--glass-border); border-radius:16px; }
+    .empty a{ color:var(--gold); font-weight:700; text-decoration:none; }
+    @media (max-width:600px){ .topbar{flex-direction:column;gap:8px;} .topbar-right{width:100%;justify-content:space-between;} }
+  </style>
+</head>
+<body>
+  <div class="bg" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <a class="logo" href="index.html">
+      <img class="platform-logo-dynamic" alt="Logo ArtSango">
+      <span>ArtSango</span>
+    </a>
+    <div class="topbar-right">
+      <button class="btn-nav btn-ghost" onclick="goBack('marketplace.html')">Retour</button>
+      <a class="btn-nav btn-gold" href="marketplace.html">Créations</a>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <h1>Mon panier</h1>
+    <div id="cart-empty" class="empty" style="display:none;">
+      <div style="font-size:2.5rem;">🛒</div>
+      <p>Ton panier est vide.</p>
+      <a href="marketplace.html">Découvrir les créations →</a>
+    </div>
+    <div id="cart-items"></div>
+    <div id="cart-summary" style="display:none;">
+      <div class="summary">
+        <div class="sum-row"><span>Sous-total</span><span id="subtotal">—</span></div>
+        <div class="sum-row"><span>Livraison</span><span>À confirmer avec l'artisan</span></div>
+        <div class="sum-row sum-total"><span>Total estimé</span><span id="total">—</span></div>
+      </div>
+      <a class="btn btn-main" href="checkout.html">Passer la commande</a>
+      <a class="btn btn-ghost" href="marketplace.html">Continuer mes achats</a>
+    </div>
+  </div>
+
+  <script>
+    function removeLegacyDemoItems(cart) {
+      const cleaned = cart.filter((item) => {
+        const id = String(item?.id || '').toLowerCase();
+        const artisanId = String(item?.artisanId || '').toLowerCase();
+        const isDemo = id.startsWith('demo') || artisanId === 'demo' || id.startsWith('d');
+        return !isDemo;
+      });
+      if (cleaned.length !== cart.length) {
+        localStorage.setItem('artsango_cart', JSON.stringify(cleaned));
+      }
+      return cleaned;
+    }
+
+    function loadCart() {
+      const rawCart = JSON.parse(localStorage.getItem('artsango_cart') || '[]');
+      const cart = removeLegacyDemoItems(rawCart);
+      const container = document.getElementById('cart-items');
+      const summary   = document.getElementById('cart-summary');
+      const empty     = document.getElementById('cart-empty');
+
+      if (!cart.length) { empty.style.display = 'block'; return; }
+
+      container.innerHTML = cart.map((item, i) => `
+        <div class="item">
+          <div class="item-img">${item.imageUrl ? `<img src="${item.imageUrl}" alt="">` : ''}</div>
+          <div class="item-info">
+            <p class="item-name">${item.name || '—'}</p>
+            <p class="item-artisan">${item.artisanName || ''}</p>
+            <p class="item-price">${(item.price || 0).toLocaleString('fr-FR')} XOF</p>
+          </div>
+          <button class="remove-btn" onclick="removeItem(${i})">🗑</button>
+        </div>`).join('');
+
+      const total = cart.reduce((s, i) => s + (i.price || 0), 0);
+      document.getElementById('subtotal').textContent = total.toLocaleString('fr-FR') + ' XOF';
+      document.getElementById('total').textContent    = total.toLocaleString('fr-FR') + ' XOF';
+      summary.style.display = 'block';
+    }
+
+    function removeItem(idx) {
+      const cart = JSON.parse(localStorage.getItem('artsango_cart') || '[]');
+      cart.splice(idx, 1);
+      localStorage.setItem('artsango_cart', JSON.stringify(cart));
+      location.reload();
+    }
+
+    loadCart();
+
+    function goBack(fallback) {
+      if (window.history.length > 1) window.history.back(); else window.location.href = fallback;
+    }
+  </script>
+  <script type="module" src="./platform-logo.js"></script>
+  <script defer src="./mobile-nav.js"></script>
+</body>
+</html>

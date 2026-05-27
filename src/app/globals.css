@@ -1,0 +1,96 @@
+﻿@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f5efe4;
+  --foreground: #17120d;
+  --panel: rgba(255, 251, 243, 0.78);
+  --panel-strong: rgba(255, 251, 243, 0.94);
+  --line: rgba(95, 57, 39, 0.15);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  color: var(--foreground);
+  background:
+    radial-gradient(circle at 20% 10%, rgba(216, 170, 79, 0.28), transparent 32rem),
+    radial-gradient(circle at 82% 16%, rgba(36, 72, 59, 0.18), transparent 28rem),
+    linear-gradient(135deg, #f8f1e5 0%, #efe0c8 48%, #f5efe4 100%);
+  font-family: var(--font-sans), sans-serif;
+}
+
+body::before {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  content: "";
+  background-image:
+    linear-gradient(rgba(95, 57, 39, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(95, 57, 39, 0.045) 1px, transparent 1px);
+  background-size: 36px 36px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), transparent 90%);
+}
+
+body::after {
+  position: fixed;
+  inset: auto -12vw -28vh auto;
+  z-index: -1;
+  width: 52vw;
+  height: 52vw;
+  min-width: 420px;
+  min-height: 420px;
+  content: "";
+  background: conic-gradient(from 120deg, rgba(183, 101, 61, 0.22), rgba(216, 170, 79, 0.2), rgba(36, 72, 59, 0.16), rgba(183, 101, 61, 0.22));
+  border-radius: 999px;
+  filter: blur(18px);
+  opacity: 0.8;
+  animation: sweep 9s ease-in-out infinite alternate;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+::selection {
+  color: #fff7e8;
+  background: #5f3927;
+}
+
+.scrollbar-soft {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(95, 57, 39, 0.28) transparent;
+}
+
+.scrollbar-soft::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scrollbar-soft::-webkit-scrollbar-thumb {
+  background: rgba(95, 57, 39, 0.28);
+  border-radius: 999px;
+}
+
+.glass-panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: 0 24px 80px rgba(48, 32, 18, 0.14);
+  backdrop-filter: blur(24px);
+}
