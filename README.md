@@ -1,27 +1,27 @@
 # ArtSango AI
 
-Plateforme IA conversationnelle MVP pour aider les artisans africains à discuter avec une IA, générer des descriptions produits, améliorer des textes, proposer des prix, créer des posts réseaux sociaux, travailler le branding et recevoir des conseils business.
+Plateforme IA conversationnelle MVP pour aider les artisans africains a discuter avec une IA, generer des descriptions produits, ameliorer des textes, proposer des prix, creer des posts reseaux sociaux, travailler le branding et recevoir des conseils business.
 
 ## Architecture
 
-- `src/app/page.tsx` : entrée Next.js App Router.
+- `src/app/page.tsx` : entree Next.js App Router.
 - `src/components/chat/chat-app.tsx` : interface conversationnelle, sidebar, composer, uploads, conversations locales.
-- `src/app/api/chat/route.ts` : API route Node.js sécurisée, aucune clé exposée au frontend.
-- `src/lib/ai/models.ts` : configuration centralisée Build with AFRI pour chat, image, audio, vidéo et ASR.
+- `src/app/api/chat/route.ts` : API route Node.js securisee, aucune cle exposee au frontend.
+- `src/lib/ai/models.ts` : configuration centralisee Build with AFRI pour chat, image, audio, video et ASR.
 - `src/lib/ai/service.ts` : orchestration IA.
-- `src/lib/ai/providers/openai-compatible.ts` : provider compatible `/chat/completions` utilisé par Build with AFRI.
-- `src/lib/ai/prompt.ts` : prompt système ArtSango AI.
+- `src/lib/ai/providers/openai-compatible.ts` : provider compatible `/chat/completions` utilise par Build with AFRI.
+- `src/lib/ai/prompt.ts` : prompt systeme ArtSango AI.
 - `src/lib/storage/conversations.ts` : persistance locale MVP via `localStorage`.
-- `src/types/chat.ts` : types partagés frontend/backend.
+- `src/types/chat.ts` : types partages frontend/backend.
 
-## Modèles configurés
+## Modeles configures
 
-Modèles conversationnels disponibles dans le sélecteur UI:
+Modeles conversationnels disponibles dans le selecteur UI:
 
-- `gpt-5.5` : production haut de gamme, vision, documents longs, raisonnement supérieur.
-- `claude-opus-4.7` : analyse profonde, stratégie, raisonnement long, vision.
+- `gpt-5.5` : production haut de gamme, vision, documents longs, raisonnement superieur.
+- `claude-opus-4.7` : analyse profonde, strategie, raisonnement long, vision.
 
-Modèles multimodaux préparés dans la configuration centrale:
+Modeles multimodaux prepares dans la configuration centrale:
 
 - `gpt-image-2` via `POST /v1/images`.
 - `gpt-audio-1.5` via `POST /v1/audio/speech`.
@@ -30,7 +30,7 @@ Modèles multimodaux préparés dans la configuration centrale:
 
 ## Variables d'environnement
 
-Créer `.env.local` à partir de `.env.example`.
+Creer `.env.local` a partir de `.env.example`.
 
 ```bash
 ARTSANGO_AI_API_KEY=your_server_side_key
@@ -48,10 +48,10 @@ ARTSANGO_AI_USE_MOCK=false
 
 Notes:
 
-- Ne jamais préfixer la clé avec `NEXT_PUBLIC_`.
+- Ne jamais prefixer la cle avec `NEXT_PUBLIC_`.
 - `ARTSANGO_AI_BASE_URL` doit rester la racine API: `https://build.lewisnote.com/v1`.
-- Les endpoints spécifiques sont centralisés dans `src/lib/ai/models.ts`.
-- `ARTSANGO_AI_USE_MOCK=true` permet de tester l'interface sans provider réel.
+- Les endpoints specifiques sont centralises dans `src/lib/ai/models.ts`.
+- `ARTSANGO_AI_USE_MOCK=true` permet de tester l'interface sans provider reel.
 
 ## Lancement local
 
@@ -71,24 +71,24 @@ npm run build
 npm run start
 ```
 
-## Déploiement Vercel
+## Deploiement Vercel
 
 1. Pousser le projet sur GitHub.
 2. Importer le repo dans Vercel.
 3. Framework preset: `Next.js`.
 4. Build command: `npm run build`.
 5. Ajouter les variables d'environnement dans Vercel Project Settings.
-6. Déployer.
+6. Deployer.
 
-## Ajouter un nouveau modèle IA
+## Ajouter un nouveau modele IA
 
-Pour un modèle conversationnel, modifier uniquement `src/lib/ai/models.ts` dans `AI_MODELS`:
+Pour un modele conversationnel, modifier uniquement `src/lib/ai/models.ts` dans `AI_MODELS`:
 
 ```ts
 {
   id: "nouveau-modele",
-  label: "Nouveau modèle",
-  description: "Usage principal du modèle.",
+  label: "Nouveau modele",
+  description: "Usage principal du modele.",
   badge: "New",
   capability: "chat",
   provider: "build-with-afri",
@@ -107,17 +107,17 @@ Puis ajouter la variable correspondante dans `.env.local` et Vercel:
 ARTSANGO_AI_NEW_MODEL=provider-model-name
 ```
 
-Pour un modèle image/audio/vidéo/ASR, ajouter une entrée dans `AI_MEDIA_MODELS` avec son endpoint et ses paramètres par défaut.
+Pour un modele image/audio/video/ASR, ajouter une entree dans `AI_MEDIA_MODELS` avec son endpoint et ses parametres par defaut.
 
-## Sécurité
+## Securite
 
-- Les appels IA passent par `/api/chat` côté serveur.
-- Les clés API restent dans `.env.local` ou les variables Vercel.
-- Les conversations MVP sont stockées localement dans le navigateur.
-- Les uploads sont limités côté UI à 3 fichiers de 3 Mo pour éviter des payloads trop lourds.
+- Les appels IA passent par `/api/chat` cote serveur.
+- Les cles API restent dans `.env.local` ou les variables Vercel.
+- Les conversations MVP sont stockees localement dans le navigateur.
+- Les uploads sont limites cote UI a 3 fichiers de 3 Mo pour eviter des payloads trop lourds.
 
 ## Limites MVP
 
-- Persistance locale uniquement, pas encore de compte utilisateur ni base de données.
+- Persistance locale uniquement, pas encore de compte utilisateur ni base de donnees.
 - Le chat utilise maintenant `gpt-5.5` et `claude-opus-4.7` via Build with AFRI.
-- Les modèles image/audio/vidéo/ASR sont centralisés et prêts pour les prochaines routes API dédiées.
+- Les modeles image/audio/video/ASR sont centralises et prets pour les prochaines routes API dediees.
