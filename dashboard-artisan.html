@@ -992,6 +992,8 @@
     onAuthStateChanged(auth, async user => {
       if (!user) { window.location.href = 'connexion.html'; return; }
       currentUser = user;
+
+      try {
       document.getElementById('my-shop-link').href = 'boutique-vendeur.html?id=' + user.uid;
       const mobileShopLink = document.getElementById('mobile-shop-link');
       if (mobileShopLink) mobileShopLink.href = 'boutique-vendeur.html?id=' + user.uid;
@@ -1103,7 +1105,6 @@
       const menuToggle = document.getElementById('seller-menu-toggle');
       const menuPanel = document.getElementById('seller-menu-panel');
       const sellerLogout = document.getElementById('seller-menu-logout');
-      const mobileShopLink = document.getElementById('mobile-shop-link');
       const sellerShopLink = document.getElementById('seller-menu-shop-link');
       const closeMenu = () => {
         if (!menuPanel || !menuToggle) return;
@@ -1129,6 +1130,19 @@
       }
       if (sellerShopLink && user?.uid) sellerShopLink.href = 'boutique-vendeur.html?id=' + user.uid;
       if (mobileShopLink && user?.uid) mobileShopLink.href = 'boutique-vendeur.html?id=' + user.uid;
+      } catch (e) {
+        console.error('Erreur chargement dashboard artisan:', e);
+        document.getElementById('dash-title').textContent = 'Dashboard — ' + (user.email || 'Artisan');
+        document.getElementById('profile-name').textContent = user.email || 'Artisan';
+        document.getElementById('profile-location').textContent = 'Données temporairement indisponibles';
+        document.getElementById('stat-views').textContent = '0';
+        document.getElementById('stat-orders').textContent = '0';
+        document.getElementById('stat-ca').textContent = '0 XOF';
+        document.getElementById('stat-products').textContent = '0';
+        document.getElementById('prod-grid').innerHTML = `<div class="no-products">Impossible de charger les produits pour le moment. Vérifie la connexion ou les règles Firestore.</div>`;
+        document.getElementById('loading-state').style.display = 'none';
+        document.getElementById('dash-content').style.display = 'block';
+      }
     });
   </script>
   <script>
