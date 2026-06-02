@@ -1,7 +1,7 @@
-const AI_BASE_URL = process.env.AI_BASE_URL;
-const AI_API_KEY = process.env.AI_API_KEY;
-const TEXT_MODEL = process.env.AI_TEXT_MODEL || 'gpt-5.4-mini';
-const IMAGE_MODEL = process.env.AI_IMAGE_MODEL || 'gpt-image-2';
+const AI_BASE_URL = (process.env.ARTSANGO_AI_BASE_URL || process.env.AI_BASE_URL || 'https://build.lewisnote.com/v1').replace(/\/$/, '');
+const AI_API_KEY = process.env.ARTSANGO_AI_API_KEY || process.env.AI_API_KEY;
+const TEXT_MODEL = process.env.ARTSANGO_AI_GPT55_MODEL || process.env.AI_TEXT_MODEL || 'gpt-5.5';
+const IMAGE_MODEL = process.env.ARTSANGO_AI_IMAGE_MODEL || process.env.AI_IMAGE_MODEL || 'gpt-image-2';
 
 function getErrorText(data, fallback) {
   if (!data) return fallback;
@@ -162,7 +162,7 @@ module.exports = async (req, res) => {
 
   if (!AI_BASE_URL || !AI_API_KEY) {
     return res.status(500).json({
-      error: 'Configuration manquante: AI_BASE_URL et AI_API_KEY doivent etre definies sur Vercel.',
+      error: 'Configuration manquante: ARTSANGO_AI_BASE_URL et ARTSANGO_AI_API_KEY doivent etre definies sur Vercel.',
     });
   }
 
