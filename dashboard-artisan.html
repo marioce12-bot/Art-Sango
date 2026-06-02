@@ -490,12 +490,7 @@
           </article>
           <article class="card">
             <h2>Raccourcis IA</h2>
-            <ul>
-              <li><a href="ai-studio.html">Générer la bio de ma marque</a></li>
-              <li><a href="ai-studio.html">Créer 3 posts Instagram</a></li>
-              <li><a href="ai-studio.html">Optimiser le prix d'un produit</a></li>
-              <li><a href="ai-studio.html">Améliorer mon storytelling</a></li>
-            </ul>
+            <a class="btn btn-main" href="/ai-studio">Ouvrir le Studio IA</a>
           </article>
         </section>
 
@@ -689,19 +684,6 @@
     let shopSections = [];
     let currentArtisanData = {};
     const SHOP_THEME_DEFAULT = 'heritage';
-    const DASHBOARD_TIMEOUT_MS = 10000;
-
-    function showDashboard() {
-      document.getElementById('loading-state').style.display = 'none';
-      document.getElementById('dash-content').style.display = 'block';
-    }
-
-    function withTimeout(promise, label, timeoutMs = DASHBOARD_TIMEOUT_MS) {
-      return Promise.race([
-        promise,
-        new Promise((_, reject) => setTimeout(() => reject(new Error(`${label} trop long.`)), timeoutMs)),
-      ]);
-    }
 
     // ── Upload photo de profil (fix: display_url) ────────────────
     const toB64 = f => new Promise((res,rej) => { const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(f); });
@@ -1011,7 +993,7 @@
       const mobileShopLink = document.getElementById('mobile-shop-link');
       if (mobileShopLink) mobileShopLink.href = 'boutique-vendeur.html?id=' + user.uid;
 
-      const aSnap = await withTimeout(getDoc(doc(db,'artisans',user.uid)), 'Chargement du profil');
+      const aSnap = await getDoc(doc(db,'artisans',user.uid));
       const a     = aSnap.exists() ? aSnap.data() : {};
 
       document.getElementById('dash-title').textContent    = 'Dashboard — ' + (a.brandName || user.email);
@@ -1058,8 +1040,6 @@
 
       currentArtisanData = { ...a };
 
-      showDashboard();
-
       // Stats commandes (respecte statsResetAt pour eviter le retour apres reset)
       const resetAtMs = a.statsResetAt ? new Date(a.statsResetAt).getTime() : 0;
       const getOrderMs = (o) => {
@@ -1069,7 +1049,7 @@
         return Number.isFinite(t) ? t : 0;
       };
 
-      const oSnap  = await withTimeout(getDocs(query(collection(db,'commandes'), where('artisanId','==',user.uid))), 'Chargement des commandes');
+      const oSnap  = await getDocs(query(collection(db,'commandes'), where('artisanId','==',user.uid)));
       const allOrders = oSnap.docs.map(d => d.data());
       const orders = resetAtMs > 0
         ? allOrders.filter((o) => getOrderMs(o) > resetAtMs)
@@ -1086,7 +1066,7 @@
           `<div class="alert-row"><strong>${toShip.length} commande(s)</strong> à expédier <a href="commandes.html">Traiter</a></div>`;
       }
 
-      await withTimeout(loadMyProducts(), 'Chargement des produits');
+      await loadMyProducts();
 
       try {
         const {
@@ -1113,6 +1093,9 @@
       } catch (e) {
         console.warn('Notifications non configurées:', e.message);
       }
+
+      document.getElementById('loading-state').style.display = 'none';
+      document.getElementById('dash-content').style.display  = 'block';
 
       const menuToggle = document.getElementById('seller-menu-toggle');
       const menuPanel = document.getElementById('seller-menu-panel');
@@ -1152,7 +1135,8 @@
         document.getElementById('stat-ca').textContent = '0 XOF';
         document.getElementById('stat-products').textContent = '0';
         document.getElementById('prod-grid').innerHTML = `<div class="no-products">Impossible de charger les produits pour le moment. Vérifie la connexion ou les règles Firestore.</div>`;
-        showDashboard();
+        document.getElementById('loading-state').style.display = 'none';
+        document.getElementById('dash-content').style.display = 'block';
       }
     });
   </script>

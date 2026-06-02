@@ -240,22 +240,6 @@
     const db   = getFirestore(app);
     let currentOrders = [];
 
-    function showClientDashboard() {
-      document.getElementById('loading-state').style.display = 'none';
-      document.getElementById('dash-content').style.display = 'block';
-    }
-
-    function showDashboardFallback(message) {
-      showClientDashboard();
-      document.getElementById('client-name').textContent = auth.currentUser?.email?.split('@')[0] || 'Client';
-      document.getElementById('client-email').textContent = auth.currentUser?.email || '';
-      document.getElementById('stat-orders').textContent = '0';
-      document.getElementById('stat-favs').textContent = '0';
-      document.getElementById('stat-cart').textContent = '0';
-      document.getElementById('orders-list').innerHTML = `<div class="empty-state">${message}</div>`;
-      document.getElementById('favs-container').innerHTML = `<div class="empty-state">${message}</div>`;
-    }
-
     document.getElementById('logout-btn').addEventListener('click', () => {
       signOut(auth).then(() => window.location.href = 'index.html');
     });
@@ -305,8 +289,6 @@
         return;
       }
 
-      try {
-
       // Charger profil client
       let clientData = {};
       try {
@@ -320,7 +302,7 @@
       // Initiales dans l'avatar
       document.getElementById('avatar-zone').textContent = displayName.charAt(0).toUpperCase();
 
-      showClientDashboard();
+      document.getElementById('dash-content').style.display = 'block';
 
       // Stats panier
       const cart = JSON.parse(localStorage.getItem('artsango_cart') || '[]');
@@ -420,10 +402,6 @@
         });
       } catch (e) {
         console.warn('Notifications non configurées:', e.message);
-      }
-      } catch (e) {
-        console.error('Erreur chargement dashboard client:', e);
-        showDashboardFallback('Impossible de charger tes données pour le moment. Vérifie la connexion ou les règles Firestore.');
       }
     });
 
