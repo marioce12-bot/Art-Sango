@@ -46,7 +46,7 @@
 
   <script type="module">
     import { initializeApp }                         from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged }   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, setPersistence, browserLocalPersistence }   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import { getFirestore, doc, getDoc }             from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     // ─── REMPLACE avec tes valeurs Firebase ───────────────────────
@@ -63,6 +63,8 @@
     const app  = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db   = getFirestore(app);
+    const authPersistenceReady = setPersistence(auth, browserLocalPersistence)
+      .catch((e) => console.warn('Persistance auth locale indisponible:', e.message));
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) return;
@@ -94,6 +96,7 @@
       btn.disabled = true;
       btn.textContent = 'Connexion…';
       try {
+        await authPersistenceReady;
         const cred = await signInWithEmailAndPassword(auth, email, password);
         const uid = cred.user.uid;
         const artisanSnap = await getDoc(doc(db, 'artisans', uid));

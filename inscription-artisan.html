@@ -144,7 +144,7 @@
 
   <script type="module">
     import { initializeApp }                               from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword }     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getAuth, createUserWithEmailAndPassword, setPersistence, browserLocalPersistence }     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -159,6 +159,8 @@
     const app  = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db   = getFirestore(app);
+    const authPersistenceReady = setPersistence(auth, browserLocalPersistence)
+      .catch((e) => console.warn('Persistance auth locale indisponible:', e.message));
 
     window.doRegister = async function() {
       const errEl = document.getElementById('err-msg');
@@ -190,6 +192,7 @@
       btn.textContent = 'Création en cours...';
 
       try {
+        await authPersistenceReady;
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         const uid  = cred.user.uid;
 
