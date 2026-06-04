@@ -1,15 +1,19 @@
 function normalizeBaseUrl(value) {
-  return String(value || '').replace(/\/+$/, '');
+  return cleanEnv(value).replace(/\/+$/, '');
 }
 
-const AI_PROVIDER = process.env.ARTSANGO_AI_PROVIDER || process.env.AI_PROVIDER || process.env.OPENAI_PROVIDER || 'openai';
+function cleanEnv(value) {
+  return String(value || '').trim();
+}
+
+const AI_PROVIDER = cleanEnv(process.env.ARTSANGO_AI_PROVIDER || process.env.AI_PROVIDER || process.env.OPENAI_PROVIDER || 'openai');
 const AI_BASE_URL = normalizeBaseUrl(
   process.env.ARTSANGO_AI_BASE_URL ||
   process.env.AI_BASE_URL ||
   process.env.OPENAI_BASE_URL ||
   'https://api.openai.com/v1'
 );
-const AI_API_KEY =
+const AI_API_KEY = cleanEnv(
   process.env.ARTSANGO_AI_API_KEY ||
   process.env.ARTSANGO_AI_KEY ||
   process.env.ARTSANGO_AI_GATEWAY_API_KEY ||
@@ -17,17 +21,18 @@ const AI_API_KEY =
   process.env.VERCEL_AI_GATEWAY_API_KEY ||
   process.env.AI_API_KEY ||
   process.env.OPENAI_API_KEY ||
-  '';
+  ''
+);
 const TEXT_MODEL =
-  process.env.ARTSANGO_AI_GPT55_MODEL ||
+  cleanEnv(process.env.ARTSANGO_AI_GPT55_MODEL ||
   process.env.AI_TEXT_MODEL ||
   process.env.OPENAI_TEXT_MODEL ||
-  'gpt-4o-mini';
+  'gpt-4o-mini');
 const IMAGE_MODEL =
-  process.env.ARTSANGO_AI_IMAGE_MODEL ||
+  cleanEnv(process.env.ARTSANGO_AI_IMAGE_MODEL ||
   process.env.AI_IMAGE_MODEL ||
   process.env.OPENAI_IMAGE_MODEL ||
-  'gpt-image-1';
+  'gpt-image-1');
 
 function getAiStatus() {
   const missingEnv = [];
