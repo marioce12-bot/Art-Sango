@@ -29,11 +29,27 @@ app.post('/api/push', async (req, res) => {
 // ── Config ──────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 
-const AI_BASE_URL = process.env.AI_BASE_URL;
-const AI_API_KEY = process.env.AI_API_KEY;
+function normalizeBaseUrl(value) {
+  return String(value || '').replace(/\/+$/, '');
+}
 
-const TEXT_MODEL = process.env.AI_TEXT_MODEL || 'gpt-5.4-mini';
-const IMAGE_MODEL = process.env.AI_IMAGE_MODEL || 'gpt-image-2';
+const AI_BASE_URL = normalizeBaseUrl(process.env.AI_BASE_URL || process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1');
+const AI_API_KEY = process.env.AI_API_KEY || process.env.OPENAI_API_KEY || '';
+
+const TEXT_MODEL = process.env.AI_TEXT_MODEL || process.env.OPENAI_TEXT_MODEL || 'gpt-4o-mini';
+const IMAGE_MODEL = process.env.AI_IMAGE_MODEL || process.env.OPENAI_IMAGE_MODEL || 'gpt-image-1';
+
+function getAiStatus() {
+  const missingEnv = [];
+  if (!AI_API_KEY) missingEnv.push('AI_API_KEY ou OPENAI_API_KEY');
+  return {
+    configured: missingEnv.length === 0,
+    baseUrl: AI_BASE_URL,
+    textModel: TEXT_MODEL,
+    imageModel: IMAGE_MODEL,
+    missingEnv,
+  };
+}
 
 // ── Persistance JSON simple ─────────────────────────────────────────────────
 const DB_PATH = path.join(__dirname, 'data', 'db.json');
@@ -262,22 +278,34 @@ app.get('/api/outputs', (req, res) => {
 });
 
 // ── Route chatbot unifiée ────────────────────────────────────────────────────
+app.get('/api/chat', (req, res) => {
+  const status = getAiStatus();
+  res.status(status.configured ? 200 : 503).json(status);
+});
+
 app.post('/api/chat', async (req, res) => {
   const { prompt = '', conversationId } = req.body || {};
   const imageDataUrl = normalizeDataUrl(req.body?.imageDataUrl || '');
-
-  if (!AI_BASE_URL || !AI_API_KEY) {
-    return res.status(500).json({
-      error: 'Configuration manquante: AI_BASE_URL et AI_API_KEY doivent etre definies.',
-    });
-  }
 
   if (!prompt.trim() && !imageDataUrl) {
     return res.status(400).json({ error: 'Message ou image requis.' });
   }
 
   if ((prompt || '').trim().toLowerCase() === 'ping') {
-    return res.json({ mode: 'status', reply: 'IA connectée.' });
+    const status = getAiStatus();
+    return res.status(status.configured ? 200 : 503).json({
+      mode: 'status',
+      reply: status.configured ? 'IA connectee.' : 'Configuration IA manquante.',
+      ...status,
+    });
+  }
+
+  const status = getAiStatus();
+  if (!status.configured) {
+    return res.status(500).json({
+      error: `Configuration IA manquante: definis ${status.missingEnv.join(', ')} dans les variables d'environnement.`,
+      ...status,
+    });
   }
 
   const mode = inferIntent(prompt, Boolean(imageDataUrl));

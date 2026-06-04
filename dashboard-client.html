@@ -59,6 +59,8 @@
     .profile-actions{ margin-left:auto; display:flex; gap:10px; flex-wrap:wrap; }
     .btn-outline{ text-decoration:none; border:1.5px solid rgba(227,189,136,0.45); color:var(--cream); font-weight:700; border-radius:12px; padding:9px 16px; font-size:.9rem; background:rgba(255,255,255,.05); transition:background .15s; }
     .btn-outline:hover{ background:rgba(255,255,255,.12); }
+    .btn-ai{ background:linear-gradient(135deg,var(--gold),var(--burnt-orange)); color:#23120a; border-color:rgba(203,165,107,0.55); }
+    .btn-ai:hover{ background:linear-gradient(135deg,#d9b776,#d47a48); }
 
     /* Stats */
     .stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px; }
@@ -146,6 +148,7 @@
           <a class="nav-link" href="marketplace.html">Marketplace</a>
           <a class="nav-link" href="panier.html">Panier</a>
           <a class="nav-link" href="messagerie.html">Messagerie</a>
+          <a class="nav-link" href="ai-studio.html">Studio IA</a>
           <button class="logout-btn" id="logout-btn">Déconnexion</button>
         </div>
       </header>
@@ -167,6 +170,7 @@
             <p id="client-email">—</p>
           </div>
           <div class="profile-actions">
+            <a class="btn-outline btn-ai" href="ai-studio.html">Ouvrir Studio IA</a>
             <a class="btn-outline" href="marketplace.html">Explorer les créations</a>
           </div>
         </div>

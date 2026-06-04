@@ -199,17 +199,19 @@
       const dot = document.getElementById('statusDot');
       const txt = document.getElementById('statusText');
       try {
-        const r = await fetch('/api/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: 'ping' }),
-        });
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const r = await fetch('/api/chat');
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok || data.configured === false) {
+          const missing = Array.isArray(data.missingEnv) && data.missingEnv.length
+            ? data.missingEnv.join(', ')
+            : `HTTP ${r.status}`;
+          throw new Error(missing);
+        }
         dot.className = 'status-dot ok';
-        txt.textContent = 'IA connectée — prête à discuter';
+        txt.textContent = `IA connectée — ${data.textModel || 'modèle texte'} prêt`;
       } catch (e) {
         dot.className = 'status-dot err';
-        txt.textContent = `IA indisponible (${e.message}) — vérifie le serveur`;
+        txt.textContent = `IA à configurer: ${e.message}`;
       }
     }
     checkStatus();
@@ -304,7 +306,12 @@
         });
 
         const data = await res.json();
-        if (!res.ok || data.error) throw new Error(data.error || `HTTP ${res.status}`);
+        if (!res.ok || data.error) {
+          const missing = Array.isArray(data.missingEnv) && data.missingEnv.length
+            ? ` Variables manquantes: ${data.missingEnv.join(', ')}.`
+            : '';
+          throw new Error((data.error || `HTTP ${res.status}`) + missing);
+        }
 
         appendMessage('ai', data.reply || '', data.imageUrl || '');
         localStorage.setItem('artsango_last_ai_output', JSON.stringify({
