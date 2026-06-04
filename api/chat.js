@@ -117,7 +117,6 @@ async function requestTextReply({ prompt, imageDataUrl }) {
     },
     body: JSON.stringify({
       model: TEXT_MODEL,
-      temperature: 0.7,
       max_tokens: 900,
       messages: [
         { role: 'system', content: system },
