@@ -55,6 +55,21 @@ function getErrorText(data, fallback) {
   return fallback;
 }
 
+async function readProviderResponse(response, fallback) {
+  const raw = await response.text();
+  if (!raw.trim()) return null;
+
+  try {
+    return JSON.parse(raw);
+  } catch {
+    const preview = raw.trim().slice(0, 500);
+    if (response.ok) {
+      return { choices: [{ message: { content: preview } }] };
+    }
+    throw new Error(`${fallback}: réponse non JSON du fournisseur (${preview})`);
+  }
+}
+
 function normalizeDataUrl(dataUrl) {
   if (!dataUrl || typeof dataUrl !== 'string') return '';
   if (!dataUrl.startsWith('data:image/')) return '';
@@ -125,7 +140,7 @@ async function requestTextReply({ prompt, imageDataUrl }) {
     }),
   });
 
-  const data = await response.json();
+  const data = await readProviderResponse(response, `Text API HTTP ${response.status}`);
   if (!response.ok) throw new Error(getErrorText(data, `Text API HTTP ${response.status}`));
   const text = extractText(data);
   if (!text) throw new Error('Réponse texte vide du modèle IA.');
@@ -149,7 +164,7 @@ async function requestImageGeneration(prompt) {
     }),
   });
 
-  const data = await response.json();
+  const data = await readProviderResponse(response, `Image API HTTP ${response.status}`);
   if (!response.ok) throw new Error(getErrorText(data, `Image API HTTP ${response.status}`));
 
   const item = data?.data?.[0] || null;
@@ -177,7 +192,7 @@ async function requestImageEdit(prompt, imageDataUrl) {
     body: fd,
   });
 
-  const data = await response.json();
+  const data = await readProviderResponse(response, `Image edit API HTTP ${response.status}`);
   if (!response.ok) throw new Error(getErrorText(data, `Image edit API HTTP ${response.status}`));
 
   const item = data?.data?.[0] || null;

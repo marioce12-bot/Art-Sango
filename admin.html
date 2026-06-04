@@ -10,7 +10,7 @@
     *{ box-sizing:border-box; }
     body{ margin:0; font-family:"Inter",Verdana,sans-serif; background:var(--bg); color:#111827; }
     .wrap{ max-width:980px; margin:0 auto; padding:20px; padding-bottom:calc(20px + env(safe-area-inset-bottom)); }
-    .top{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:18px; }
+    .top{ position:sticky; top:calc(12px + env(safe-area-inset-top)); z-index:60; display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:18px; background:rgba(239,231,217,.94); padding:10px 0; backdrop-filter:blur(12px); }
     .back-btn{ border:0; background:var(--brand); color:#fff; border-radius:999px; padding:10px 14px; font-weight:700; cursor:pointer; }
     h1{ margin:0; font-family:"Playfair Display",serif; }
     .stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
