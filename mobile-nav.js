@@ -205,7 +205,7 @@
 
   async function resolveAccountLink() {
     try {
-      const [{ initializeApp, getApps }, { getAuth, onAuthStateChanged }, { getFirestore, doc, getDoc, collection, query, where, getDocs }] = await Promise.all([
+      const [{ initializeApp, getApps }, { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence }, { getFirestore, doc, getDoc, collection, query, where, getDocs }] = await Promise.all([
         import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'),
         import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js'),
         import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js')
@@ -223,6 +223,8 @@
       const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
       const auth = getAuth(app);
       const db = getFirestore(app);
+      await setPersistence(auth, browserLocalPersistence)
+        .catch((e) => console.warn('Persistance auth locale indisponible:', e.message));
 
       const startGlobalNotifications = async (user, role = '') => {
         if (!user?.uid || NOTIF_PAGES.has(path)) return;

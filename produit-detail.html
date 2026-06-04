@@ -219,7 +219,7 @@
 
   <script type="module">
     import { initializeApp }                                           from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, onAuthStateChanged }                              from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import { getFirestore, doc, getDoc, collection, getDocs, query, where, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -234,6 +234,8 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db  = getFirestore(app);
+    const authPersistenceReady = setPersistence(auth, browserLocalPersistence)
+      .catch((e) => console.warn('Persistance auth locale indisponible:', e.message));
 
     const params  = new URLSearchParams(location.search);
     const prodId  = params.get('id');
@@ -352,16 +354,17 @@
       bindMobileSwipe();
     }
 
+    await authPersistenceReady;
     onAuthStateChanged(auth, async (user) => {
       currentUser = user;
       currentRole = '';
       if (!user) { authResolved = true; resolveAuthReady(); return; }
       try {
         const artisanSnap = await getDoc(doc(db, 'artisans', user.uid));
-        if (artisanSnap.exists()) { currentRole = 'artisan'; }
+        if (artisanSnap.exists()) { currentRole = 'artisan'; localStorage.setItem('artsango_user_role', 'artisan'); }
         else {
           const clientSnap = await getDoc(doc(db, 'clients', user.uid));
-          if (clientSnap.exists()) currentRole = 'client';
+          if (clientSnap.exists()) { currentRole = 'client'; localStorage.setItem('artsango_user_role', 'client'); }
         }
       } catch {}
       authResolved = true;

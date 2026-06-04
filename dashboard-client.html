@@ -228,7 +228,7 @@
 
   <script type="module">
     import { initializeApp }                                      from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut }               from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence }               from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import { getFirestore, doc, getDoc, collection, query, where, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -243,6 +243,8 @@
     const app  = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db   = getFirestore(app);
+    const authPersistenceReady = setPersistence(auth, browserLocalPersistence)
+      .catch((e) => console.warn('Persistance auth locale indisponible:', e.message));
     let currentOrders = [];
 
     document.getElementById('logout-btn').addEventListener('click', () => {
@@ -286,6 +288,7 @@
       return map[statut] || [statut || '—', 'status-pending'];
     }
 
+    await authPersistenceReady;
     onAuthStateChanged(auth, async (user) => {
       document.getElementById('loading-state').style.display = 'none';
 
@@ -293,6 +296,8 @@
         document.getElementById('not-connected').style.display = 'block';
         return;
       }
+      localStorage.setItem('artsango_user_role', 'client');
+      document.getElementById('dash-content').style.display = 'block';
 
       // Charger profil client
       let clientData = {};
@@ -306,8 +311,6 @@
       document.getElementById('client-email').textContent = user.email || '';
       // Initiales dans l'avatar
       document.getElementById('avatar-zone').textContent = displayName.charAt(0).toUpperCase();
-
-      document.getElementById('dash-content').style.display = 'block';
 
       // Stats panier
       const cart = JSON.parse(localStorage.getItem('artsango_cart') || '[]');

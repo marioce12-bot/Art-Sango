@@ -1,4 +1,4 @@
-const CACHE_NAME = 'artsango-v4';
+const CACHE_NAME = 'artsango-v5';
 const DEFAULT_NOTIFICATION_ICON = './icon.svg';
 const PRECACHE = [
   './',

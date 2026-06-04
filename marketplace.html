@@ -253,7 +253,7 @@
 
   <script type="module">
     import { initializeApp }   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import { getFirestore, collection, getDocs, query, orderBy, doc, getDoc }
       from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -269,6 +269,8 @@
     const app  = initializeApp(firebaseConfig);
     const db   = getFirestore(app);
     const auth = getAuth(app);
+    const authPersistenceReady = setPersistence(auth, browserLocalPersistence)
+      .catch((e) => console.warn('Persistance auth locale indisponible:', e.message));
 
     let allProducts  = [];
     let artisansData = {};
@@ -276,6 +278,7 @@
     let resolveAuth; const authReady = new Promise(r => { resolveAuth = r; });
 
     /* ── Auth ── */
+    await authPersistenceReady;
     onAuthStateChanged(auth, async user => {
       currentUser = user; currentRole = '';
       const btn = document.getElementById('dashboard-btn');
@@ -283,10 +286,11 @@
       try {
         const a = await getDoc(doc(db,'artisans',user.uid));
         if (a.exists()) {
+          localStorage.setItem('artsango_user_role', 'artisan');
           currentRole = 'artisan'; btn.href = 'dashboard-artisan.html'; btn.textContent = 'Mon tableau de bord'; btn.style.display = 'inline-flex';
         } else {
           const c = await getDoc(doc(db,'clients',user.uid));
-          if (c.exists()) { currentRole = 'client'; btn.href = 'dashboard-client.html'; btn.textContent = 'Mon espace'; btn.style.display = 'inline-flex'; }
+          if (c.exists()) { localStorage.setItem('artsango_user_role', 'client'); currentRole = 'client'; btn.href = 'dashboard-client.html'; btn.textContent = 'Mon espace'; btn.style.display = 'inline-flex'; }
         }
       } catch {}
       authResolved = true; resolveAuth();

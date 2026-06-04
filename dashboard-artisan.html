@@ -674,7 +674,7 @@
 
   <script type="module">
     import { initializeApp }                    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import {
       getFirestore, doc, getDoc, collection, query, where,
       getDocs, updateDoc, deleteDoc, orderBy, setDoc
@@ -688,6 +688,8 @@
     const app  = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db   = getFirestore(app);
+    const authPersistenceReady = setPersistence(auth, browserLocalPersistence)
+      .catch((e) => console.warn('Persistance auth locale indisponible:', e.message));
     const IMGBB_KEY = "af6d7113f6f4673b0ab9084960da124e";
 
     let currentUser = null;
@@ -996,9 +998,13 @@
     }
 
     // ── Auth + chargement ─────────────────────────────────────────
+    await authPersistenceReady;
     onAuthStateChanged(auth, async user => {
       if (!user) { window.location.href = 'connexion.html'; return; }
       currentUser = user;
+      localStorage.setItem('artsango_user_role', 'artisan');
+      document.getElementById('loading-state').style.display = 'none';
+      document.getElementById('dash-content').style.display  = 'block';
       document.getElementById('my-shop-link').href = 'boutique-vendeur.html?id=' + user.uid;
       const mobileShopLink = document.getElementById('mobile-shop-link');
       if (mobileShopLink) mobileShopLink.href = 'boutique-vendeur.html?id=' + user.uid;
@@ -1103,9 +1109,6 @@
       } catch (e) {
         console.warn('Notifications non configurées:', e.message);
       }
-
-      document.getElementById('loading-state').style.display = 'none';
-      document.getElementById('dash-content').style.display  = 'block';
 
       const menuToggle = document.getElementById('seller-menu-toggle');
       const menuPanel = document.getElementById('seller-menu-panel');

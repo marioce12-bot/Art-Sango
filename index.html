@@ -892,7 +892,7 @@
   <!-- Firebase & Scripts -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -907,6 +907,8 @@
     const app  = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db   = getFirestore(app);
+    const authPersistenceReady = setPersistence(auth, browserLocalPersistence)
+      .catch((e) => console.warn('Persistance auth locale indisponible:', e.message));
 
     const localLogo = localStorage.getItem('artsango_platform_logo') || '';
     if (localLogo) {
@@ -922,13 +924,15 @@
       }
     } catch {}
 
+    await authPersistenceReady;
     onAuthStateChanged(auth, async user => {
       if (!user) return;
       const nav = document.getElementById('nav-auth');
       let dashHref = 'dashboard-client.html', dashLabel = 'Mon espace';
       try {
         const a = await getDoc(doc(db,'artisans',user.uid));
-        if (a.exists()) { dashHref = 'dashboard-artisan.html'; dashLabel = 'Mon tableau de bord'; }
+        if (a.exists()) { dashHref = 'dashboard-artisan.html'; dashLabel = 'Mon tableau de bord'; localStorage.setItem('artsango_user_role', 'artisan'); }
+        else { localStorage.setItem('artsango_user_role', 'client'); }
       } catch {}
       nav.innerHTML = `
         <a href="marketplace.html">Créations</a>

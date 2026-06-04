@@ -50,7 +50,7 @@ export async function GET(request, context) {
     return new Response(body, {
       headers: {
         'Content-Type': MIME_TYPES[resolved.fileExt] || 'application/octet-stream',
-        'Cache-Control': resolved.fileExt === '.html' ? 'no-cache' : 'public, max-age=3600',
+        'Cache-Control': resolved.fileExt === '.html' || path.basename(resolved.fullPath) === 'sw.js' ? 'no-cache' : 'public, max-age=3600',
       },
     });
   } catch {

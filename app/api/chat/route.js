@@ -101,7 +101,6 @@ function inferIntent(prompt, hasImage) {
 
   if (hasImage && asksImprove) return 'image_edit';
   if (!hasImage && asksImage) return 'image_generate';
-  if (hasImage && !asksImprove) return 'image_edit';
   return 'text_chat';
 }
 
@@ -257,10 +256,17 @@ export async function POST(request) {
         prompt: `Image générée pour: "${prompt}". Donne un texte produit, une légende Instagram avec hashtags et un CTA WhatsApp.`,
       });
     } else if (mode === 'image_edit') {
-      imageUrl = await requestImageEdit(prompt, imageDataUrl);
-      reply = await requestTextReply({
-        prompt: `Image améliorée pour: "${prompt || 'amélioration visuelle'}". Donne un texte vendeur + une version courte Instagram.`,
-      });
+      try {
+        imageUrl = await requestImageEdit(prompt, imageDataUrl);
+        reply = await requestTextReply({
+          prompt: `Image améliorée pour: "${prompt || 'amélioration visuelle'}". Donne un texte vendeur + une version courte Instagram.`,
+        });
+      } catch (editError) {
+        reply = await requestTextReply({
+          prompt: `${prompt || 'Analyse cette image.'}\n\nL'édition automatique de l'image n'est pas disponible avec le fournisseur actuel (${editError.message}). Propose plutôt des conseils précis d'amélioration visuelle, une légende prête à publier, des hashtags et un CTA WhatsApp.`,
+          imageDataUrl,
+        });
+      }
     } else {
       reply = await requestTextReply({ prompt, imageDataUrl });
     }
