@@ -29,11 +29,11 @@ app.post('/api/push', async (req, res) => {
 // ── Config ──────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 
-const AI_BASE_URL = (process.env.ARTSANGO_AI_BASE_URL || process.env.AI_BASE_URL || 'https://build.lewisnote.com/v1').replace(/\/$/, '');
-const AI_API_KEY = process.env.ARTSANGO_AI_API_KEY || process.env.AI_API_KEY;
+const AI_BASE_URL = process.env.AI_BASE_URL;
+const AI_API_KEY = process.env.AI_API_KEY;
 
-const TEXT_MODEL = process.env.ARTSANGO_AI_GPT55_MODEL || process.env.AI_TEXT_MODEL || 'gpt-5.5';
-const IMAGE_MODEL = process.env.ARTSANGO_AI_IMAGE_MODEL || process.env.AI_IMAGE_MODEL || 'gpt-image-2';
+const TEXT_MODEL = process.env.AI_TEXT_MODEL || 'gpt-5.4-mini';
+const IMAGE_MODEL = process.env.AI_IMAGE_MODEL || 'gpt-image-2';
 
 // ── Persistance JSON simple ─────────────────────────────────────────────────
 const DB_PATH = path.join(__dirname, 'data', 'db.json');
@@ -268,7 +268,7 @@ app.post('/api/chat', async (req, res) => {
 
   if (!AI_BASE_URL || !AI_API_KEY) {
     return res.status(500).json({
-      error: 'Configuration manquante: ARTSANGO_AI_BASE_URL et ARTSANGO_AI_API_KEY doivent etre definies.',
+      error: 'Configuration manquante: AI_BASE_URL et AI_API_KEY doivent etre definies.',
     });
   }
 
