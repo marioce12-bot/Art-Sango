@@ -1,4 +1,7 @@
-const webPush = require('web-push');
+import webPush from 'web-push';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 const DEFAULT_VAPID_PUBLIC_KEY = 'BAFa3HkBvUUXxsnR7Dgyr6b1iWADG7qP1SsQP-9p-IYfj6PpWDPLp4pt1cbxXynSqdA46eL45PEutTzg9VZcDrM';
 const DEFAULT_VAPID_PRIVATE_KEY = 'NUpdsv20xeon0QALNHwnmkC6pgl0vNM-Ti-a-dAQZhc';
@@ -26,10 +29,6 @@ function configureWebPush() {
   }
 
   return config;
-}
-
-function getPublicKey() {
-  return getPushConfig().publicKey;
 }
 
 function normalizeNotification(input = {}) {
@@ -71,7 +70,27 @@ async function sendPushNotifications(subscriptions, notification = {}) {
   };
 }
 
-module.exports = {
-  getPublicKey,
-  sendPushNotifications,
-};
+export async function GET() {
+  return Response.json({ publicKey: getPushConfig().publicKey });
+}
+
+export async function OPTIONS() {
+  return new Response(null, { status: 200 });
+}
+
+export async function POST(request) {
+  try {
+    const body = await request.json().catch(() => ({}));
+    const subscriptions = Array.isArray(body?.subscriptions) ? body.subscriptions : [];
+    const notification = body?.notification || {};
+
+    if (!subscriptions.length) {
+      return Response.json({ error: 'Aucune souscription push fournie.' }, { status: 400 });
+    }
+
+    const result = await sendPushNotifications(subscriptions, notification);
+    return Response.json(result);
+  } catch (error) {
+    return Response.json({ error: error.message || 'Erreur push.' }, { status: 500 });
+  }
+}

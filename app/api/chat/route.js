@@ -1,9 +1,12 @@
-function normalizeBaseUrl(value) {
-  return cleanEnv(value).replace(/\/+$/, '');
-}
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 function cleanEnv(value) {
   return String(value || '').trim();
+}
+
+function normalizeBaseUrl(value) {
+  return cleanEnv(value).replace(/\/+$/, '');
 }
 
 const AI_PROVIDER = cleanEnv(process.env.ARTSANGO_AI_PROVIDER || process.env.AI_PROVIDER || process.env.OPENAI_PROVIDER || 'openai');
@@ -23,16 +26,22 @@ const AI_API_KEY = cleanEnv(
   process.env.OPENAI_API_KEY ||
   ''
 );
-const TEXT_MODEL =
-  cleanEnv(process.env.ARTSANGO_AI_GPT55_MODEL ||
+const TEXT_MODEL = cleanEnv(
+  process.env.ARTSANGO_AI_GPT55_MODEL ||
   process.env.AI_TEXT_MODEL ||
   process.env.OPENAI_TEXT_MODEL ||
-  'gpt-4o-mini');
-const IMAGE_MODEL =
-  cleanEnv(process.env.ARTSANGO_AI_IMAGE_MODEL ||
+  'gpt-4o-mini'
+);
+const IMAGE_MODEL = cleanEnv(
+  process.env.ARTSANGO_AI_IMAGE_MODEL ||
   process.env.AI_IMAGE_MODEL ||
   process.env.OPENAI_IMAGE_MODEL ||
-  'gpt-image-1');
+  'gpt-image-1'
+);
+
+function json(data, status = 200) {
+  return Response.json(data, { status });
+}
 
 function getAiStatus() {
   const missingEnv = [];
@@ -66,7 +75,7 @@ async function readProviderResponse(response, fallback) {
     if (response.ok) {
       return { choices: [{ message: { content: preview } }] };
     }
-    throw new Error(`${fallback}: réponse non JSON du fournisseur (${preview})`);
+    throw new Error(`${fallback}: reponse non JSON du fournisseur (${preview})`);
   }
 }
 
@@ -201,50 +210,39 @@ async function requestImageEdit(prompt, imageDataUrl) {
   return imageUrl;
 }
 
-async function readJsonBody(req) {
-  if (req.body && typeof req.body === 'object') return req.body;
-  if (typeof req.body === 'string' && req.body.trim()) {
-    try { return JSON.parse(req.body); } catch { return {}; }
-  }
-
-  const chunks = [];
-  for await (const chunk of req) chunks.push(chunk);
-  const raw = Buffer.concat(chunks).toString('utf8');
-  if (!raw) return {};
-  try { return JSON.parse(raw); } catch { return {}; }
+export async function GET() {
+  const status = getAiStatus();
+  return json(status, status.configured ? 200 : 503);
 }
 
-module.exports = async (req, res) => {
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method === 'GET') {
-    const status = getAiStatus();
-    return res.status(status.configured ? 200 : 503).json(status);
-  }
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+export async function OPTIONS() {
+  return new Response(null, { status: 200 });
+}
 
-  const body = await readJsonBody(req);
-  const prompt = (body.prompt || '').trim();
+export async function POST(request) {
+  const body = await request.json().catch(() => ({}));
+  const prompt = String(body.prompt || '').trim();
   const imageDataUrl = normalizeDataUrl(body.imageDataUrl || '');
 
   if (prompt.toLowerCase() === 'ping') {
     const status = getAiStatus();
-    return res.status(status.configured ? 200 : 503).json({
+    return json({
       mode: 'status',
       reply: status.configured ? 'IA connectee.' : 'Configuration IA manquante.',
       ...status,
-    });
+    }, status.configured ? 200 : 503);
   }
 
   const status = getAiStatus();
   if (!status.configured) {
-    return res.status(500).json({
+    return json({
       error: `Configuration IA manquante: definis ${status.missingEnv.join(', ')} dans les variables d'environnement Vercel.`,
       ...status,
-    });
+    }, 500);
   }
 
   if (!prompt && !imageDataUrl) {
-    return res.status(400).json({ error: 'Message ou image requis.' });
+    return json({ error: 'Message ou image requis.' }, 400);
   }
 
   const mode = inferIntent(prompt, Boolean(imageDataUrl));
@@ -267,8 +265,8 @@ module.exports = async (req, res) => {
       reply = await requestTextReply({ prompt, imageDataUrl });
     }
 
-    return res.status(200).json({ mode, reply, imageUrl });
+    return json({ mode, reply, imageUrl });
   } catch (error) {
-    return res.status(500).json({ error: error.message || 'Erreur IA.' });
+    return json({ error: error.message || 'Erreur IA.' }, 500);
   }
-};
+}

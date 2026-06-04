@@ -1,15 +1,17 @@
 {
-  "name": "artsango-ia-chat",
+  "name": "artsango-next",
   "version": "1.0.0",
   "private": true,
-  "description": "ArtSango IA chat assistant MVP",
-  "main": "server.js",
+  "description": "ArtSango marketplace converted to Next.js",
   "scripts": {
-    "dev": "node server.js",
-    "start": "node server.js"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
   },
   "dependencies": {
-    "express": "^4.21.2",
+    "next": "^16.0.7",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
     "web-push": "^3.6.7"
   }
 }
